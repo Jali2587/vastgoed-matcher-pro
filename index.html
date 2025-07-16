@@ -4,237 +4,204 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vastgoed Matcher Pro AI</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .demo-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .dashboard {
+            text-align: center;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="app"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { Users, Building, Star, LogOut, User, Plus, Settings } = lucide;
+    <script>
+        console.log('🚀 Script started - check if you can see this in console');
+        
+        // Simple state management
+        let currentUser = null;
+        let isLoggedIn = false;
 
-        const VastgoedApp = () => {
-          const [user, setUser] = useState(null);
-          const [showAuth, setShowAuth] = useState(true);
+        // Demo users
+        const users = [
+            { email: 'admin@vastgoed.nl', password: 'admin123', name: 'Beheerder', role: 'admin' },
+            { email: 'jan@example.com', password: 'password123', name: 'Jan Vermeer', role: 'user' }
+        ];
 
-          // System users with access control
-          const systemUsers = [
-            { 
-              id: 'admin1', 
-              email: 'admin@vastgoed.nl', 
-              password: 'admin123', 
-              name: 'Beheerder', 
-              company: 'Vastgoed Matcher Pro', 
-              role: 'admin', 
-              status: 'active'
-            },
-            { 
-              id: 'user1', 
-              email: 'jan@example.com', 
-              password: 'password123', 
-              name: 'Jan Vermeer', 
-              company: 'Vermeer Vastgoed', 
-              role: 'user', 
-              status: 'active'
+        // Login function
+        function handleLogin(event) {
+            event.preventDefault();
+            console.log('🔐 Login attempt started');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('📧 Email:', email);
+            console.log('🔑 Password length:', password.length);
+            
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                console.log('✅ User found:', user.name);
+                currentUser = user;
+                isLoggedIn = true;
+                showDashboard();
+            } else {
+                console.log('❌ Invalid credentials');
+                alert('Ongeldige inloggegevens');
             }
-          ];
+        }
 
-          // Login function
-          const handleLogin = (credentials) => {
-            console.log('Login attempt:', credentials.email);
-            
-            const foundUser = systemUsers.find(u => 
-              u.email.toLowerCase() === credentials.email.toLowerCase() && 
-              u.password === credentials.password
-            );
-            
-            if (!foundUser) {
-              alert('Ongeldige inloggegevens');
-              return;
-            }
-            
-            if (foundUser.status !== 'active') {
-              alert('Account niet actief');
-              return;
-            }
-            
-            setUser({
-              id: foundUser.id,
-              name: foundUser.name,
-              email: foundUser.email,
-              company: foundUser.company,
-              role: foundUser.role
-            });
-            
-            setShowAuth(false);
-            console.log('Login successful:', foundUser.name);
-          };
+        // Logout function
+        function handleLogout() {
+            console.log('🚪 Logout clicked');
+            currentUser = null;
+            isLoggedIn = false;
+            showLogin();
+        }
 
-          const handleLogout = () => {
-            setUser(null);
-            setShowAuth(true);
-          };
+        // Show login form
+        function showLogin() {
+            console.log('🔑 Showing login form');
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="container">
+                    <h1 style="text-align: center; color: #333; margin-bottom: 30px;">Vastgoed Matcher Pro</h1>
+                    
+                    <div class="demo-info">
+                        <strong>🧪 Test Login:</strong><br>
+                        👑 Admin: admin@vastgoed.nl / admin123<br>
+                        👤 User: jan@example.com / password123
+                    </div>
+                    
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Wachtwoord:</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        
+                        <button type="submit">Inloggen</button>
+                    </form>
+                    
+                    <div class="debug-info">
+                        🔍 Debug info:<br>
+                        - Script loaded: ✅<br>
+                        - Users loaded: ${users.length}<br>
+                        - Console check: Open Dev Tools (⌘+⌥+I)
+                    </div>
+                </div>
+            `;
+        }
 
-          // Login Form Component
-          const LoginForm = () => {
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
+        // Show dashboard
+        function showDashboard() {
+            console.log('📊 Showing dashboard for:', currentUser.name);
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="container">
+                    <div class="dashboard">
+                        <h1 style="color: #28a745;">🎉 Login Succesvol!</h1>
+                        <h2>Welkom ${currentUser.name}</h2>
+                        <p style="color: #666;">Je bent ingelogd als <strong>${currentUser.role === 'admin' ? 'Beheerder' : 'Gebruiker'}</strong></p>
+                        
+                        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                            ✅ Authenticatie werkt!<br>
+                            ✅ Dashboard laadt!<br>
+                            ✅ JavaScript functioneert!
+                        </div>
+                        
+                        <button onclick="handleLogout()" class="logout-btn">Uitloggen</button>
+                        
+                        <div class="debug-info">
+                            🔍 User Data:<br>
+                            - Name: ${currentUser.name}<br>
+                            - Email: ${currentUser.email}<br>
+                            - Role: ${currentUser.role}<br>
+                            - Login time: ${new Date().toLocaleTimeString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-            const handleSubmit = (e) => {
-              e.preventDefault();
-              handleLogin({ email, password });
-            };
-
-            return React.createElement('div', { className: 'min-h-screen bg-gray-50 flex items-center justify-center' },
-              React.createElement('div', { className: 'max-w-md w-full bg-white rounded-lg shadow-md p-8' },
-                React.createElement('div', { className: 'text-center mb-8' },
-                  React.createElement('h1', { className: 'text-2xl font-bold text-gray-900' }, 'Vastgoed Matcher Pro'),
-                  React.createElement('p', { className: 'text-gray-600 mt-2' }, 'Inloggen op je account')
-                ),
-
-                // Demo credentials
-                React.createElement('div', { className: 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6' },
-                  React.createElement('h4', { className: 'font-semibold text-blue-800 mb-2' }, 'Demo Login:'),
-                  React.createElement('div', { className: 'text-sm text-blue-700 space-y-1' },
-                    React.createElement('p', null, '👑 Admin: admin@vastgoed.nl / admin123'),
-                    React.createElement('p', null, '👤 User: jan@example.com / password123')
-                  )
-                ),
-
-                React.createElement('form', { onSubmit: handleSubmit, className: 'space-y-4' },
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Email'),
-                    React.createElement('input', {
-                      type: 'email',
-                      value: email,
-                      onChange: (e) => setEmail(e.target.value),
-                      className: 'w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                      required: true
-                    })
-                  ),
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Wachtwoord'),
-                    React.createElement('input', {
-                      type: 'password',
-                      value: password,
-                      onChange: (e) => setPassword(e.target.value),
-                      className: 'w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                      required: true
-                    })
-                  ),
-                  React.createElement('button', {
-                    type: 'submit',
-                    className: 'w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors'
-                  }, 'Inloggen')
-                )
-              )
-            );
-          };
-
-          // Main Dashboard
-          const Dashboard = () => {
-            console.log('Dashboard rendering for user:', user);
-            
-            try {
-              return React.createElement('div', { className: 'max-w-7xl mx-auto p-6' },
-                // Header
-                React.createElement('div', { className: 'mb-8 flex justify-between items-center' },
-                  React.createElement('div', null,
-                    React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-2' }, 'Vastgoed Matcher Pro AI'),
-                    React.createElement('p', { className: 'text-gray-600' }, `Welkom terug, ${user ? user.name : 'Onbekend'}!`),
-                    React.createElement('div', { className: 'flex items-center space-x-4 mt-2' },
-                      React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, 
-                        user && user.role === 'admin' ? '👑 Beheerder' : '👤 Gebruiker'
-                      )
-                    )
-                  ),
-                  React.createElement('div', { className: 'flex items-center space-x-4' },
-                    React.createElement('div', { className: 'text-right' },
-                      React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
-                        React.createElement(User, { size: 16 }),
-                        React.createElement('span', null, user ? user.name : 'Onbekend')
-                      ),
-                      React.createElement('div', { className: 'text-sm text-gray-500' }, user ? user.company : 'Onbekend')
-                    ),
-                    React.createElement('button', {
-                      onClick: handleLogout,
-                      className: 'flex items-center space-x-2 text-gray-600 hover:text-red-600'
-                    },
-                      React.createElement(LogOut, { size: 16 }),
-                      React.createElement('span', null, 'Uitloggen')
-                    )
-                  )
-                ),
-
-                // Simple success message first
-                React.createElement('div', { className: 'bg-green-50 border border-green-200 rounded-lg p-6 mb-8' },
-                  React.createElement('h3', { className: 'text-lg font-semibold text-green-800 mb-2' }, '🎉 Login Succesvol!'),
-                  React.createElement('p', { className: 'text-green-700' }, 
-                    `Welkom ${user ? user.name : 'Onbekend'}! Je bent ingelogd als ${user && user.role === 'admin' ? 'beheerder' : 'gebruiker'}.`
-                  ),
-                  React.createElement('p', { className: 'text-sm text-green-600 mt-2' }, 
-                    'Dashboard wordt geladen... Als je dit ziet, werkt de authenticatie!'
-                  )
-                ),
-
-                // Stats cards
-                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                    React.createElement('div', { className: 'flex items-center justify-between' },
-                      React.createElement('div', null,
-                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Investeerders'),
-                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '3')
-                      ),
-                      React.createElement(Users, { className: 'h-8 w-8 text-blue-600' })
-                    )
-                  ),
-                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                    React.createElement('div', { className: 'flex items-center justify-between' },
-                      React.createElement('div', null,
-                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Deals'),
-                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '4')
-                      ),
-                      React.createElement(Building, { className: 'h-8 w-8 text-green-600' })
-                    )
-                  ),
-                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                    React.createElement('div', { className: 'flex items-center justify-between' },
-                      React.createElement('div', null,
-                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'AI Matches'),
-                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '12')
-                      ),
-                      React.createElement(Star, { className: 'h-8 w-8 text-purple-600' })
-                    )
-                  )
-                )
-              );
-            } catch (error) {
-              console.error('Dashboard render error:', error);
-              return React.createElement('div', { className: 'p-6' },
-                React.createElement('h1', null, 'Error in Dashboard'),
-                React.createElement('p', null, 'Check console for details'),
-                React.createElement('button', { 
-                  onClick: handleLogout,
-                  className: 'bg-red-600 text-white px-4 py-2 rounded mt-4'
-                }, 'Logout')
-              );
-            }
-          };
-
-          // Main render
-          if (showAuth || !user) {
-            return React.createElement(LoginForm);
-          }
-
-          return React.createElement(Dashboard);
-        };
-
-        // Render the app
-        ReactDOM.render(React.createElement(VastgoedApp), document.getElementById('root'));
+        // Initialize app
+        console.log('🎬 Initializing app');
+        showLogin();
+        
+        // Make functions global so HTML can access them
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        
+        console.log('✅ App initialization complete');
     </script>
 </body>
 </html>
