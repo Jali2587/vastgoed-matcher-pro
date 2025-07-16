@@ -137,80 +137,92 @@
 
           // Main Dashboard
           const Dashboard = () => {
-            return React.createElement('div', { className: 'max-w-7xl mx-auto p-6' },
-              // Header
-              React.createElement('div', { className: 'mb-8 flex justify-between items-center' },
-                React.createElement('div', null,
-                  React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-2' }, 'Vastgoed Matcher Pro AI'),
-                  React.createElement('p', { className: 'text-gray-600' }, `Welkom terug, ${user.name}!`),
-                  React.createElement('div', { className: 'flex items-center space-x-4 mt-2' },
-                    React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, 
-                      user.role === 'admin' ? '👑 Beheerder' : '👤 Gebruiker'
+            console.log('Dashboard rendering for user:', user);
+            
+            try {
+              return React.createElement('div', { className: 'max-w-7xl mx-auto p-6' },
+                // Header
+                React.createElement('div', { className: 'mb-8 flex justify-between items-center' },
+                  React.createElement('div', null,
+                    React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-2' }, 'Vastgoed Matcher Pro AI'),
+                    React.createElement('p', { className: 'text-gray-600' }, `Welkom terug, ${user ? user.name : 'Onbekend'}!`),
+                    React.createElement('div', { className: 'flex items-center space-x-4 mt-2' },
+                      React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, 
+                        user && user.role === 'admin' ? '👑 Beheerder' : '👤 Gebruiker'
+                      )
+                    )
+                  ),
+                  React.createElement('div', { className: 'flex items-center space-x-4' },
+                    React.createElement('div', { className: 'text-right' },
+                      React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
+                        React.createElement(User, { size: 16 }),
+                        React.createElement('span', null, user ? user.name : 'Onbekend')
+                      ),
+                      React.createElement('div', { className: 'text-sm text-gray-500' }, user ? user.company : 'Onbekend')
+                    ),
+                    React.createElement('button', {
+                      onClick: handleLogout,
+                      className: 'flex items-center space-x-2 text-gray-600 hover:text-red-600'
+                    },
+                      React.createElement(LogOut, { size: 16 }),
+                      React.createElement('span', null, 'Uitloggen')
                     )
                   )
                 ),
-                React.createElement('div', { className: 'flex items-center space-x-4' },
-                  React.createElement('div', { className: 'text-right' },
-                    React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
-                      React.createElement(User, { size: 16 }),
-                      React.createElement('span', null, user.name)
-                    ),
-                    React.createElement('div', { className: 'text-sm text-gray-500' }, user.company)
+
+                // Simple success message first
+                React.createElement('div', { className: 'bg-green-50 border border-green-200 rounded-lg p-6 mb-8' },
+                  React.createElement('h3', { className: 'text-lg font-semibold text-green-800 mb-2' }, '🎉 Login Succesvol!'),
+                  React.createElement('p', { className: 'text-green-700' }, 
+                    `Welkom ${user ? user.name : 'Onbekend'}! Je bent ingelogd als ${user && user.role === 'admin' ? 'beheerder' : 'gebruiker'}.`
                   ),
-                  React.createElement('button', {
-                    onClick: handleLogout,
-                    className: 'flex items-center space-x-2 text-gray-600 hover:text-red-600'
-                  },
-                    React.createElement(LogOut, { size: 16 }),
-                    React.createElement('span', null, 'Uitloggen')
+                  React.createElement('p', { className: 'text-sm text-green-600 mt-2' }, 
+                    'Dashboard wordt geladen... Als je dit ziet, werkt de authenticatie!'
                   )
-                )
-              ),
+                ),
 
-              // Content
-              React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Investeerders'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '3')
-                    ),
-                    React.createElement(Users, { className: 'h-8 w-8 text-blue-600' })
-                  )
-                ),
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Deals'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '4')
-                    ),
-                    React.createElement(Building, { className: 'h-8 w-8 text-green-600' })
-                  )
-                ),
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'AI Matches'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '12')
-                    ),
-                    React.createElement(Star, { className: 'h-8 w-8 text-purple-600' })
+                // Stats cards
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Investeerders'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '3')
+                      ),
+                      React.createElement(Users, { className: 'h-8 w-8 text-blue-600' })
+                    )
+                  ),
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Deals'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '4')
+                      ),
+                      React.createElement(Building, { className: 'h-8 w-8 text-green-600' })
+                    )
+                  ),
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'AI Matches'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '12')
+                      ),
+                      React.createElement(Star, { className: 'h-8 w-8 text-purple-600' })
+                    )
                   )
                 )
-              ),
-
-              // Success message
-              React.createElement('div', { className: 'mt-8 bg-green-50 border border-green-200 rounded-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-semibold text-green-800 mb-2' }, '🎉 Applicatie werkt!'),
-                React.createElement('p', { className: 'text-green-700' }, 
-                  user.role === 'admin' 
-                    ? 'Je bent ingelogd als beheerder. Alle functies zijn beschikbaar.'
-                    : 'Je bent ingelogd als gebruiker. Welkom bij Vastgoed Matcher Pro!'
-                ),
-                React.createElement('p', { className: 'text-sm text-green-600 mt-2' }, 
-                  'Deze eenvoudige versie werkt. We kunnen nu stap voor stap uitbreiden.'
-                )
-              )
-            );
+              );
+            } catch (error) {
+              console.error('Dashboard render error:', error);
+              return React.createElement('div', { className: 'p-6' },
+                React.createElement('h1', null, 'Error in Dashboard'),
+                React.createElement('p', null, 'Check console for details'),
+                React.createElement('button', { 
+                  onClick: handleLogout,
+                  className: 'bg-red-600 text-white px-4 py-2 rounded mt-4'
+                }, 'Logout')
+              );
+            }
           };
 
           // Main render
