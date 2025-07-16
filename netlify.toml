@@ -1,14 +1,18 @@
 [build]
   publish = "."
-  command = ""
+  command = "echo 'Static site, no build needed'"
 
-[build.environment]
-  NODE_VERSION = "18"
+[functions]
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-[functions]
-  node_bundler = "esbuild"
+[build.environment]
+  NODE_VERSION = "18"
+
+# Plugin om dependencies automatisch te installeren voor functions
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
