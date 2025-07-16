@@ -33,6 +33,8 @@
           const [isLoadingAI, setIsLoadingAI] = useState(false);
           const [showCommissionEditor, setShowCommissionEditor] = useState(false);
           const [currentTransaction, setCurrentTransaction] = useState(null);
+          const [showUserManagement, setShowUserManagement] = useState(false);
+          const [showAddUser, setShowAddUser] = useState(false);
           const [commissionStructure, setCommissionStructure] = useState({
             total_rate: 0.025,
             participants: [
@@ -40,6 +42,40 @@
               { role: 'investor_owner', user_id: null, percentage: 40, fixed_amount: 0, type: 'percentage' }
             ]
           });
+
+          // System users with access control
+          const [systemUsers, setSystemUsers] = useState([
+            { 
+              id: 'admin1', 
+              email: 'admin@vastgoed.nl', 
+              password: 'admin123', 
+              name: 'Beheerder', 
+              company: 'Vastgoed Matcher Pro', 
+              role: 'admin', 
+              status: 'active',
+              created_at: '2024-01-01T00:00:00Z'
+            },
+            { 
+              id: 'user1', 
+              email: 'jan@example.com', 
+              password: 'password123', 
+              name: 'Jan Vermeer', 
+              company: 'Vermeer Vastgoed', 
+              role: 'user', 
+              status: 'active',
+              created_at: '2024-01-10T10:00:00Z'
+            },
+            { 
+              id: 'user2', 
+              email: 'lisa@example.com', 
+              password: 'password123', 
+              name: 'Lisa de Vries', 
+              company: 'De Vries Properties', 
+              role: 'user', 
+              status: 'pending',
+              created_at: '2024-01-15T14:30:00Z'
+            }
+          ]);
 
           // Real OpenAI API call via Netlify function
           const callOpenAI = async (prompt, type = 'analysis', data = null) => {
@@ -158,11 +194,219 @@
 
           // Database functies
           const loadData = async () => {
-            setUsers([
-              { id: '1', name: 'Jan Vermeer', email: 'jan@example.com', company: 'Vermeer Vastgoed', role: 'agent' },
-              { id: '2', name: 'Lisa de Vries', email: 'lisa@example.com', company: 'De Vries Properties', role: 'agent' },
-              { id: '3', name: 'Mark Jansen', email: 'mark@example.com', company: 'Jansen Makelaars', role: 'manager' }
-            ]);
+            try {
+              console.log('Loading demo data...');
+              
+              // Use systemUsers for user data
+              setUsers(
+                systemUsers
+                  .filter(u => u.status === 'active')
+                  .map(u => ({
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    company: u.company,
+                    role: u.role
+                  }))
+              );
+            
+              setInvestors([
+                {
+                  id: '1',
+                  naam: 'Peter van der Berg',
+                  email: 'peter@example.com',
+                  telefoon: '06-12345678',
+                  bedrijf: 'Berg Investments',
+                  minBudget: 100000,
+                  maxBudget: 500000,
+                  voorkeursRegio: ['Nederland', 'Duitsland'],
+                  voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
+                  vastgoedTypes: ['Appartement', 'Kantoor'],
+                  projectTypes: ['Turn-key', 'Renovatie'],
+                  risicoprofiel: 'Gemiddeld',
+                  gewenstRendement: 6,
+                  investeringshorizon: 'Lang termijn',
+                  ervaringLevel: 'Ervaren',
+                  beschikbaarheid: 'Direct',
+                  communicatieVoorkeur: 'Telefoon',
+                  investmentMotivatie: 'Uitbreiding van vastgoed portfolio voor pensioen opbouw',
+                  owner_id: 'admin1',
+                  created_at: '2024-01-15T10:30:00Z'
+                },
+                {
+                  id: '2',
+                  naam: 'Maria Jansen',
+                  email: 'maria@example.com',
+                  telefoon: '06-87654321',
+                  bedrijf: 'Jansen Property',
+                  minBudget: 200000,
+                  maxBudget: 1000000,
+                  voorkeursRegio: ['Frankrijk', 'Spanje'],
+                  voorkeursLocaties: ['Utrecht', 'Den Haag', 'Parijs', 'Barcelona', 'Madrid'],
+                  vastgoedTypes: ['Appartement', 'Retail', 'Studenten'],
+                  projectTypes: ['Turn-key', 'Ontwikkeling'],
+                  risicoprofiel: 'Conservatief',
+                  gewenstRendement: 4,
+                  investeringshorizon: 'Middellang',
+                  ervaringLevel: 'Beginner',
+                  beschikbaarheid: '1-3 maanden',
+                  communicatieVoorkeur: 'Email',
+                  investmentMotivatie: 'Eerste stappen in vastgoed beleggen, focus op stabiele inkomsten',
+                  owner_id: 'user1',
+                  created_at: '2024-01-20T14:15:00Z'
+                },
+                {
+                  id: '3',
+                  naam: 'David Chen',
+                  email: 'david@example.com',
+                  telefoon: '06-98765432',
+                  bedrijf: 'Chen Capital',
+                  minBudget: 500000,
+                  maxBudget: 2000000,
+                  voorkeursRegio: ['Nederland', 'Zwitserland'],
+                  voorkeursLocaties: ['Amsterdam', 'Utrecht', 'Almere', 'Zürich', 'Genève'],
+                  vastgoedTypes: ['Kantoor', 'Industrie', 'Zorgvastgoed'],
+                  projectTypes: ['Transformatie', 'Ontwikkeling', 'Gemengd'],
+                  risicoprofiel: 'Agressief',
+                  gewenstRendement: 8,
+                  investeringshorizon: 'Lang termijn',
+                  ervaringLevel: 'Ervaren',
+                  beschikbaarheid: 'Direct',
+                  communicatieVoorkeur: 'WhatsApp',
+                  investmentMotivatie: 'Institutionele belegger zoekt hoogrenderende vastgoed kansen',
+                  owner_id: 'admin1',
+                  created_at: '2024-01-25T16:45:00Z'
+                }
+              ]);
+              
+              setDeals([
+                {
+                  id: '1',
+                  titel: 'Modern Appartement Amsterdam',
+                  locatie: 'Amsterdam',
+                  type: 'Appartement',
+                  projectType: 'Turn-key',
+                  prijs: 350000,
+                  verwachtRendement: 5.5,
+                  risico: 'Gemiddeld',
+                  beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord met metro verbinding',
+                  oppervlakte: 85,
+                  bouwjaar: 2020,
+                  huurpotentie: 1800,
+                  status: 'Beschikbaar',
+                  owner_id: 'admin1',
+                  created_at: '2024-01-10T09:00:00Z'
+                },
+                {
+                  id: '2',
+                  titel: 'Kantoorpand Rotterdam',
+                  locatie: 'Rotterdam',
+                  type: 'Kantoor',
+                  projectType: 'Renovatie',
+                  prijs: 750000,
+                  verwachtRendement: 7.2,
+                  risico: 'Hoog',
+                  beschrijving: 'Kantoorpand voor renovatie in bedrijventerrein met parkeerplaatsen en uitbreidingsmogelijkheid',
+                  oppervlakte: 400,
+                  bouwjaar: 2015,
+                  huurpotentie: 4500,
+                  status: 'Beschikbaar',
+                  owner_id: 'user1',
+                  created_at: '2024-01-12T11:30:00Z'
+                },
+                {
+                  id: '3',
+                  titel: 'Studentencomplex Utrecht',
+                  locatie: 'Utrecht',
+                  type: 'Studenten',
+                  projectType: 'Ontwikkeling',
+                  prijs: 1200000,
+                  verwachtRendement: 6.8,
+                  risico: 'Laag',
+                  beschrijving: 'Nieuwbouw ontwikkeling studentencomplex nabij universiteit met langetermijn contracten',
+                  oppervlakte: 600,
+                  bouwjaar: 2018,
+                  huurpotentie: 6800,
+                  status: 'Beschikbaar',
+                  owner_id: 'admin1',
+                  created_at: '2024-01-15T14:20:00Z'
+                },
+                {
+                  id: '4',
+                  titel: 'Retail Locatie Eindhoven',
+                  locatie: 'Eindhoven',
+                  type: 'Retail',
+                  projectType: 'Transformatie',
+                  prijs: 480000,
+                  verwachtRendement: 4.5,
+                  risico: 'Gemiddeld',
+                  beschrijving: 'Transformatie project: voormalig kantoorpand naar retail in drukke winkelstraat',
+                  oppervlakte: 120,
+                  bouwjaar: 2010,
+                  huurpotentie: 1800,
+                  status: 'Beschikbaar',
+                  owner_id: 'user1',
+                  created_at: '2024-01-18T10:15:00Z'
+                }
+              ]);
+              
+              setTransactions([
+                {
+                  id: '1',
+                  deal_id: '1',
+                  investor_id: '1',
+                  deal_owner_id: 'admin1',
+                  investor_owner_id: 'admin1',
+                  transaction_amount: 350000,
+                  commission_rate: 0.025,
+                  total_commission: 8750,
+                  commission_structure: JSON.stringify({
+                    total_rate: 0.025,
+                    participants: [
+                      { role: 'deal_owner', user_id: 'admin1', percentage: 60, fixed_amount: 0, type: 'percentage' },
+                      { role: 'investor_owner', user_id: 'admin1', percentage: 40, fixed_amount: 0, type: 'percentage' }
+                    ]
+                  }),
+                  participant_commissions: JSON.stringify([
+                    { role: 'deal_owner', user_id: 'admin1', percentage: 60, commission_amount: 5250, type: 'percentage' },
+                    { role: 'investor_owner', user_id: 'admin1', percentage: 40, commission_amount: 3500, type: 'percentage' }
+                  ]),
+                  status: 'completed',
+                  closed_date: '2024-01-25T15:30:00Z'
+                },
+                {
+                  id: '2',
+                  deal_id: '2',
+                  investor_id: '2',
+                  deal_owner_id: 'user1',
+                  investor_owner_id: 'user1',
+                  transaction_amount: 750000,
+                  commission_rate: 0.03,
+                  total_commission: 22500,
+                  commission_structure: JSON.stringify({
+                    total_rate: 0.03,
+                    participants: [
+                      { role: 'deal_owner', user_id: 'user1', percentage: 40, fixed_amount: 0, type: 'percentage' },
+                      { role: 'investor_owner', user_id: 'user1', percentage: 30, fixed_amount: 0, type: 'percentage' },
+                      { role: 'referral', user_id: 'admin1', percentage: 30, fixed_amount: 0, type: 'percentage' }
+                    ]
+                  }),
+                  participant_commissions: JSON.stringify([
+                    { role: 'deal_owner', user_id: 'user1', percentage: 40, commission_amount: 9000, type: 'percentage' },
+                    { role: 'investor_owner', user_id: 'user1', percentage: 30, commission_amount: 6750, type: 'percentage' },
+                    { role: 'referral', user_id: 'admin1', percentage: 30, commission_amount: 6750, type: 'percentage' }
+                  ]),
+                  status: 'pending',
+                  closed_date: null
+                }
+              ]);
+              
+              console.log('Demo data loaded successfully');
+              
+            } catch (error) {
+              console.error('Error loading data:', error);
+            }
+          };
             
             setInvestors([
               {
@@ -399,43 +643,144 @@
             }));
           };
 
-          // Auth functions
+          // Auth functions with proper validation
           const handleLogin = async (credentials) => {
-            setUser({
-              id: '1',
-              name: credentials.email.split('@')[0],
-              email: credentials.email,
-              company: 'Vastgoed Ventures BV'
-            });
-            setShowAuth(false);
-            loadData();
-            
-            console.log('Ingelogd als:', credentials.email);
+            try {
+              console.log('Login attempt:', credentials.email);
+              
+              // Find user in system
+              const foundUser = systemUsers.find(u => 
+                u.email.toLowerCase() === credentials.email.toLowerCase() && 
+                u.password === credentials.password
+              );
+              
+              if (!foundUser) {
+                alert('Ongeldige inloggegevens. Probeer opnieuw.');
+                return;
+              }
+              
+              if (foundUser.status === 'pending') {
+                alert('Je account is nog niet goedgekeurd door een beheerder. Neem contact op voor toegang.');
+                return;
+              }
+              
+              if (foundUser.status === 'blocked') {
+                alert('Je account is geblokkeerd. Neem contact op met de beheerder.');
+                return;
+              }
+              
+              // Successful login
+              setUser({
+                id: foundUser.id,
+                name: foundUser.name,
+                email: foundUser.email,
+                company: foundUser.company,
+                role: foundUser.role
+              });
+              
+              setShowAuth(false);
+              
+              // Load data after successful login
+              setTimeout(() => {
+                loadData();
+              }, 100);
+              
+              console.log('Login successful:', foundUser.name);
+              
+            } catch (error) {
+              console.error('Login error:', error);
+              alert('Er is een fout opgetreden bij het inloggen.');
+            }
           };
 
           const handleRegister = async (userData) => {
-            setUser({
-              id: '1',
-              name: userData.name,
-              email: userData.email,
-              company: userData.company
-            });
-            setShowAuth(false);
-            loadData();
-            
-            console.log('Geregistreerd als:', userData.email);
+            try {
+              // Check if email already exists
+              const existingUser = systemUsers.find(u => 
+                u.email.toLowerCase() === userData.email.toLowerCase()
+              );
+              
+              if (existingUser) {
+                alert('Dit email adres is al geregistreerd.');
+                return;
+              }
+              
+              // Create new user (pending approval)
+              const newUser = {
+                id: 'user_' + Date.now(),
+                email: userData.email,
+                password: userData.password,
+                name: userData.name,
+                company: userData.company,
+                role: 'user',
+                status: 'pending', // Requires admin approval
+                created_at: new Date().toISOString()
+              };
+              
+              setSystemUsers(prev => [...prev, newUser]);
+              
+              alert('Registratie succesvol! Je account moet nog goedgekeurd worden door een beheerder. Je ontvangt bericht zodra je toegang hebt.');
+              setAuthMode('login');
+              
+            } catch (error) {
+              console.error('Registration error:', error);
+              alert('Er is een fout opgetreden bij registreren.');
+            }
           };
 
           const handleLogout = async () => {
             setUser(null);
             setShowAuth(true);
+            setActiveTab('dashboard');
             setInvestors([]);
             setDeals([]);
             setTransactions([]);
             setUsers([]);
             setAiInsights({});
+            setMatches([]);
             
             console.log('Uitgelogd');
+          };
+
+          // User Management Functions (Admin only)
+          const handleUserStatusChange = (userId, newStatus) => {
+            setSystemUsers(prev => 
+              prev.map(user => 
+                user.id === userId 
+                  ? { ...user, status: newStatus }
+                  : user
+              )
+            );
+            console.log(`User ${userId} status changed to ${newStatus}`);
+          };
+
+          const handleAddNewUser = (userData) => {
+            const newUser = {
+              id: 'user_' + Date.now(),
+              email: userData.email,
+              password: userData.password || 'password123',
+              name: userData.name,
+              company: userData.company,
+              role: userData.role || 'user',
+              status: 'active',
+              created_at: new Date().toISOString()
+            };
+            
+            setSystemUsers(prev => [...prev, newUser]);
+            setShowAddUser(false);
+            console.log('New user added:', newUser);
+          };
+
+          const handleDeleteUser = (userId) => {
+            if (userId === user.id) {
+              alert('Je kunt je eigen account niet verwijderen.');
+              return;
+            }
+            
+            if (confirm('Weet je zeker dat je deze gebruiker wilt verwijderen?')) {
+              setSystemUsers(prev => prev.filter(u => u.id !== userId));
+              console.log('User deleted:', userId);
+            }
           };
 
           useEffect(() => {
@@ -1163,6 +1508,18 @@
                   )
                 ),
 
+                // Demo login info
+                authMode === 'login' && React.createElement('div', { className: 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6' },
+                  React.createElement('h4', { className: 'font-semibold text-blue-800 mb-2' }, 'Demo Login Gegevens:'),
+                  React.createElement('div', { className: 'text-sm text-blue-700 space-y-1' },
+                    React.createElement('p', null, '👑 Beheerder: admin@vastgoed.nl / admin123'),
+                    React.createElement('p', null, '👤 Gebruiker: jan@example.com / password123'),
+                    React.createElement('p', { className: 'text-xs text-blue-600 mt-2' }, 
+                      'Nieuwe registraties vereisen goedkeuring van beheerder'
+                    )
+                  )
+                ),
+
                 React.createElement('form', { onSubmit: handleSubmit, className: 'space-y-4' },
                   authMode === 'register' && [
                     React.createElement('div', { key: 'name' },
@@ -1222,7 +1579,169 @@
             );
           };
 
-          const Dashboard = () => {
+          // Admin Panel Component
+          const AdminPanel = () => {
+            const pendingUsers = systemUsers.filter(u => u.status === 'pending');
+            const activeUsers = systemUsers.filter(u => u.status === 'active');
+            const blockedUsers = systemUsers.filter(u => u.status === 'blocked');
+
+            return React.createElement('div', null,
+              React.createElement('div', { className: 'mb-8' },
+                React.createElement('div', { className: 'flex justify-between items-center mb-6' },
+                  React.createElement('h2', { className: 'text-2xl font-bold' }, 'Gebruikersbeheer'),
+                  React.createElement('button', {
+                    onClick: () => setShowAddUser(true),
+                    className: 'bg-blue-600 text-white px-4 py-2 rounded flex items-center space-x-2 hover:bg-blue-700'
+                  },
+                    React.createElement(Plus, { size: 20 }),
+                    React.createElement('span', null, 'Nieuwe Gebruiker')
+                  )
+                ),
+
+                // Statistics
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-6 mb-8' },
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Totaal Gebruikers'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, systemUsers.length)
+                      ),
+                      React.createElement(Users, { className: 'h-8 w-8 text-blue-600' })
+                    )
+                  ),
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Actieve Gebruikers'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-green-600' }, activeUsers.length)
+                      ),
+                      React.createElement(UserCheck, { className: 'h-8 w-8 text-green-600' })
+                    )
+                  ),
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Wachtend op Goedkeuring'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-yellow-600' }, pendingUsers.length)
+                      ),
+                      React.createElement(AlertCircle, { className: 'h-8 w-8 text-yellow-600' })
+                    )
+                  ),
+                  React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
+                    React.createElement('div', { className: 'flex items-center justify-between' },
+                      React.createElement('div', null,
+                        React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Geblokkeerde Gebruikers'),
+                        React.createElement('p', { className: 'text-2xl font-bold text-red-600' }, blockedUsers.length)
+                      ),
+                      React.createElement(Settings, { className: 'h-8 w-8 text-red-600' })
+                    )
+                  )
+                )
+              ),
+
+              // Pending approvals
+              pendingUsers.length > 0 && React.createElement('div', { className: 'mb-8' },
+                React.createElement('h3', { className: 'text-lg font-semibold mb-4 text-yellow-700' }, 
+                  `🔔 ${pendingUsers.length} gebruiker(s) wachten op goedkeuring`
+                ),
+                React.createElement('div', { className: 'space-y-4' },
+                  pendingUsers.map(user =>
+                    React.createElement('div', { 
+                      key: user.id, 
+                      className: 'bg-yellow-50 border border-yellow-200 rounded-lg p-4' 
+                    },
+                      React.createElement('div', { className: 'flex items-center justify-between' },
+                        React.createElement('div', null,
+                          React.createElement('h4', { className: 'font-semibold' }, user.name),
+                          React.createElement('p', { className: 'text-sm text-gray-600' }, user.email),
+                          React.createElement('p', { className: 'text-sm text-gray-600' }, user.company),
+                          React.createElement('p', { className: 'text-xs text-gray-500' }, 
+                            `Geregistreerd: ${new Date(user.created_at).toLocaleDateString()}`
+                          )
+                        ),
+                        React.createElement('div', { className: 'space-x-2' },
+                          React.createElement('button', {
+                            onClick: () => handleUserStatusChange(user.id, 'active'),
+                            className: 'bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'
+                          }, 'Goedkeuren'),
+                          React.createElement('button', {
+                            onClick: () => handleUserStatusChange(user.id, 'blocked'),
+                            className: 'bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700'
+                          }, 'Weigeren')
+                        )
+                      )
+                    )
+                  )
+                )
+              ),
+
+              // All users table
+              React.createElement('div', { className: 'bg-white rounded-lg shadow-md border' },
+                React.createElement('div', { className: 'p-6' },
+                  React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, 'Alle Gebruikers'),
+                  React.createElement('div', { className: 'overflow-x-auto' },
+                    React.createElement('table', { className: 'w-full' },
+                      React.createElement('thead', null,
+                        React.createElement('tr', { className: 'border-b' },
+                          React.createElement('th', { className: 'text-left py-2' }, 'Naam'),
+                          React.createElement('th', { className: 'text-left py-2' }, 'Email'),
+                          React.createElement('th', { className: 'text-left py-2' }, 'Bedrijf'),
+                          React.createElement('th', { className: 'text-left py-2' }, 'Rol'),
+                          React.createElement('th', { className: 'text-left py-2' }, 'Status'),
+                          React.createElement('th', { className: 'text-left py-2' }, 'Acties')
+                        )
+                      ),
+                      React.createElement('tbody', null,
+                        systemUsers.map(systemUser =>
+                          React.createElement('tr', { key: systemUser.id, className: 'border-b' },
+                            React.createElement('td', { className: 'py-2' }, systemUser.name),
+                            React.createElement('td', { className: 'py-2' }, systemUser.email),
+                            React.createElement('td', { className: 'py-2' }, systemUser.company),
+                            React.createElement('td', { className: 'py-2' },
+                              React.createElement('span', { 
+                                className: `px-2 py-1 rounded text-xs ${
+                                  systemUser.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                }` 
+                              }, systemUser.role === 'admin' ? 'Beheerder' : 'Gebruiker')
+                            ),
+                            React.createElement('td', { className: 'py-2' },
+                              React.createElement('span', { 
+                                className: `px-2 py-1 rounded text-xs ${
+                                  systemUser.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  systemUser.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }` 
+                              }, 
+                                systemUser.status === 'active' ? 'Actief' :
+                                systemUser.status === 'pending' ? 'Wachtend' : 'Geblokkeerd'
+                              )
+                            ),
+                            React.createElement('td', { className: 'py-2' },
+                              React.createElement('div', { className: 'space-x-2' },
+                                systemUser.id !== user.id && React.createElement('select', {
+                                  value: systemUser.status,
+                                  onChange: (e) => handleUserStatusChange(systemUser.id, e.target.value),
+                                  className: 'text-xs border rounded px-2 py-1'
+                                },
+                                  React.createElement('option', { value: 'active' }, 'Actief'),
+                                  React.createElement('option', { value: 'pending' }, 'Wachtend'),
+                                  React.createElement('option', { value: 'blocked' }, 'Geblokkeerd')
+                                ),
+                                systemUser.id !== user.id && React.createElement('button', {
+                                  onClick: () => handleDeleteUser(systemUser.id),
+                                  className: 'text-red-600 text-xs hover:underline'
+                                }, 'Verwijder')
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            );
+          };
             const commissionSummary = calculateCommissionSummary();
             const userInvestors = investors.filter(i => i.owner_id === user.id);
             const userDeals = deals.filter(d => d.owner_id === user.id);
@@ -1351,13 +1870,19 @@
                   React.createElement('span', { className: 'text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full' }, '🤖 AI-Enhanced'),
                   React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, '📍 Regio Matching'),
                   React.createElement('span', { className: 'text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full' }, '🏗️ Project Types'),
-                  React.createElement('span', { className: 'text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full' }, '💰 Smart Commissies')
+                  React.createElement('span', { className: 'text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full' }, '💰 Smart Commissies'),
+                  user.role === 'admin' && React.createElement('span', { className: 'text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full' }, '👑 Beheerder')
                 )
               ),
               React.createElement('div', { className: 'flex items-center space-x-4' },
-                React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
-                  React.createElement(User, { size: 16 }),
-                  React.createElement('span', null, user.company)
+                React.createElement('div', { className: 'text-right' },
+                  React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
+                    React.createElement(User, { size: 16 }),
+                    React.createElement('span', null, user.name)
+                  ),
+                  React.createElement('div', { className: 'text-sm text-gray-500' },
+                    user.company + ' • ' + (user.role === 'admin' ? 'Beheerder' : 'Gebruiker')
+                  )
                 ),
                 React.createElement('button', {
                   onClick: handleLogout,
@@ -1415,6 +1940,16 @@
               },
                 React.createElement(DollarSign, { size: 20 }),
                 React.createElement('span', null, `Transacties (${transactions.length})`)
+              ),
+              // Admin only tab
+              user.role === 'admin' && React.createElement('button', {
+                onClick: () => setActiveTab('admin'),
+                className: `px-4 py-2 rounded flex items-center space-x-2 whitespace-nowrap ${
+                  activeTab === 'admin' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`
+              },
+                React.createElement(Settings, { size: 20 }),
+                React.createElement('span', null, 'Beheer')
               )
             ),
 
@@ -1580,7 +2115,10 @@
               )
             ),
 
-            // Add forms modals
+            // Admin Panel Tab (only for admins)
+            activeTab === 'admin' && user.role === 'admin' && React.createElement(AdminPanel),
+
+            // Modals
             showAddInvestor && React.createElement(InvestorForm, {
               onSubmit: handleAddInvestor,
               onCancel: () => setShowAddInvestor(false)
@@ -1589,6 +2127,11 @@
             showAddDeal && React.createElement(DealForm, {
               onSubmit: handleAddDeal,
               onCancel: () => setShowAddDeal(false)
+            }),
+
+            showAddUser && React.createElement(AddUserForm, {
+              onSubmit: handleAddNewUser,
+              onCancel: () => setShowAddUser(false)
             })
           );
         };
