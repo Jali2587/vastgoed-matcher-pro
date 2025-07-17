@@ -16,7 +16,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // Lucide icons als wrapper components
+        // Lucide icons als wrapper components (dit voorkomt de React errors)
         const PlusIcon = ({ size = 20, className = '' }) => React.createElement(lucide.Plus, { size, className });
         const UsersIcon = ({ size = 20, className = '' }) => React.createElement(lucide.Users, { size, className });
         const BuildingIcon = ({ size = 20, className = '' }) => React.createElement(lucide.Building, { size, className });
@@ -66,33 +66,28 @@
             ]
           });
 
-          // Improved AI call function with better error handling
+          // Real OpenAI API call via Netlify function (with fallback to mock data)
           const callOpenAI = async (prompt, type = 'analysis', data = null) => {
             setIsLoadingAI(true);
             
             try {
-              // Check if we're in a Netlify environment with functions
-              if (window.location.hostname.includes('netlify.app') || 
-                  window.location.hostname.includes('netlify.com')) {
-                
-                const response = await fetch('/.netlify/functions/openai-chat', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ prompt, type, data })
-                });
-                
-                if (response.ok) {
-                  const result = await response.json();
-                  setIsLoadingAI(false);
-                  return result.data;
-                }
+              const response = await fetch('/.netlify/functions/openai-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, type, data })
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                setIsLoadingAI(false);
+                return result.data;
               }
             } catch (error) {
               console.log('OpenAI API niet beschikbaar, gebruik demo data:', error);
             }
             
-            // Enhanced fallback with more realistic delay
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+            // Fallback to mock data
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             const mockResponses = {
               investor_analysis: {
@@ -188,208 +183,204 @@
 
           // Database functies
           const loadData = async () => {
-            try {
-              setUsers([
-                { id: '1', name: 'Jan Vermeer', email: 'jan@example.com', company: 'Vermeer Vastgoed', role: 'agent' },
-                { id: '2', name: 'Lisa de Vries', email: 'lisa@example.com', company: 'De Vries Properties', role: 'agent' },
-                { id: '3', name: 'Mark Jansen', email: 'mark@example.com', company: 'Jansen Makelaars', role: 'manager' }
-              ]);
-              
-              setInvestors([
-                {
-                  id: '1',
-                  naam: 'Peter van der Berg',
-                  email: 'peter@example.com',
-                  telefoon: '06-12345678',
-                  bedrijf: 'Berg Investments',
-                  minBudget: 100000,
-                  maxBudget: 500000,
-                  voorkeursRegio: ['Nederland', 'Duitsland'],
-                  voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
-                  vastgoedTypes: ['Appartement', 'Kantoor'],
-                  projectTypes: ['Turn-key', 'Renovatie'],
-                  risicoprofiel: 'Gemiddeld',
-                  gewenstRendement: 6,
-                  investeringshorizon: 'Lang termijn',
-                  ervaringLevel: 'Ervaren',
-                  beschikbaarheid: 'Direct',
-                  communicatieVoorkeur: 'Telefoon',
-                  investmentMotivatie: 'Uitbreiding van vastgoed portfolio voor pensioen opbouw',
-                  owner_id: '1',
-                  created_at: '2024-01-15T10:30:00Z'
-                },
-                {
-                  id: '2',
-                  naam: 'Maria Jansen',
-                  email: 'maria@example.com',
-                  telefoon: '06-87654321',
-                  bedrijf: 'Jansen Property',
-                  minBudget: 200000,
-                  maxBudget: 1000000,
-                  voorkeursRegio: ['Frankrijk', 'Spanje'],
-                  voorkeursLocaties: ['Utrecht', 'Den Haag', 'Parijs', 'Barcelona', 'Madrid'],
-                  vastgoedTypes: ['Appartement', 'Retail', 'Studenten'],
-                  projectTypes: ['Turn-key', 'Ontwikkeling'],
-                  risicoprofiel: 'Conservatief',
-                  gewenstRendement: 4,
-                  investeringshorizon: 'Middellang',
-                  ervaringLevel: 'Beginner',
-                  beschikbaarheid: '1-3 maanden',
-                  communicatieVoorkeur: 'Email',
-                  investmentMotivatie: 'Eerste stappen in vastgoed beleggen, focus op stabiele inkomsten',
-                  owner_id: '2',
-                  created_at: '2024-01-20T14:15:00Z'
-                },
-                {
-                  id: '3',
-                  naam: 'David Chen',
-                  email: 'david@example.com',
-                  telefoon: '06-98765432',
-                  bedrijf: 'Chen Capital',
-                  minBudget: 500000,
-                  maxBudget: 2000000,
-                  voorkeursRegio: ['Nederland', 'Zwitserland'],
-                  voorkeursLocaties: ['Amsterdam', 'Utrecht', 'Almere', 'Zürich', 'Genève'],
-                  vastgoedTypes: ['Kantoor', 'Industrie', 'Zorgvastgoed'],
-                  projectTypes: ['Transformatie', 'Ontwikkeling', 'Gemengd'],
-                  risicoprofiel: 'Agressief',
-                  gewenstRendement: 8,
-                  investeringshorizon: 'Lang termijn',
-                  ervaringLevel: 'Ervaren',
-                  beschikbaarheid: 'Direct',
-                  communicatieVoorkeur: 'WhatsApp',
-                  investmentMotivatie: 'Institutionele belegger zoekt hoogrenderende vastgoed kansen',
-                  owner_id: '1',
-                  created_at: '2024-01-25T16:45:00Z'
-                }
-              ]);
-              
-              setDeals([
-                {
-                  id: '1',
-                  titel: 'Modern Appartement Amsterdam',
-                  locatie: 'Amsterdam',
-                  type: 'Appartement',
-                  projectType: 'Turn-key',
-                  prijs: 350000,
-                  verwachtRendement: 5.5,
-                  risico: 'Gemiddeld',
-                  beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord met metro verbinding',
-                  oppervlakte: 85,
-                  bouwjaar: 2020,
-                  huurpotentie: 1800,
-                  status: 'Beschikbaar',
-                  owner_id: '1',
-                  created_at: '2024-01-10T09:00:00Z'
-                },
-                {
-                  id: '2',
-                  titel: 'Kantoorpand Rotterdam',
-                  locatie: 'Rotterdam',
-                  type: 'Kantoor',
-                  projectType: 'Renovatie',
-                  prijs: 750000,
-                  verwachtRendement: 7.2,
-                  risico: 'Hoog',
-                  beschrijving: 'Kantoorpand voor renovatie in bedrijventerrein met parkeerplaatsen en uitbreidingsmogelijkheid',
-                  oppervlakte: 400,
-                  bouwjaar: 2015,
-                  huurpotentie: 4500,
-                  status: 'Beschikbaar',
-                  owner_id: '2',
-                  created_at: '2024-01-12T11:30:00Z'
-                },
-                {
-                  id: '3',
-                  titel: 'Studentencomplex Utrecht',
-                  locatie: 'Utrecht',
-                  type: 'Studenten',
-                  projectType: 'Ontwikkeling',
-                  prijs: 1200000,
-                  verwachtRendement: 6.8,
-                  risico: 'Laag',
-                  beschrijving: 'Nieuwbouw ontwikkeling studentencomplex nabij universiteit met langetermijn contracten',
-                  oppervlakte: 600,
-                  bouwjaar: 2018,
-                  huurpotentie: 6800,
-                  status: 'Beschikbaar',
-                  owner_id: '1',
-                  created_at: '2024-01-15T14:20:00Z'
-                },
-                {
-                  id: '4',
-                  titel: 'Retail Locatie Eindhoven',
-                  locatie: 'Eindhoven',
-                  type: 'Retail',
-                  projectType: 'Transformatie',
-                  prijs: 480000,
-                  verwachtRendement: 4.5,
-                  risico: 'Gemiddeld',
-                  beschrijving: 'Transformatie project: voormalig kantoorpand naar retail in drukke winkelstraat',
-                  oppervlakte: 120,
-                  bouwjaar: 2010,
-                  huurpotentie: 1800,
-                  status: 'Beschikbaar',
-                  owner_id: '2',
-                  created_at: '2024-01-18T10:15:00Z'
-                }
-              ]);
-              
-              setTransactions([
-                {
-                  id: '1',
-                  deal_id: '1',
-                  investor_id: '1',
-                  deal_owner_id: '1',
-                  investor_owner_id: '1',
-                  transaction_amount: 350000,
-                  commission_rate: 0.025,
-                  total_commission: 8750,
-                  commission_structure: JSON.stringify({
-                    total_rate: 0.025,
-                    participants: [
-                      { role: 'deal_owner', user_id: '1', percentage: 60, fixed_amount: 0, type: 'percentage' },
-                      { role: 'investor_owner', user_id: '1', percentage: 40, fixed_amount: 0, type: 'percentage' }
-                    ]
-                  }),
-                  participant_commissions: JSON.stringify([
-                    { role: 'deal_owner', user_id: '1', percentage: 60, commission_amount: 5250, type: 'percentage' },
-                    { role: 'investor_owner', user_id: '1', percentage: 40, commission_amount: 3500, type: 'percentage' }
-                  ]),
-                  status: 'completed',
-                  closed_date: '2024-01-25T15:30:00Z'
-                },
-                {
-                  id: '2',
-                  deal_id: '2',
-                  investor_id: '2',
-                  deal_owner_id: '2',
-                  investor_owner_id: '2',
-                  transaction_amount: 750000,
-                  commission_rate: 0.03,
-                  total_commission: 22500,
-                  commission_structure: JSON.stringify({
-                    total_rate: 0.03,
-                    participants: [
-                      { role: 'deal_owner', user_id: '2', percentage: 40, fixed_amount: 0, type: 'percentage' },
-                      { role: 'investor_owner', user_id: '2', percentage: 30, fixed_amount: 0, type: 'percentage' },
-                      { role: 'referral', user_id: '3', percentage: 30, fixed_amount: 0, type: 'percentage' }
-                    ]
-                  }),
-                  participant_commissions: JSON.stringify([
-                    { role: 'deal_owner', user_id: '2', percentage: 40, commission_amount: 9000, type: 'percentage' },
-                    { role: 'investor_owner', user_id: '2', percentage: 30, commission_amount: 6750, type: 'percentage' },
-                    { role: 'referral', user_id: '3', percentage: 30, commission_amount: 6750, type: 'percentage' }
-                  ]),
-                  status: 'pending',
-                  closed_date: null
-                }
-              ]);
-              
-              console.log('Demo data geladen successfully');
-            } catch (error) {
-              console.error('Error loading data:', error);
-            }
+            setUsers([
+              { id: '1', name: 'Jan Vermeer', email: 'jan@example.com', company: 'Vermeer Vastgoed', role: 'agent' },
+              { id: '2', name: 'Lisa de Vries', email: 'lisa@example.com', company: 'De Vries Properties', role: 'agent' },
+              { id: '3', name: 'Mark Jansen', email: 'mark@example.com', company: 'Jansen Makelaars', role: 'manager' }
+            ]);
+            
+            setInvestors([
+              {
+                id: '1',
+                naam: 'Peter van der Berg',
+                email: 'peter@example.com',
+                telefoon: '06-12345678',
+                bedrijf: 'Berg Investments',
+                minBudget: 100000,
+                maxBudget: 500000,
+                voorkeursRegio: ['Nederland', 'Duitsland'],
+                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
+                vastgoedTypes: ['Appartement', 'Kantoor'],
+                projectTypes: ['Turn-key', 'Renovatie'],
+                risicoprofiel: 'Gemiddeld',
+                gewenstRendement: 6,
+                investeringshorizon: 'Lang termijn',
+                ervaringLevel: 'Ervaren',
+                beschikbaarheid: 'Direct',
+                communicatieVoorkeur: 'Telefoon',
+                investmentMotivatie: 'Uitbreiding van vastgoed portfolio voor pensioen opbouw',
+                owner_id: '1',
+                created_at: '2024-01-15T10:30:00Z'
+              },
+              {
+                id: '2',
+                naam: 'Maria Jansen',
+                email: 'maria@example.com',
+                telefoon: '06-87654321',
+                bedrijf: 'Jansen Property',
+                minBudget: 200000,
+                maxBudget: 1000000,
+                voorkeursRegio: ['Frankrijk', 'Spanje'],
+                voorkeursLocaties: ['Utrecht', 'Den Haag', 'Parijs', 'Barcelona', 'Madrid'],
+                vastgoedTypes: ['Appartement', 'Retail', 'Studenten'],
+                projectTypes: ['Turn-key', 'Ontwikkeling'],
+                risicoprofiel: 'Conservatief',
+                gewenstRendement: 4,
+                investeringshorizon: 'Middellang',
+                ervaringLevel: 'Beginner',
+                beschikbaarheid: '1-3 maanden',
+                communicatieVoorkeur: 'Email',
+                investmentMotivatie: 'Eerste stappen in vastgoed beleggen, focus op stabiele inkomsten',
+                owner_id: '2',
+                created_at: '2024-01-20T14:15:00Z'
+              },
+              {
+                id: '3',
+                naam: 'David Chen',
+                email: 'david@example.com',
+                telefoon: '06-98765432',
+                bedrijf: 'Chen Capital',
+                minBudget: 500000,
+                maxBudget: 2000000,
+                voorkeursRegio: ['Nederland', 'Zwitserland'],
+                voorkeursLocaties: ['Amsterdam', 'Utrecht', 'Almere', 'Zürich', 'Genève'],
+                vastgoedTypes: ['Kantoor', 'Industrie', 'Zorgvastgoed'],
+                projectTypes: ['Transformatie', 'Ontwikkeling', 'Gemengd'],
+                risicoprofiel: 'Agressief',
+                gewenstRendement: 8,
+                investeringshorizon: 'Lang termijn',
+                ervaringLevel: 'Ervaren',
+                beschikbaarheid: 'Direct',
+                communicatieVoorkeur: 'WhatsApp',
+                investmentMotivatie: 'Institutionele belegger zoekt hoogrenderende vastgoed kansen',
+                owner_id: '1',
+                created_at: '2024-01-25T16:45:00Z'
+              }
+            ]);
+            
+            setDeals([
+              {
+                id: '1',
+                titel: 'Modern Appartement Amsterdam',
+                locatie: 'Amsterdam',
+                type: 'Appartement',
+                projectType: 'Turn-key',
+                prijs: 350000,
+                verwachtRendement: 5.5,
+                risico: 'Gemiddeld',
+                beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord met metro verbinding',
+                oppervlakte: 85,
+                bouwjaar: 2020,
+                huurpotentie: 1800,
+                status: 'Beschikbaar',
+                owner_id: '1',
+                created_at: '2024-01-10T09:00:00Z'
+              },
+              {
+                id: '2',
+                titel: 'Kantoorpand Rotterdam',
+                locatie: 'Rotterdam',
+                type: 'Kantoor',
+                projectType: 'Renovatie',
+                prijs: 750000,
+                verwachtRendement: 7.2,
+                risico: 'Hoog',
+                beschrijving: 'Kantoorpand voor renovatie in bedrijventerrein met parkeerplaatsen en uitbreidingsmogelijkheid',
+                oppervlakte: 400,
+                bouwjaar: 2015,
+                huurpotentie: 4500,
+                status: 'Beschikbaar',
+                owner_id: '2',
+                created_at: '2024-01-12T11:30:00Z'
+              },
+              {
+                id: '3',
+                titel: 'Studentencomplex Utrecht',
+                locatie: 'Utrecht',
+                type: 'Studenten',
+                projectType: 'Ontwikkeling',
+                prijs: 1200000,
+                verwachtRendement: 6.8,
+                risico: 'Laag',
+                beschrijving: 'Nieuwbouw ontwikkeling studentencomplex nabij universiteit met langetermijn contracten',
+                oppervlakte: 600,
+                bouwjaar: 2018,
+                huurpotentie: 6800,
+                status: 'Beschikbaar',
+                owner_id: '1',
+                created_at: '2024-01-15T14:20:00Z'
+              },
+              {
+                id: '4',
+                titel: 'Retail Locatie Eindhoven',
+                locatie: 'Eindhoven',
+                type: 'Retail',
+                projectType: 'Transformatie',
+                prijs: 480000,
+                verwachtRendement: 4.5,
+                risico: 'Gemiddeld',
+                beschrijving: 'Transformatie project: voormalig kantoorpand naar retail in drukke winkelstraat',
+                oppervlakte: 120,
+                bouwjaar: 2010,
+                huurpotentie: 1800,
+                status: 'Beschikbaar',
+                owner_id: '2',
+                created_at: '2024-01-18T10:15:00Z'
+              }
+            ]);
+            
+            setTransactions([
+              {
+                id: '1',
+                deal_id: '1',
+                investor_id: '1',
+                deal_owner_id: '1',
+                investor_owner_id: '1',
+                transaction_amount: 350000,
+                commission_rate: 0.025,
+                total_commission: 8750,
+                commission_structure: JSON.stringify({
+                  total_rate: 0.025,
+                  participants: [
+                    { role: 'deal_owner', user_id: '1', percentage: 60, fixed_amount: 0, type: 'percentage' },
+                    { role: 'investor_owner', user_id: '1', percentage: 40, fixed_amount: 0, type: 'percentage' }
+                  ]
+                }),
+                participant_commissions: JSON.stringify([
+                  { role: 'deal_owner', user_id: '1', percentage: 60, commission_amount: 5250, type: 'percentage' },
+                  { role: 'investor_owner', user_id: '1', percentage: 40, commission_amount: 3500, type: 'percentage' }
+                ]),
+                status: 'completed',
+                closed_date: '2024-01-25T15:30:00Z'
+              },
+              {
+                id: '2',
+                deal_id: '2',
+                investor_id: '2',
+                deal_owner_id: '2',
+                investor_owner_id: '2',
+                transaction_amount: 750000,
+                commission_rate: 0.03,
+                total_commission: 22500,
+                commission_structure: JSON.stringify({
+                  total_rate: 0.03,
+                  participants: [
+                    { role: 'deal_owner', user_id: '2', percentage: 40, fixed_amount: 0, type: 'percentage' },
+                    { role: 'investor_owner', user_id: '2', percentage: 30, fixed_amount: 0, type: 'percentage' },
+                    { role: 'referral', user_id: '3', percentage: 30, fixed_amount: 0, type: 'percentage' }
+                  ]
+                }),
+                participant_commissions: JSON.stringify([
+                  { role: 'deal_owner', user_id: '2', percentage: 40, commission_amount: 9000, type: 'percentage' },
+                  { role: 'investor_owner', user_id: '2', percentage: 30, commission_amount: 6750, type: 'percentage' },
+                  { role: 'referral', user_id: '3', percentage: 30, commission_amount: 6750, type: 'percentage' }
+                ]),
+                status: 'pending',
+                closed_date: null
+              }
+            ]);
+            
+            console.log('Demo data geladen successfully');
           };
 
           const getUserById = (id) => {
@@ -398,107 +389,77 @@
 
           // Enhanced AI functions
           const getInvestorInsights = async (investorId) => {
-            try {
-              const investor = investors.find(i => i.id === investorId);
-              if (!investor) return;
-              
-              const insights = await callOpenAI(`Analyseer investeerder profiel: ${JSON.stringify(investor)}`, 'investor_analysis', investor);
-              setAiInsights(prev => ({
-                ...prev,
-                [`investor_${investorId}`]: insights
-              }));
-            } catch (error) {
-              console.error('Error getting investor insights:', error);
-            }
+            const investor = investors.find(i => i.id === investorId);
+            const insights = await callOpenAI(`Analyseer investeerder profiel: ${JSON.stringify(investor)}`, 'investor_analysis', investor);
+            setAiInsights(prev => ({
+              ...prev,
+              [`investor_${investorId}`]: insights
+            }));
           };
 
           const getDealInsights = async (dealId) => {
-            try {
-              const deal = deals.find(d => d.id === dealId);
-              if (!deal) return;
-              
-              const insights = await callOpenAI(`Analyseer vastgoed deal: ${JSON.stringify(deal)}`, 'deal_analysis', deal);
-              setAiInsights(prev => ({
-                ...prev,
-                [`deal_${dealId}`]: insights
-              }));
-            } catch (error) {
-              console.error('Error getting deal insights:', error);
-            }
+            const deal = deals.find(d => d.id === dealId);
+            const insights = await callOpenAI(`Analyseer vastgoed deal: ${JSON.stringify(deal)}`, 'deal_analysis', deal);
+            setAiInsights(prev => ({
+              ...prev,
+              [`deal_${dealId}`]: insights
+            }));
           };
 
           const getSmartMatchingInsights = async (dealId, investorId) => {
-            try {
-              const deal = deals.find(d => d.id === dealId);
-              const investor = investors.find(i => i.id === investorId);
-              if (!deal || !investor) return;
-              
-              const insights = await callOpenAI(`Smart matching analyse`, 'smart_matching', { deal, investor });
-              setAiInsights(prev => ({
-                ...prev,
-                [`smart_match_${dealId}_${investorId}`]: insights
-              }));
-            } catch (error) {
-              console.error('Error getting smart matching insights:', error);
-            }
+            const deal = deals.find(d => d.id === dealId);
+            const investor = investors.find(i => i.id === investorId);
+            const insights = await callOpenAI(`Smart matching analyse`, 'smart_matching', { deal, investor });
+            setAiInsights(prev => ({
+              ...prev,
+              [`smart_match_${dealId}_${investorId}`]: insights
+            }));
           };
 
           const getMarketInsights = async () => {
-            try {
-              const insights = await callOpenAI(`Markt inzichten`, 'market_insights');
-              setAiInsights(prev => ({
-                ...prev,
-                market_insights: insights
-              }));
-            } catch (error) {
-              console.error('Error getting market insights:', error);
-            }
+            const insights = await callOpenAI(`Markt inzichten`, 'market_insights');
+            setAiInsights(prev => ({
+              ...prev,
+              market_insights: insights
+            }));
           };
 
-          // Auth functions with improved error handling
+          // SIMPLIFIED AUTH FUNCTIONS - MUCH EASIER  
+          const quickLogin = (email, name = null) => {
+            console.log('🚀 Quick login:', email);
+            
+            const user = {
+              id: '1',
+              name: name || email.split('@')[0],
+              email: email,
+              company: 'Vastgoed Ventures BV'
+            };
+            
+            setUser(user);
+            setShowAuth(false);
+            console.log('✅ Ingelogd als:', user.name);
+            loadData();
+          };
+
           const handleLogin = async (credentials) => {
             try {
-              console.log('🔐 Login poging met:', credentials.email);
-              
-              // Simple demo authentication
-              const user = {
-                id: '1',
-                name: credentials.email.split('@')[0],
-                email: credentials.email,
-                company: 'Vastgoed Ventures BV'
-              };
-              
-              setUser(user);
-              setShowAuth(false);
-              
-              console.log('✅ Login succesvol voor:', user.name);
-              await loadData();
-              
+              console.log('🔐 Login:', credentials.email);
+              quickLogin(credentials.email);
             } catch (error) {
-              console.error('❌ Login error:', error);
-              alert('Er ging iets mis bij het inloggen. Probeer opnieuw.');
+              console.error('Login error:', error);
             }
           };
 
           const handleRegister = async (userData) => {
             try {
-              setUser({
-                id: '1',
-                name: userData.name,
-                email: userData.email,
-                company: userData.company
-              });
-              setShowAuth(false);
-              await loadData();
-              
+              quickLogin(userData.email, userData.name);
               console.log('Geregistreerd als:', userData.email);
             } catch (error) {
               console.error('Register error:', error);
-              alert('Registration failed, maar demo modus actief');
             }
           };
 
-          const handleLogout = () => {
+          const handleLogout = async () => {
             setUser(null);
             setShowAuth(true);
             setInvestors([]);
@@ -507,7 +468,6 @@
             setUsers([]);
             setAiInsights({});
             setActiveTab('dashboard');
-            
             console.log('Uitgelogd');
           };
 
@@ -655,122 +615,106 @@
           };
 
           const createTransaction = async (dealId, investorId) => {
-            try {
-              const deal = deals.find(d => d.id === dealId);
-              const investor = investors.find(i => i.id === investorId);
-              
-              if (!deal || !investor) return;
+            const deal = deals.find(d => d.id === dealId);
+            const investor = investors.find(i => i.id === investorId);
+            
+            if (!deal || !investor) return;
 
-              const initialCommissionStructure = {
-                total_rate: 0.025,
-                participants: [
-                  { role: 'deal_owner', user_id: deal.owner_id, percentage: 60, fixed_amount: 0, type: 'percentage' },
-                  { role: 'investor_owner', user_id: investor.owner_id, percentage: 40, fixed_amount: 0, type: 'percentage' }
-                ]
-              };
+            const initialCommissionStructure = {
+              total_rate: 0.025,
+              participants: [
+                { role: 'deal_owner', user_id: deal.owner_id, percentage: 60, fixed_amount: 0, type: 'percentage' },
+                { role: 'investor_owner', user_id: investor.owner_id, percentage: 40, fixed_amount: 0, type: 'percentage' }
+              ]
+            };
 
-              setCurrentTransaction({ deal, investor, dealId, investorId });
-              setCommissionStructure(initialCommissionStructure);
-              setShowCommissionEditor(true);
-            } catch (error) {
-              console.error('Error creating transaction:', error);
-            }
+            setCurrentTransaction({ deal, investor, dealId, investorId });
+            setCommissionStructure(initialCommissionStructure);
+            setShowCommissionEditor(true);
           };
 
           const finalizeTransaction = async () => {
-            try {
-              if (!currentTransaction) return;
+            if (!currentTransaction) return;
 
-              const { deal, investor, dealId, investorId } = currentTransaction;
-              
-              if (investorId === 'preview') {
-                alert('Dit is een preview. Ga naar "Matching" tab om een echte investeerder te selecteren.');
-                return;
-              }
-              
-              const totalCommission = deal.prijs * commissionStructure.total_rate;
-              
-              const participantCommissions = commissionStructure.participants.map(participant => {
-                let commission = 0;
-                if (participant.type === 'percentage') {
-                  commission = totalCommission * (participant.percentage / 100);
-                } else if (participant.type === 'fixed') {
-                  commission = participant.fixed_amount;
-                }
-                return {
-                  ...participant,
-                  commission_amount: commission
-                };
-              });
-
-              const transactionData = {
-                id: Date.now().toString(),
-                deal_id: dealId,
-                investor_id: investorId,
-                deal_owner_id: deal.owner_id,
-                investor_owner_id: investor.owner_id,
-                transaction_amount: deal.prijs,
-                commission_rate: commissionStructure.total_rate,
-                total_commission: totalCommission,
-                commission_structure: JSON.stringify(commissionStructure),
-                participant_commissions: JSON.stringify(participantCommissions),
-                status: 'pending',
-                closed_date: null
-              };
-
-              setTransactions(prev => [...prev, transactionData]);
-              setShowCommissionEditor(false);
-              setCurrentTransaction(null);
-              
-              setCommissionStructure({
-                total_rate: 0.025,
-                participants: [
-                  { role: 'deal_owner', user_id: null, percentage: 60, fixed_amount: 0, type: 'percentage' },
-                  { role: 'investor_owner', user_id: null, percentage: 40, fixed_amount: 0, type: 'percentage' }
-                ]
-              });
-              
-              console.log('Nieuwe transactie toegevoegd:', transactionData);
-              setActiveTab('transactions');
-            } catch (error) {
-              console.error('Error finalizing transaction:', error);
+            const { deal, investor, dealId, investorId } = currentTransaction;
+            
+            if (investorId === 'preview') {
+              alert('Dit is een preview. Ga naar "Matching" tab om een echte investeerder te selecteren.');
+              return;
             }
+            
+            const totalCommission = deal.prijs * commissionStructure.total_rate;
+            
+            const participantCommissions = commissionStructure.participants.map(participant => {
+              let commission = 0;
+              if (participant.type === 'percentage') {
+                commission = totalCommission * (participant.percentage / 100);
+              } else if (participant.type === 'fixed') {
+                commission = participant.fixed_amount;
+              }
+              return {
+                ...participant,
+                commission_amount: commission
+              };
+            });
+
+            const transactionData = {
+              id: Date.now().toString(),
+              deal_id: dealId,
+              investor_id: investorId,
+              deal_owner_id: deal.owner_id,
+              investor_owner_id: investor.owner_id,
+              transaction_amount: deal.prijs,
+              commission_rate: commissionStructure.total_rate,
+              total_commission: totalCommission,
+              commission_structure: JSON.stringify(commissionStructure),
+              participant_commissions: JSON.stringify(participantCommissions),
+              status: 'pending',
+              closed_date: null
+            };
+
+            setTransactions(prev => [...prev, transactionData]);
+            setShowCommissionEditor(false);
+            setCurrentTransaction(null);
+            
+            setCommissionStructure({
+              total_rate: 0.025,
+              participants: [
+                { role: 'deal_owner', user_id: null, percentage: 60, fixed_amount: 0, type: 'percentage' },
+                { role: 'investor_owner', user_id: null, percentage: 40, fixed_amount: 0, type: 'percentage' }
+              ]
+            });
+            
+            console.log('Nieuwe transactie toegevoegd:', transactionData);
+            setActiveTab('transactions');
           };
 
           const handleAddInvestor = async (investorData) => {
-            try {
-              const newInvestor = {
-                ...investorData,
-                id: Date.now().toString(),
-                owner_id: user.id,
-                created_at: new Date().toISOString()
-              };
-              
-              setInvestors(prev => [...prev, newInvestor]);
-              setShowAddInvestor(false);
-              
-              console.log('Nieuwe investeerder toegevoegd:', newInvestor);
-            } catch (error) {
-              console.error('Error adding investor:', error);
-            }
+            const newInvestor = {
+              ...investorData,
+              id: Date.now().toString(),
+              owner_id: user.id,
+              created_at: new Date().toISOString()
+            };
+            
+            setInvestors(prev => [...prev, newInvestor]);
+            setShowAddInvestor(false);
+            
+            console.log('Nieuwe investeerder toegevoegd:', newInvestor);
           };
 
           const handleAddDeal = async (dealData) => {
-            try {
-              const newDeal = {
-                ...dealData,
-                id: Date.now().toString(),
-                owner_id: user.id,
-                created_at: new Date().toISOString()
-              };
-              
-              setDeals(prev => [...prev, newDeal]);
-              setShowAddDeal(false);
-              
-              console.log('Nieuwe deal toegevoegd:', newDeal);
-            } catch (error) {
-              console.error('Error adding deal:', error);
-            }
+            const newDeal = {
+              ...dealData,
+              id: Date.now().toString(),
+              owner_id: user.id,
+              created_at: new Date().toISOString()
+            };
+            
+            setDeals(prev => [...prev, newDeal]);
+            setShowAddDeal(false);
+            
+            console.log('Nieuwe deal toegevoegd:', newDeal);
           };
 
           const getMatchColor = (score) => {
@@ -782,25 +726,17 @@
           const calculateCommissionSummary = () => {
             const userTransactions = transactions.filter(t => {
               if (t.participant_commissions) {
-                try {
-                  const participants = JSON.parse(t.participant_commissions);
-                  return participants.some(p => p.user_id === user.id);
-                } catch (e) {
-                  return false;
-                }
+                const participants = JSON.parse(t.participant_commissions);
+                return participants.some(p => p.user_id === user.id);
               }
               return t.deal_owner_id === user.id || t.investor_owner_id === user.id;
             });
             
             const totalCommission = userTransactions.reduce((sum, t) => {
               if (t.participant_commissions) {
-                try {
-                  const participants = JSON.parse(t.participant_commissions);
-                  const userParticipant = participants.find(p => p.user_id === user.id);
-                  return sum + (userParticipant ? userParticipant.commission_amount : 0);
-                } catch (e) {
-                  return sum;
-                }
+                const participants = JSON.parse(t.participant_commissions);
+                const userParticipant = participants.find(p => p.user_id === user.id);
+                return sum + (userParticipant ? userParticipant.commission_amount : 0);
               }
               const userCommission = t.deal_owner_id === user.id ? (t.deal_owner_commission || 0) : (t.investor_owner_commission || 0);
               return sum + userCommission;
@@ -817,11 +753,630 @@
             };
           };
 
-          // Rest of the component code remains the same...
-          // [Including all the form components, dashboard, and other sections]
-          
-          // Show auth form if not logged in
-          if (showAuth || !user) {
+          // Forms Components
+          const InvestorForm = ({ onSubmit, onCancel }) => {
+            const [formData, setFormData] = useState({
+              naam: '',
+              email: '',
+              telefoon: '',
+              bedrijf: '',
+              minBudget: '',
+              maxBudget: '',
+              voorkeursRegio: [],
+              voorkeursLocaties: [],
+              vastgoedTypes: [],
+              projectTypes: [],
+              risicoprofiel: 'Gemiddeld',
+              gewenstRendement: '',
+              investeringshorizon: 'Middellang',
+              ervaringLevel: 'Gemiddeld',
+              investmentMotivatie: '',
+              communicatieVoorkeur: 'Email',
+              beschikbaarheid: 'Direct'
+            });
+
+            const regioSteden = {
+              'Nederland': ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen'],
+              'Spanje': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'],
+              'Duitsland': ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
+              'Frankrijk': ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
+              'Zwitserland': ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'],
+              'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki']
+            };
+
+            const handleRegioChange = (regio) => {
+              setFormData(prev => {
+                const newRegio = prev.voorkeursRegio.includes(regio)
+                  ? prev.voorkeursRegio.filter(r => r !== regio)
+                  : [...prev.voorkeursRegio, regio];
+                
+                let newLocaties = [...prev.voorkeursLocaties];
+                if (newRegio.includes(regio)) {
+                  regioSteden[regio].forEach(stad => {
+                    if (!newLocaties.includes(stad)) {
+                      newLocaties.push(stad);
+                    }
+                  });
+                } else {
+                  newLocaties = newLocaties.filter(stad => !regioSteden[regio].includes(stad));
+                }
+
+                return {
+                  ...prev,
+                  voorkeursRegio: newRegio,
+                  voorkeursLocaties: newLocaties
+                };
+              });
+            };
+
+            const handleLocationChange = (location) => {
+              setFormData(prev => ({
+                ...prev,
+                voorkeursLocaties: prev.voorkeursLocaties.includes(location)
+                  ? prev.voorkeursLocaties.filter(l => l !== location)
+                  : [...prev.voorkeursLocaties, location]
+              }));
+            };
+
+            const handleProjectTypeChange = (type) => {
+              setFormData(prev => ({
+                ...prev,
+                projectTypes: prev.projectTypes.includes(type)
+                  ? prev.projectTypes.filter(t => t !== type)
+                  : [...prev.projectTypes, type]
+              }));
+            };
+
+            const handleTypeChange = (type) => {
+              setFormData(prev => ({
+                ...prev,
+                vastgoedTypes: prev.vastgoedTypes.includes(type)
+                  ? prev.vastgoedTypes.filter(t => t !== type)
+                  : [...prev.vastgoedTypes, type]
+              }));
+            };
+
+            const handleSubmit = (e) => {
+              e.preventDefault();
+              onSubmit(formData);
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-5xl h-full max-h-[95vh] flex flex-col">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold">Nieuwe Investeerder Toevoegen</h3>
+                      <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6">
+                    <form onSubmit={handleSubmit} id="investor-form">
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Basis Informatie</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Naam *</label>
+                            <input
+                              type="text"
+                              value={formData.naam}
+                              onChange={(e) => setFormData({...formData, naam: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Email *</label>
+                            <input
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({...formData, email: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Telefoon</label>
+                            <input
+                              type="tel"
+                              value={formData.telefoon}
+                              onChange={(e) => setFormData({...formData, telefoon: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Bedrijf</label>
+                            <input
+                              type="text"
+                              value={formData.bedrijf}
+                              onChange={(e) => setFormData({...formData, bedrijf: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Budget & Financiën</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Min Budget (€) *</label>
+                            <input
+                              type="number"
+                              value={formData.minBudget}
+                              onChange={(e) => setFormData({...formData, minBudget: parseInt(e.target.value)})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Max Budget (€) *</label>
+                            <input
+                              type="number"
+                              value={formData.maxBudget}
+                              onChange={(e) => setFormData({...formData, maxBudget: parseInt(e.target.value)})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Gewenst Rendement (%) *</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={formData.gewenstRendement}
+                              onChange={(e) => setFormData({...formData, gewenstRendement: parseFloat(e.target.value)})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Vastgoed Voorkeuren</h4>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Vastgoed Types</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {['Appartement', 'Kantoor', 'Retail', 'Industrie', 'Woning', 'Hotel', 'Studenten', 'Zorgvastgoed'].map(type => (
+                              <label key={type} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.vastgoedTypes.includes(type)}
+                                  onChange={() => handleTypeChange(type)}
+                                  className="text-blue-600"
+                                />
+                                <span className="text-sm">{type}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Project Types</label>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {['Turn-key', 'Renovatie', 'Transformatie', 'Ontwikkeling', 'Gemengd'].map(type => (
+                              <label key={type} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.projectTypes.includes(type)}
+                                  onChange={() => handleProjectTypeChange(type)}
+                                  className="text-blue-600"
+                                />
+                                <span className="text-sm">{type}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                  
+                  <div className="p-6 border-t bg-gray-50">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-6 py-2 text-gray-600 border rounded-md hover:bg-gray-100"
+                      >
+                        Annuleren
+                      </button>
+                      <button
+                        type="submit"
+                        form="investor-form"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Investeerder Toevoegen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          const DealForm = ({ onSubmit, onCancel }) => {
+            const [formData, setFormData] = useState({
+              titel: '',
+              locatie: '',
+              type: '',
+              projectType: '',
+              prijs: '',
+              verwachtRendement: '',
+              risico: 'Gemiddeld',
+              beschrijving: '',
+              oppervlakte: '',
+              bouwjaar: '',
+              huurpotentie: '',
+              status: 'Beschikbaar'
+            });
+
+            const handleSubmit = (e) => {
+              e.preventDefault();
+              onSubmit(formData);
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold">Nieuwe Deal Toevoegen</h3>
+                      <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6">
+                    <form onSubmit={handleSubmit} id="deal-form">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Titel *</label>
+                          <input
+                            type="text"
+                            value={formData.titel}
+                            onChange={(e) => setFormData({...formData, titel: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Locatie *</label>
+                          <select
+                            value={formData.locatie}
+                            onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          >
+                            <option value="">Selecteer locatie</option>
+                            <optgroup label="Nederland">
+                              <option value="Amsterdam">Amsterdam</option>
+                              <option value="Rotterdam">Rotterdam</option>
+                              <option value="Utrecht">Utrecht</option>
+                              <option value="Den Haag">Den Haag</option>
+                              <option value="Eindhoven">Eindhoven</option>
+                              <option value="Tilburg">Tilburg</option>
+                            </optgroup>
+                            <optgroup label="Duitsland">
+                              <option value="Berlijn">Berlijn</option>
+                              <option value="München">München</option>
+                              <option value="Hamburg">Hamburg</option>
+                              <option value="Frankfurt">Frankfurt</option>
+                              <option value="Keulen">Keulen</option>
+                            </optgroup>
+                            <optgroup label="Frankrijk">
+                              <option value="Parijs">Parijs</option>
+                              <option value="Lyon">Lyon</option>
+                              <option value="Marseille">Marseille</option>
+                              <option value="Toulouse">Toulouse</option>
+                              <option value="Nice">Nice</option>
+                            </optgroup>
+                            <optgroup label="Spanje">
+                              <option value="Madrid">Madrid</option>
+                              <option value="Barcelona">Barcelona</option>
+                              <option value="Valencia">Valencia</option>
+                              <option value="Sevilla">Sevilla</option>
+                              <option value="Málaga">Málaga</option>
+                            </optgroup>
+                            <optgroup label="Zwitserland">
+                              <option value="Zürich">Zürich</option>
+                              <option value="Genève">Genève</option>
+                              <option value="Basel">Basel</option>
+                              <option value="Lausanne">Lausanne</option>
+                              <option value="Bern">Bern</option>
+                            </optgroup>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Type *</label>
+                          <select
+                            value={formData.type}
+                            onChange={(e) => setFormData({...formData, type: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          >
+                            <option value="">Selecteer type</option>
+                            <option value="Appartement">Appartement</option>
+                            <option value="Kantoor">Kantoor</option>
+                            <option value="Retail">Retail</option>
+                            <option value="Industrie">Industrie</option>
+                            <option value="Woning">Woning</option>
+                            <option value="Hotel">Hotel</option>
+                            <option value="Studenten">Studenten</option>
+                            <option value="Zorgvastgoed">Zorgvastgoed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Project Type *</label>
+                          <select
+                            value={formData.projectType}
+                            onChange={(e) => setFormData({...formData, projectType: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          >
+                            <option value="">Selecteer project type</option>
+                            <option value="Turn-key">Turn-key - Kant-en-klaar</option>
+                            <option value="Renovatie">Renovatie - Opknappen</option>
+                            <option value="Transformatie">Transformatie - Functiewijziging</option>
+                            <option value="Ontwikkeling">Ontwikkeling - Nieuwbouw</option>
+                            <option value="Gemengd">Gemengd - Combinatie</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Prijs (€) *</label>
+                          <input
+                            type="number"
+                            value={formData.prijs}
+                            onChange={(e) => setFormData({...formData, prijs: parseInt(e.target.value)})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Verwacht Rendement (%) *</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={formData.verwachtRendement}
+                            onChange={(e) => setFormData({...formData, verwachtRendement: parseFloat(e.target.value)})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Beschrijving</label>
+                        <textarea
+                          value={formData.beschrijving}
+                          onChange={(e) => setFormData({...formData, beschrijving: e.target.value})}
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                      </div>
+                    </form>
+                  </div>
+                  
+                  <div className="p-6 border-t bg-gray-50">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-6 py-2 text-gray-600 border rounded-md hover:bg-gray-100"
+                      >
+                        Annuleren
+                      </button>
+                      <button
+                        type="submit"
+                        form="deal-form"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Deal Toevoegen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          // Commission Editor Component
+          const CommissionEditor = () => {
+            if (!showCommissionEditor || !currentTransaction) return null;
+
+            const { deal, investor } = currentTransaction;
+            const totalCommission = deal.prijs * commissionStructure.total_rate;
+
+            const updateParticipant = (index, field, value) => {
+              const newParticipants = [...commissionStructure.participants];
+              newParticipants[index] = { ...newParticipants[index], [field]: value };
+              setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+            };
+
+            const addParticipant = () => {
+              setCommissionStructure({
+                ...commissionStructure,
+                participants: [
+                  ...commissionStructure.participants,
+                  { role: 'referral', user_id: null, percentage: 0, fixed_amount: 0, type: 'percentage' }
+                ]
+              });
+            };
+
+            const removeParticipant = (index) => {
+              if (commissionStructure.participants.length > 2) {
+                const newParticipants = commissionStructure.participants.filter((_, i) => i !== index);
+                setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+              }
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-4xl">
+                  <div className="p-6 border-b">
+                    <h3 className="text-xl font-bold">Commissie Structuur Instellen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Deal: {deal.titel} - Investeerder: {investor.naam}
+                    </p>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={commissionStructure.total_rate * 100}
+                        onChange={(e) => setCommissionStructure({
+                          ...commissionStructure,
+                          total_rate: parseFloat(e.target.value) / 100
+                        })}
+                        className="w-32 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">
+                        = €{totalCommission.toLocaleString()} van €{deal.prijs.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <h4 className="font-semibold">Commissie Verdeling:</h4>
+                      {commissionStructure.participants.map((participant, index) => (
+                        <div key={index} className="border rounded p-4 bg-gray-50">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Rol</label>
+                              <select
+                                value={participant.role}
+                                onChange={(e) => updateParticipant(index, 'role', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="deal_owner">Deal Eigenaar</option>
+                                <option value="investor_owner">Investeerder Eigenaar</option>
+                                <option value="referral">Verwijzer</option>
+                                <option value="manager">Manager</option>
+                                <option value="assistant">Assistent</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Gebruiker</label>
+                              <select
+                                value={participant.user_id || ''}
+                                onChange={(e) => updateParticipant(index, 'user_id', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Selecteer gebruiker</option>
+                                {users.map(user => (
+                                  <option key={user.id} value={user.id}>{user.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Type</label>
+                              <select
+                                value={participant.type}
+                                onChange={(e) => updateParticipant(index, 'type', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Vast Bedrag</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
+                              </label>
+                              <input
+                                type="number"
+                                step={participant.type === 'percentage' ? '0.1' : '1'}
+                                value={participant.type === 'percentage' ? participant.percentage : participant.fixed_amount}
+                                onChange={(e) => updateParticipant(
+                                  index, 
+                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
+                                  parseFloat(e.target.value)
+                                )}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          </div>
+                          {commissionStructure.participants.length > 2 && (
+                            <button
+                              onClick={() => removeParticipant(index)}
+                              className="mt-2 text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Verwijder
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      
+                      <button
+                        onClick={addParticipant}
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                      >
+                        <PlusIcon size={16} />
+                        <span>Deelnemer Toevoegen</span>
+                      </button>
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded mb-6">
+                      <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
+                      <div className="space-y-1 text-sm">
+                        {commissionStructure.participants.map((participant, index) => {
+                          const user = getUserById(participant.user_id);
+                          const commission = participant.type === 'percentage' 
+                            ? totalCommission * (participant.percentage / 100)
+                            : participant.fixed_amount;
+                          
+                          return (
+                            <div key={index} className="flex justify-between">
+                              <span>{user.name} ({participant.role})</span>
+                              <span>€{commission.toLocaleString()}</span>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t pt-1 font-semibold flex justify-between">
+                          <span>Totaal:</span>
+                          <span>€{totalCommission.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4">
+                    <button
+                      onClick={() => setShowCommissionEditor(false)}
+                      className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      onClick={finalizeTransaction}
+                      className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Transactie Afronden
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          // SUPER SIMPLE AUTH - JUST CLICK TO LOGIN
+          const AuthForm = () => {
+            const [formData, setFormData] = useState({
+              email: '',
+              password: '',
+              name: '',
+              company: ''
+            });
+
+            const handleSubmit = (e) => {
+              e.preventDefault();
+              if (authMode === 'login') {
+                handleLogin(formData);
+              } else {
+                handleRegister(formData);
+              }
+            };
+
             return (
               <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
@@ -838,41 +1393,36 @@
                   </div>
 
                   <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <h4 className="font-semibold text-green-800 mb-2">⚡ Snelle Toegang</h4>
+                    <h4 className="font-semibold text-green-800 mb-3">⚡ Klik gewoon om in te loggen!</h4>
                     <div className="space-y-2">
                       <button
                         type="button"
-                        onClick={() => handleLogin({ email: 'admin@vastgoed.nl', password: 'admin123' })}
-                        className="w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium"
+                        onClick={() => quickLogin('admin@vastgoed.nl', 'Admin')}
+                        className="w-full text-left p-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg font-medium hover:from-green-500 hover:to-green-700 transition-all"
                       >
-                        👑 Admin Login - admin@vastgoed.nl
+                        👑 Admin Login - Volledige toegang
                       </button>
                       <button
                         type="button" 
-                        onClick={() => handleLogin({ email: 'test@test.nl', password: 'test' })}
-                        className="w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium"
+                        onClick={() => quickLogin('demo@test.nl', 'Demo User')}
+                        className="w-full text-left p-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg font-medium hover:from-blue-500 hover:to-blue-700 transition-all"
                       >
-                        👤 Test Login - test@test.nl
+                        🎯 Demo Login - Bekijk functionaliteit
+                      </button>
+                      <button
+                        type="button" 
+                        onClick={() => quickLogin('gast@vastgoed.nl', 'Gast')}
+                        className="w-full text-left p-3 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-purple-700 transition-all"
+                      >
+                        👤 Gast Login - Snelle toegang
                       </button>
                     </div>
                   </div>
 
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.target);
-                    const credentials = {
-                      email: formData.get('email'),
-                      password: formData.get('password'),
-                      name: formData.get('name') || '',
-                      company: formData.get('company') || ''
-                    };
-                    
-                    if (authMode === 'login') {
-                      handleLogin(credentials);
-                    } else {
-                      handleRegister(credentials);
-                    }
-                  }} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="text-center text-gray-500 text-sm">
+                      <p>Of vul handmatig in (elk email werkt):</p>
+                    </div>
                     
                     {authMode === 'register' && (
                       <>
@@ -880,7 +1430,8 @@
                           <label className="block text-sm font-medium text-gray-700 mb-1">Naam</label>
                           <input
                             type="text"
-                            name="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({...formData, name: e.target.value})}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                           />
@@ -889,7 +1440,8 @@
                           <label className="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label>
                           <input
                             type="text"
-                            name="company"
+                            value={formData.company}
+                            onChange={(e) => setFormData({...formData, company: e.target.value})}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                           />
@@ -900,7 +1452,8 @@
                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                       <input
                         type="email"
-                        name="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
@@ -909,7 +1462,8 @@
                       <label className="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
                       <input
                         type="password"
-                        name="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
@@ -933,19 +1487,142 @@
                 </div>
               </div>
             );
+          };
+
+          const Dashboard = () => {
+            const commissionSummary = calculateCommissionSummary();
+            const userInvestors = investors.filter(i => i.owner_id === user.id);
+            const userDeals = deals.filter(d => d.owner_id === user.id);
+
+            return (
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Mijn Investeerders</p>
+                        <p className="text-2xl font-bold text-gray-900">{userInvestors.length}</p>
+                      </div>
+                      <UsersIcon className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Mijn Deals</p>
+                        <p className="text-2xl font-bold text-gray-900">{userDeals.length}</p>
+                      </div>
+                      <BuildingIcon className="h-8 w-8 text-green-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Totale Commissie</p>
+                        <p className="text-2xl font-bold text-gray-900">€{commissionSummary.totalCommission.toLocaleString()}</p>
+                      </div>
+                      <DollarSignIcon className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Transactie Volume</p>
+                        <p className="text-2xl font-bold text-gray-900">€{(commissionSummary.totalVolume / 1000000).toFixed(1)}M</p>
+                      </div>
+                      <TrendingUpIcon className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-lg shadow-md p-6 border">
+                    <h3 className="text-lg font-semibold mb-4">Recente Transacties</h3>
+                    <div className="space-y-3">
+                      {transactions.slice(0, 5).map(transaction => {
+                        const deal = deals.find(d => d.id === transaction.deal_id);
+                        const investor = investors.find(i => i.id === transaction.investor_id);
+                        
+                        let userCommission = 0;
+                        if (transaction.participant_commissions) {
+                          try {
+                            const participants = JSON.parse(transaction.participant_commissions);
+                            const userParticipant = participants.find(p => p.user_id === user.id);
+                            userCommission = userParticipant ? userParticipant.commission_amount : 0;
+                          } catch (e) {
+                            console.error('Error parsing participant commissions:', e);
+                          }
+                        } else {
+                          userCommission = transaction.deal_owner_id === user.id ? (transaction.deal_owner_commission || 0) : (transaction.investor_owner_commission || 0);
+                        }
+                        
+                        return (
+                          <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div>
+                              <p className="font-medium">{deal?.titel || 'Onbekende Deal'}</p>
+                              <p className="text-sm text-gray-600">{investor?.naam || 'Onbekende Investeerder'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">€{transaction.transaction_amount.toLocaleString()}</p>
+                              <p className="text-sm text-green-600">+€{userCommission.toLocaleString()} commissie</p>
+                              <p className={`text-xs ${transaction.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-md p-6 border">
+                    <h3 className="text-lg font-semibold mb-4">Team Leden</h3>
+                    <div className="space-y-3">
+                      {users.map(userItem => {
+                        const userInvestorCount = investors.filter(i => i.owner_id === userItem.id).length;
+                        const userDealCount = deals.filter(d => d.owner_id === userItem.id).length;
+                        return (
+                          <div key={userItem.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div className="flex items-center space-x-3">
+                              <UserCheckIcon className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <p className="font-medium">{userItem.name}</p>
+                                <p className="text-sm text-gray-600">{userItem.company}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm">{userInvestorCount} investeerders</p>
+                              <p className="text-sm">{userDealCount} deals</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          // Show auth form if not logged in
+          if (showAuth || !user) {
+            return <AuthForm />;
           }
 
-          // Main app interface (truncated for brevity, but includes all the original functionality)
           return (
             <div className="max-w-7xl mx-auto p-6">
               <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">Vastgoed Matcher Pro AI</h1>
-                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}!</p>
-                  <div className="flex flex-wrap items-center space-x-2">
+                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! AI-powered matching, internationale regio targeting, project type filtering & geavanceerde commissie structuren</p>
+                  <div className="flex flex-wrap items-center space-x-2 space-y-1 sm:space-y-0">
                     <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Commission Tracking</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📍 Regio Matching</span>
+                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🏗️ Project Types</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Smart Commissies</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 mt-4 lg:mt-0">
@@ -1011,18 +1688,466 @@
                 </button>
               </div>
 
-              <div className="bg-white rounded-lg shadow-md p-6 border text-center">
-                <h2 className="text-xl font-bold mb-4">Vastgoed Matcher Pro AI</h2>
-                <p className="text-gray-600 mb-4">
-                  Applicatie succesvol geladen en klaar voor GitHub/Netlify deployment!
-                </p>
-                <div className="text-sm text-gray-500">
-                  <p>✅ Improved error handling</p>
-                  <p>✅ Better authentication flow</p>
-                  <p>✅ Optimized for static hosting</p>
-                  <p>✅ Netlify Functions ready</p>
+              {activeTab === 'dashboard' && <Dashboard />}
+
+              {activeTab === 'investors' && (
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 className="text-2xl font-bold">Investeerders</h2>
+                    <button
+                      onClick={() => setShowAddInvestor(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                    >
+                      <PlusIcon size={20} />
+                      <span>Nieuwe Investeerder</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {investors.map(investor => (
+                      <div key={investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
+                            investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {investor.risicoprofiel}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-sm mb-4">
+                          <div className="flex items-center space-x-2">
+                            <UserCheckIcon size={16} className="text-gray-500" />
+                            <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <MailIcon size={16} className="text-gray-500" />
+                            <span>{investor.email}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <PhoneIcon size={16} className="text-gray-500" />
+                            <span>{investor.telefoon}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <EuroIcon size={16} className="text-gray-500" />
+                            <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {investor.vastgoedTypes.slice(0, 3).map(type => (
+                              <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                {type}
+                              </span>
+                            ))}
+                            {investor.vastgoedTypes.length > 3 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                +{investor.vastgoedTypes.length - 3} meer
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-2">Project Types:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {investor.projectTypes?.slice(0, 2).map(type => (
+                              <span key={type} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                {type}
+                              </span>
+                            ))}
+                            {investor.projectTypes?.length > 2 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                +{investor.projectTypes.length - 2} meer
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t">
+                          <button
+                            onClick={() => getInvestorInsights(investor.id)}
+                            disabled={isLoadingAI}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                          >
+                            <BrainIcon size={16} />
+                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {activeTab === 'deals' && (
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 className="text-2xl font-bold">Deals</h2>
+                    <button
+                      onClick={() => setShowAddDeal(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                    >
+                      <PlusIcon size={20} />
+                      <span>Nieuwe Deal</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {deals.map(deal => (
+                      <div key={deal.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
+                            deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {deal.risico} risico
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-sm mb-4">
+                          <div className="flex items-center space-x-2">
+                            <UserCheckIcon size={16} className="text-gray-500" />
+                            <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <MapPinIcon size={16} className="text-gray-500" />
+                            <span>{deal.locatie}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <BuildingIcon size={16} className="text-gray-500" />
+                            <span>{deal.type}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <TargetIcon size={16} className="text-gray-500" />
+                            <span>{deal.projectType}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <EuroIcon size={16} className="text-gray-500" />
+                            <span className="font-semibold">€{deal.prijs.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <TrendingUpIcon size={16} className="text-gray-500" />
+                            <span className="font-semibold text-green-600">{deal.verwachtRendement}% rendement</span>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
+
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => {
+                              setMatches(findMatches(deal.id));
+                              setActiveTab('matching');
+                            }}
+                            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                          >
+                            <StarIcon size={16} />
+                            <span>Vind Matches</span>
+                          </button>
+                          <button
+                            onClick={() => getDealInsights(deal.id)}
+                            disabled={isLoadingAI}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                          >
+                            <BrainIcon size={16} />
+                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'matching' && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold mb-4">AI-Powered Matching</h2>
+                    
+                    {matches.length === 0 ? (
+                      <div className="text-center py-12">
+                        <AlertCircleIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-gray-600 text-lg">Selecteer een deal om AI-powered matches te vinden</p>
+                          <p className="text-sm text-gray-500">
+                            💡 Tips: Ga naar "Deals" tab → klik "Vind Matches" bij een deal voor geavanceerde AI analyse
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+                          <h4 className="font-semibold text-blue-800 mb-3">🤖 AI-Enhanced Matching Features:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                            <div className="space-y-2">
+                              <p>• Smart Scoring: Regio & locatie matching</p>
+                              <p>• Project Type: Turn-key, renovatie, transformatie</p>
+                              <p>• Gedrag Analyse: Investeerder profiel matching</p>
+                              <p>• Timing Optimalisatie: Beschikbaarheid & ervaring</p>
+                            </div>
+                            <div className="space-y-2">
+                              <p>• Success Probability: AI voorspelling van deal succes</p>
+                              <p>• Pitch Suggesties: Gepersonaliseerde aanbevelingen</p>
+                              <p>• Onderhandeling Tips: Strategie per investeerder</p>
+                              <p>• Project Match: Matching op ontwikkelingstype</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 p-6 rounded-lg mb-6">
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                            <div className="mb-4 lg:mb-0">
+                              <h3 className="font-semibold text-lg mb-2">🎯 Deal: {matches[0].deal.titel}</h3>
+                              <p className="text-sm text-gray-600 mb-2">{matches[0].deal.beschrijving}</p>
+                              <div className="flex flex-wrap items-center gap-4 text-sm">
+                                <span className="text-blue-600 font-medium">Deal eigenaar: {getUserById(matches[0].deal.owner_id).name}</span>
+                                <span className="text-gray-600">Type: {matches[0].deal.type}</span>
+                                <span className="text-gray-600">Project: {matches[0].deal.projectType}</span>
+                              </div>
+                            </div>
+                            <div className="text-center lg:text-right">
+                              <div className="text-3xl font-bold text-blue-600">{matches.length}</div>
+                              <div className="text-sm text-gray-600">Matches gevonden</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                          {matches.map((match, index) => (
+                            <div key={match.investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4">
+                                <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-2xl font-bold ${
+                                      index === 0 ? 'text-yellow-500' : 
+                                      index === 1 ? 'text-gray-400' : 
+                                      index === 2 ? 'text-orange-400' : 'text-gray-600'
+                                    }`}>
+                                      #{index + 1}
+                                    </span>
+                                    <div>
+                                      <h3 className="text-xl font-semibold">{match.investor.naam}</h3>
+                                      <p className="text-sm text-gray-600">{match.investor.bedrijf}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                  <span className={`px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}`}>
+                                    {match.matchScore}% match
+                                  </span>
+                                  <button
+                                    onClick={() => createTransaction(match.deal.id, match.investor.id)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                                  >
+                                    <DollarSignIcon size={16} />
+                                    <span>Start Deal</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div>
+                                  <h4 className="font-semibold mb-3">Match Analyse:</h4>
+                                  <div className="space-y-2">
+                                    {match.reasoning.slice(0, 5).map((reason, idx) => (
+                                      <div key={idx} className="text-sm p-2 bg-gray-50 rounded">
+                                        {reason}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold mb-3">Investeerder Details:</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <p>Budget: €{match.investor.minBudget.toLocaleString()} - €{match.investor.maxBudget.toLocaleString()}</p>
+                                    <p>Gewenst rendement: {match.investor.gewenstRendement}%</p>
+                                    <p>Risicoprofiel: {match.investor.risicoprofiel}</p>
+                                    <p>Ervaring: {match.investor.ervaringLevel}</p>
+                                    <p>Beschikbaarheid: {match.investor.beschikbaarheid}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-6 flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => getSmartMatchingInsights(match.deal.id, match.investor.id)}
+                                  disabled={isLoadingAI}
+                                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                                >
+                                  <BrainIcon size={16} />
+                                  <span>{isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse'}</span>
+                                </button>
+                                <button
+                                  onClick={() => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`)}
+                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                                >
+                                  <MailIcon size={16} />
+                                  <span>Contact</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'transactions' && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold mb-4">Transacties & Commissies</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Totale Commissie</h3>
+                        <p className="text-2xl font-bold text-green-600">
+                          €{calculateCommissionSummary().totalCommission.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Afgeronde Deals</h3>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {calculateCommissionSummary().completedTransactions}
+                        </p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Pending Deals</h3>
+                        <p className="text-2xl font-bold text-yellow-600">
+                          {calculateCommissionSummary().pendingTransactions}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {transactions.map(transaction => {
+                      const deal = deals.find(d => d.id === transaction.deal_id);
+                      const investor = investors.find(i => i.id === transaction.investor_id);
+                      
+                      let participantCommissions = [];
+                      try {
+                        participantCommissions = transaction.participant_commissions ? 
+                          JSON.parse(transaction.participant_commissions) : [];
+                      } catch (e) {
+                        console.error('Error parsing participant commissions:', e);
+                      }
+
+                      return (
+                        <div key={transaction.id} className="bg-white rounded-lg shadow-md p-6 border">
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4">
+                            <div>
+                              <h3 className="text-xl font-semibold mb-2">
+                                {deal?.titel || 'Onbekende Deal'}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                <span>Investeerder: {investor?.naam || 'Onbekend'}</span>
+                                <span>Waarde: €{transaction.transaction_amount.toLocaleString()}</span>
+                                <span>Commissie: €{transaction.total_commission.toLocaleString()}</span>
+                              </div>
+                            </div>
+                            <div className="mt-4 lg:mt-0">
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                              <h4 className="font-semibold mb-3">Deal Details:</h4>
+                              <div className="space-y-2 text-sm">
+                                <p>Locatie: {deal?.locatie || 'Onbekend'}</p>
+                                <p>Type: {deal?.type || 'Onbekend'}</p>
+                                <p>Project: {deal?.projectType || 'Onbekend'}</p>
+                                <p>Verwacht rendement: {deal?.verwachtRendement || 0}%</p>
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-3">Commissie Verdeling:</h4>
+                              <div className="space-y-2">
+                                {participantCommissions.map((participant, index) => {
+                                  const user = getUserById(participant.user_id);
+                                  return (
+                                    <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                                      <span>{user.name} ({participant.role})</span>
+                                      <span className="font-semibold">
+                                        €{participant.commission_amount.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {Object.keys(aiInsights).length > 0 && (
+                <div className="fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border p-4 z-40">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold flex items-center space-x-2">
+                      <BrainIcon size={16} />
+                      <span>AI Insights</span>
+                    </h4>
+                    <button
+                      onClick={() => setAiInsights({})}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="text-sm space-y-2 max-h-96 overflow-y-auto">
+                    {Object.entries(aiInsights).slice(-1).map(([key, insight]) => (
+                      <div key={key}>
+                        <p className="font-medium">
+                          {key.includes('investor') ? 'Investeerder Analyse:' :
+                          key.includes('deal') ? 'Deal Analyse:' :
+                          key.includes('smart_match') ? 'Smart Match Analyse:' :
+                          'Markt Inzichten:'}
+                        </p>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          {typeof insight === 'object' ? 
+                            Object.entries(insight).slice(0, 3).map(([k, v]) => (
+                              <p key={k}>{k}: {Array.isArray(v) ? v.join(', ') : v}</p>
+                            )) :
+                            <p>{insight}</p>
+                          }
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showAddInvestor && (
+                <InvestorForm
+                  onSubmit={handleAddInvestor}
+                  onCancel={() => setShowAddInvestor(false)}
+                />
+              )}
+
+              {showAddDeal && (
+                <DealForm
+                  onSubmit={handleAddDeal}
+                  onCancel={() => setShowAddDeal(false)}
+                />
+              )}
+
+              <CommissionEditor />
             </div>
           );
         };
@@ -1031,10 +2156,11 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(React.createElement(VastgoedInvesteerderMatcher));
 
-        console.log('🚀 Vastgoed Matcher Pro AI loaded - GitHub/Netlify ready!');
-        console.log('🎯 Optimized for static hosting');
-        console.log('🔐 Demo authentication ready');
-        console.log('⚡ Improved error handling');
+        console.log('🚀 Vastgoed Matcher Pro AI geladen - ALLE FUNCTIES HERSTELD!');
+        console.log('🔐 SUPER SIMPEL INLOGGEN: Klik gewoon op de groene knoppen!');
+        console.log('✅ Alle functionaliteit beschikbaar');
+        console.log('🎯 GitHub/Netlify ready');
+        console.log('💡 Alle login opties werken perfect');
     </script>
 </body>
 </html>
