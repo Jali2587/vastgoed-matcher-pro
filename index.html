@@ -14,7 +14,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, Fragment } = React;
         
         // Fix Lucide icons destructuring
         const Plus = lucide.Plus;
@@ -799,101 +799,111 @@
               handleLogin({ email, password });
             };
 
-            return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4' },
-              React.createElement('div', { className: 'max-w-md w-full bg-white rounded-xl shadow-lg p-8' },
-                React.createElement('div', { className: 'text-center mb-8' },
-                  React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-2' }, '🏠 Vastgoed Matcher Pro'),
-                  React.createElement('p', { className: 'text-gray-600' },
-                    authMode === 'login' ? 'Inloggen op je account' : 'Nieuw account aanmaken'
-                  ),
-                  React.createElement('div', { className: 'flex items-center justify-center space-x-2 mt-3' },
-                    React.createElement('span', { className: 'text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full' }, '🤖 AI-Enhanced'),
-                    React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, '🌍 International'),
-                    React.createElement('span', { className: 'text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full' }, '💰 Commission Tracking')
-                  )
-                ),
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+                  <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">🏠 Vastgoed Matcher Pro</h1>
+                    <p className="text-gray-600">
+                      {authMode === 'login' ? 'Inloggen op je account' : 'Nieuw account aanmaken'}
+                    </p>
+                    <div className="flex items-center justify-center space-x-2 mt-3">
+                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Commission Tracking</span>
+                    </div>
+                  </div>
 
-                // Quick login buttons
-                React.createElement('div', { className: 'mb-6 p-4 bg-green-50 rounded-lg border border-green-200' },
-                  React.createElement('h4', { className: 'font-semibold text-green-800 mb-2' }, '⚡ Snelle Toegang'),
-                  React.createElement('div', { className: 'space-y-2' },
-                    React.createElement('button', {
-                      type: 'button',
-                      onClick: () => handleDemoLogin('admin@vastgoed.nl', 'admin123'),
-                      className: 'w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium'
-                    }, '👑 Admin Login - admin@vastgoed.nl'),
-                    React.createElement('button', {
-                      type: 'button', 
-                      onClick: () => handleDemoLogin('test@test.nl', 'test'),
-                      className: 'w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium'
-                    }, '👤 Test Login - test@test.nl')
-                  )
-                ),
+                  <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">⚡ Snelle Toegang</h4>
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('admin@vastgoed.nl', 'admin123')}
+                        className="w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium"
+                      >
+                        👑 Admin Login - admin@vastgoed.nl
+                      </button>
+                      <button
+                        type="button" 
+                        onClick={() => handleDemoLogin('test@test.nl', 'test')}
+                        className="w-full text-left p-3 bg-white rounded border border-green-300 hover:bg-green-50 text-sm font-medium"
+                      >
+                        👤 Test Login - test@test.nl
+                      </button>
+                    </div>
+                  </div>
 
-                React.createElement('form', { onSubmit: handleSubmit, className: 'space-y-4' },
-                  React.createElement('div', { className: 'text-xs text-gray-500 mb-4 p-3 bg-yellow-50 rounded border border-yellow-200' },
-                    React.createElement('p', { className: 'font-medium text-yellow-800' }, '🔧 Problemen met inloggen?'),
-                    React.createElement('p', null, '1. Probeer de groene knoppen hierboven'),
-                    React.createElement('p', null, '2. Check browser console (F12) voor errors'),
-                    React.createElement('p', null, '3. Ververs de pagina en probeer opnieuw')
-                  ),
-                  
-                  // Register fields (fixed conditional rendering)
-                  authMode === 'register' ? React.createElement('div', null,
-                    React.createElement('div', null,
-                      React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Naam'),
-                      React.createElement('input', {
-                        type: 'text',
-                        value: formData.name,
-                        onChange: (e) => setFormData({...formData, name: e.target.value}),
-                        className: 'w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                        required: true
-                      })
-                    ),
-                    React.createElement('div', { className: 'mt-4' },
-                      React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Bedrijf'),
-                      React.createElement('input', {
-                        type: 'text',
-                        value: formData.company,
-                        onChange: (e) => setFormData({...formData, company: e.target.value}),
-                        className: 'w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                        required: true
-                      })
-                    )
-                  ) : null,
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Email'),
-                    React.createElement('input', {
-                      type: 'email',
-                      value: formData.email,
-                      onChange: (e) => setFormData({...formData, email: e.target.value}),
-                      className: 'w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                      required: true
-                    })
-                  ),
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Wachtwoord'),
-                    React.createElement('input', {
-                      type: 'password',
-                      value: formData.password,
-                      onChange: (e) => setFormData({...formData, password: e.target.value}),
-                      className: 'w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                      required: true
-                    })
-                  ),
-                  React.createElement('button', {
-                    type: 'submit',
-                    className: 'w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium'
-                  }, authMode === 'login' ? 'Inloggen' : 'Account Aanmaken')
-                ),
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="text-xs text-gray-500 mb-4 p-3 bg-yellow-50 rounded border border-yellow-200">
+                      <p className="font-medium text-yellow-800">🔧 Problemen met inloggen?</p>
+                      <p>1. Probeer de groene knoppen hierboven</p>
+                      <p>2. Check browser console (F12) voor errors</p>
+                      <p>3. Ververs de pagina en probeer opnieuw</p>
+                    </div>
+                    
+                    {authMode === 'register' && (
+                      <Fragment>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Naam</label>
+                          <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Bedrijf</label>
+                          <input
+                            type="text"
+                            value={formData.company}
+                            onChange={(e) => setFormData({...formData, company: e.target.value})}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                      </Fragment>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
+                      <input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {authMode === 'login' ? 'Inloggen' : 'Account Aanmaken'}
+                    </button>
+                  </form>
 
-                React.createElement('div', { className: 'mt-6 text-center' },
-                  React.createElement('button', {
-                    onClick: () => setAuthMode(authMode === 'login' ? 'register' : 'login'),
-                    className: 'text-blue-600 hover:text-blue-800 text-sm font-medium'
-                  }, authMode === 'login' ? 'Geen account? Registreer hier' : 'Al een account? Login hier')
-                )
-              )
+                  <div className="mt-6 text-center">
+                    <button
+                      onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      {authMode === 'login' ? 'Geen account? Registreer hier' : 'Al een account? Login hier'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             );
           };
 
@@ -902,654 +912,651 @@
             const userInvestors = investors.filter(i => i.owner_id === user.id);
             const userDeals = deals.filter(d => d.owner_id === user.id);
 
-            return React.createElement('div', null,
-              React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8' },
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Mijn Investeerders'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, userInvestors.length)
-                    ),
-                    React.createElement(Users, { className: 'h-8 w-8 text-blue-600' })
-                  )
-                ),
-                
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Mijn Deals'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, userDeals.length)
-                    ),
-                    React.createElement(Building, { className: 'h-8 w-8 text-green-600' })
-                  )
-                ),
-                
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Totale Commissie'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '€' + commissionSummary.totalCommission.toLocaleString())
-                    ),
-                    React.createElement(DollarSign, { className: 'h-8 w-8 text-purple-600' })
-                  )
-                ),
-                
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow-md border' },
-                  React.createElement('div', { className: 'flex items-center justify-between' },
-                    React.createElement('div', null,
-                      React.createElement('p', { className: 'text-sm font-medium text-gray-600' }, 'Transactie Volume'),
-                      React.createElement('p', { className: 'text-2xl font-bold text-gray-900' }, '€' + (commissionSummary.totalVolume / 1000000).toFixed(1) + 'M')
-                    ),
-                    React.createElement(TrendingUp, { className: 'h-8 w-8 text-orange-600' })
-                  )
-                )
-              ),
+            return (
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Mijn Investeerders</p>
+                        <p className="text-2xl font-bold text-gray-900">{userInvestors.length}</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Mijn Deals</p>
+                        <p className="text-2xl font-bold text-gray-900">{userDeals.length}</p>
+                      </div>
+                      <Building className="h-8 w-8 text-green-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Totale Commissie</p>
+                        <p className="text-2xl font-bold text-gray-900">€{commissionSummary.totalCommission.toLocaleString()}</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Transactie Volume</p>
+                        <p className="text-2xl font-bold text-gray-900">€{(commissionSummary.totalVolume / 1000000).toFixed(1)}M</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </div>
+                </div>
 
-              React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6 border' },
-                  React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, 'Recente Transacties'),
-                  React.createElement('div', { className: 'space-y-3' },
-                    transactions.slice(0, 5).map(transaction => {
-                      const deal = deals.find(d => d.id === transaction.deal_id);
-                      const investor = investors.find(i => i.id === transaction.investor_id);
-                      
-                      let userCommission = 0;
-                      if (transaction.participant_commissions) {
-                        try {
-                          const participants = JSON.parse(transaction.participant_commissions);
-                          const userParticipant = participants.find(p => p.user_id === user.id);
-                          userCommission = userParticipant ? userParticipant.commission_amount : 0;
-                        } catch (e) {
-                          console.error('Error parsing participant commissions:', e);
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-lg shadow-md p-6 border">
+                    <h3 className="text-lg font-semibold mb-4">Recente Transacties</h3>
+                    <div className="space-y-3">
+                      {transactions.slice(0, 5).map(transaction => {
+                        const deal = deals.find(d => d.id === transaction.deal_id);
+                        const investor = investors.find(i => i.id === transaction.investor_id);
+                        
+                        let userCommission = 0;
+                        if (transaction.participant_commissions) {
+                          try {
+                            const participants = JSON.parse(transaction.participant_commissions);
+                            const userParticipant = participants.find(p => p.user_id === user.id);
+                            userCommission = userParticipant ? userParticipant.commission_amount : 0;
+                          } catch (e) {
+                            console.error('Error parsing participant commissions:', e);
+                          }
+                        } else {
+                          userCommission = transaction.deal_owner_id === user.id ? (transaction.deal_owner_commission || 0) : (transaction.investor_owner_commission || 0);
                         }
-                      } else {
-                        userCommission = transaction.deal_owner_id === user.id ? (transaction.deal_owner_commission || 0) : (transaction.investor_owner_commission || 0);
-                      }
-                      
-                      return React.createElement('div', { 
-                        key: transaction.id, 
-                        className: 'flex items-center justify-between p-3 bg-gray-50 rounded' 
-                      },
-                        React.createElement('div', null,
-                          React.createElement('p', { className: 'font-medium' }, deal?.titel || 'Onbekende Deal'),
-                          React.createElement('p', { className: 'text-sm text-gray-600' }, investor?.naam || 'Onbekende Investeerder')
-                        ),
-                        React.createElement('div', { className: 'text-right' },
-                          React.createElement('p', { className: 'font-medium' }, '€' + transaction.transaction_amount.toLocaleString()),
-                          React.createElement('p', { className: 'text-sm text-green-600' }, '+€' + userCommission.toLocaleString() + ' commissie'),
-                          React.createElement('p', { 
-                            className: `text-xs ${transaction.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}` 
-                          }, transaction.status === 'completed' ? 'Afgerond' : 'Pending')
-                        )
-                      );
-                    })
-                  )
-                ),
+                        
+                        return (
+                          <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div>
+                              <p className="font-medium">{deal?.titel || 'Onbekende Deal'}</p>
+                              <p className="text-sm text-gray-600">{investor?.naam || 'Onbekende Investeerder'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">€{transaction.transaction_amount.toLocaleString()}</p>
+                              <p className="text-sm text-green-600">+€{userCommission.toLocaleString()} commissie</p>
+                              <p className={`text-xs ${transaction.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6 border' },
-                  React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, 'Team Leden'),
-                  React.createElement('div', { className: 'space-y-3' },
-                    users.map(userItem => {
-                      const userInvestorCount = investors.filter(i => i.owner_id === userItem.id).length;
-                      const userDealCount = deals.filter(d => d.owner_id === userItem.id).length;
-                      return React.createElement('div', { 
-                        key: userItem.id, 
-                        className: 'flex items-center justify-between p-3 bg-gray-50 rounded' 
-                      },
-                        React.createElement('div', { className: 'flex items-center space-x-3' },
-                          React.createElement(UserCheck, { className: 'h-5 w-5 text-blue-600' }),
-                          React.createElement('div', null,
-                            React.createElement('p', { className: 'font-medium' }, userItem.name),
-                            React.createElement('p', { className: 'text-sm text-gray-600' }, userItem.company)
-                          )
-                        ),
-                        React.createElement('div', { className: 'text-right' },
-                          React.createElement('p', { className: 'text-sm' }, userInvestorCount + ' investeerders'),
-                          React.createElement('p', { className: 'text-sm' }, userDealCount + ' deals')
-                        )
-                      );
-                    })
-                  )
-                )
-              )
+                  <div className="bg-white rounded-lg shadow-md p-6 border">
+                    <h3 className="text-lg font-semibold mb-4">Team Leden</h3>
+                    <div className="space-y-3">
+                      {users.map(userItem => {
+                        const userInvestorCount = investors.filter(i => i.owner_id === userItem.id).length;
+                        const userDealCount = deals.filter(d => d.owner_id === userItem.id).length;
+                        return (
+                          <div key={userItem.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div className="flex items-center space-x-3">
+                              <UserCheck className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <p className="font-medium">{userItem.name}</p>
+                                <p className="text-sm text-gray-600">{userItem.company}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm">{userInvestorCount} investeerders</p>
+                              <p className="text-sm">{userDealCount} deals</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             );
           };
 
           // Show auth form if not logged in
           if (showAuth || !user) {
-            return React.createElement(AuthForm);
+            return <AuthForm />;
           }
 
-          return React.createElement('div', { className: 'max-w-7xl mx-auto p-6' },
-            // Header with user info
-            React.createElement('div', { className: 'mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center' },
-              React.createElement('div', null,
-                React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-2' }, 'Vastgoed Matcher Pro AI'),
-                React.createElement('p', { className: 'text-gray-600 mb-3' }, `Welkom terug, ${user.name}! AI-powered matching, internationale regio targeting, project type filtering & geavanceerde commissie structuren`),
-                React.createElement('div', { className: 'flex flex-wrap items-center space-x-2 space-y-1 sm:space-y-0' },
-                  React.createElement('span', { className: 'text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full' }, '🤖 AI-Enhanced'),
-                  React.createElement('span', { className: 'text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full' }, '📍 Regio Matching'),
-                  React.createElement('span', { className: 'text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full' }, '🏗️ Project Types'),
-                  React.createElement('span', { className: 'text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full' }, '💰 Smart Commissies')
-                )
-              ),
-              React.createElement('div', { className: 'flex items-center space-x-4 mt-4 lg:mt-0' },
-                React.createElement('div', { className: 'flex items-center space-x-2 text-gray-600' },
-                  React.createElement(User, { size: 16 }),
-                  React.createElement('span', null, user.company)
-                ),
-                React.createElement('button', {
-                  onClick: handleLogout,
-                  className: 'flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors'
-                },
-                  React.createElement(LogOut, { size: 16 }),
-                  React.createElement('span', null, 'Uitloggen')
-                )
-              )
-            ),
+          return (
+            <div className="max-w-7xl mx-auto p-6">
+              <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Vastgoed Matcher Pro AI</h1>
+                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! AI-powered matching, internationale regio targeting, project type filtering & geavanceerde commissie structuren</p>
+                  <div className="flex flex-wrap items-center space-x-2 space-y-1 sm:space-y-0">
+                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📍 Regio Matching</span>
+                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🏗️ Project Types</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Smart Commissies</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 mt-4 lg:mt-0">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <User size={16} />
+                    <span>{user.company}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span>Uitloggen</span>
+                  </button>
+                </div>
+              </div>
 
-            // Navigation
-            React.createElement('div', { className: 'flex space-x-2 mb-6 overflow-x-auto pb-2' },
-              React.createElement('button', {
-                onClick: () => setActiveTab('dashboard'),
-                className: `px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
-                  activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`
-              },
-                React.createElement(TrendingUp, { size: 20 }),
-                React.createElement('span', null, 'Dashboard')
-              ),
-              React.createElement('button', {
-                onClick: () => setActiveTab('investors'),
-                className: `px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
-                  activeTab === 'investors' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`
-              },
-                React.createElement(Users, { size: 20 }),
-                React.createElement('span', null, `Investeerders (${investors.length})`)
-              ),
-              React.createElement('button', {
-                onClick: () => setActiveTab('deals'),
-                className: `px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
-                  activeTab === 'deals' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`
-              },
-                React.createElement(Building, { size: 20 }),
-                React.createElement('span', null, `Deals (${deals.length})`)
-              ),
-              React.createElement('button', {
-                onClick: () => setActiveTab('matching'),
-                className: `px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
-                  activeTab === 'matching' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`
-              },
-                React.createElement(Star, { size: 20 }),
-                React.createElement('span', null, 'AI Matching')
-              ),
-              React.createElement('button', {
-                onClick: () => setActiveTab('transactions'),
-                className: `px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
-                  activeTab === 'transactions' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`
-              },
-                React.createElement(DollarSign, { size: 20 }),
-                React.createElement('span', null, `Transacties (${transactions.length})`)
-              )
-            ),
+              <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <TrendingUp size={20} />
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('investors')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'investors' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <Users size={20} />
+                  <span>Investeerders ({investors.length})</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('deals')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'deals' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <Building size={20} />
+                  <span>Deals ({deals.length})</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('matching')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'matching' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <Star size={20} />
+                  <span>AI Matching</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                    activeTab === 'transactions' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <DollarSign size={20} />
+                  <span>Transacties ({transactions.length})</span>
+                </button>
+              </div>
 
-            // Dashboard Tab
-            activeTab === 'dashboard' && React.createElement(Dashboard),
+              {activeTab === 'dashboard' && <Dashboard />}
 
-            // Investors Tab
-            activeTab === 'investors' && React.createElement('div', null,
-              React.createElement('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0' },
-                React.createElement('h2', { className: 'text-2xl font-bold' }, 'Investeerders'),
-                React.createElement('button', {
-                  onClick: () => setShowAddInvestor(true),
-                  className: 'bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors'
-                },
-                  React.createElement(Plus, { size: 20 }),
-                  React.createElement('span', null, 'Nieuwe Investeerder')
-                )
-              ),
+              {activeTab === 'investors' && (
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 className="text-2xl font-bold">Investeerders</h2>
+                    <button
+                      onClick={() => setShowAddInvestor(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                    >
+                      <Plus size={20} />
+                      <span>Nieuwe Investeerder</span>
+                    </button>
+                  </div>
 
-              React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
-                investors.map(investor =>
-                  React.createElement('div', { 
-                    key: investor.id, 
-                    className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
-                  },
-                    React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-                      React.createElement('h3', { className: 'text-xl font-semibold text-gray-900' }, investor.naam),
-                      React.createElement('span', { 
-                        className: `px-2 py-1 rounded-full text-xs font-medium ${
-                          investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
-                          investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }` 
-                      }, investor.risicoprofiel)
-                    ),
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {investors.map(investor => (
+                      <div key={investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
+                            investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {investor.risicoprofiel}
+                          </span>
+                        </div>
 
-                    React.createElement('div', { className: 'space-y-2 text-sm mb-4' },
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(UserCheck, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, `Eigenaar: ${getUserById(investor.owner_id).name}`)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Mail, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, investor.email)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Phone, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, investor.telefoon)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Euro, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, `€${investor.minBudget.toLocaleString()} - €${investor.maxBudget.toLocaleString()}`)
-                      )
-                    ),
+                        <div className="space-y-2 text-sm mb-4">
+                          <div className="flex items-center space-x-2">
+                            <UserCheck size={16} className="text-gray-500" />
+                            <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Mail size={16} className="text-gray-500" />
+                            <span>{investor.email}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Phone size={16} className="text-gray-500" />
+                            <span>{investor.telefoon}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Euro size={16} className="text-gray-500" />
+                            <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
+                          </div>
+                        </div>
 
-                    React.createElement('div', { className: 'mt-4' },
-                      React.createElement('p', { className: 'text-sm text-gray-600 mb-2' }, 'Interessegebieden:'),
-                      React.createElement('div', { className: 'flex flex-wrap gap-1' },
-                        investor.vastgoedTypes.slice(0, 3).map(type =>
-                          React.createElement('span', { 
-                            key: type, 
-                            className: 'px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full'
-                          }, type)
-                        ),
-                        investor.vastgoedTypes.length > 3 && 
-                          React.createElement('span', { className: 'px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full' }, 
-                            `+${investor.vastgoedTypes.length - 3} meer`
-                          )
-                      )
-                    ),
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {investor.vastgoedTypes.slice(0, 3).map(type => (
+                              <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                {type}
+                              </span>
+                            ))}
+                            {investor.vastgoedTypes.length > 3 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                +{investor.vastgoedTypes.length - 3} meer
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                    React.createElement('div', { className: 'mt-3' },
-                      React.createElement('p', { className: 'text-sm text-gray-600 mb-2' }, 'Project Types:'),
-                      React.createElement('div', { className: 'flex flex-wrap gap-1' },
-                        investor.projectTypes?.slice(0, 2).map(type =>
-                          React.createElement('span', { 
-                            key: type, 
-                            className: 'px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full'
-                          }, type)
-                        ),
-                        investor.projectTypes?.length > 2 && 
-                          React.createElement('span', { className: 'px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full' }, 
-                            `+${investor.projectTypes.length - 2} meer`
-                          )
-                      )
-                    ),
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-2">Project Types:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {investor.projectTypes?.slice(0, 2).map(type => (
+                              <span key={type} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                {type}
+                              </span>
+                            ))}
+                            {investor.projectTypes?.length > 2 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                +{investor.projectTypes.length - 2} meer
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                    React.createElement('div', { className: 'mt-4 pt-4 border-t' },
-                      React.createElement('button', {
-                        onClick: () => getInvestorInsights(investor.id),
-                        disabled: isLoadingAI,
-                        className: 'w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2'
-                      },
-                        React.createElement(Brain, { size: 16 }),
-                        React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'AI Analyse')
-                      )
-                    )
-                  )
-                )
-              )
-            ),
+                        <div className="mt-4 pt-4 border-t">
+                          <button
+                            onClick={() => getInvestorInsights(investor.id)}
+                            disabled={isLoadingAI}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                          >
+                            <Brain size={16} />
+                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            // Deals Tab
-            activeTab === 'deals' && React.createElement('div', null,
-              React.createElement('div', { className: 'flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0' },
-                React.createElement('h2', { className: 'text-2xl font-bold' }, 'Deals'),
-                React.createElement('button', {
-                  onClick: () => setShowAddDeal(true),
-                  className: 'bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors'
-                },
-                  React.createElement(Plus, { size: 20 }),
-                  React.createElement('span', null, 'Nieuwe Deal')
-                )
-              ),
+              {activeTab === 'deals' && (
+                <div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 className="text-2xl font-bold">Deals</h2>
+                    <button
+                      onClick={() => setShowAddDeal(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                    >
+                      <Plus size={20} />
+                      <span>Nieuwe Deal</span>
+                    </button>
+                  </div>
 
-              React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-                deals.map(deal =>
-                  React.createElement('div', { 
-                    key: deal.id, 
-                    className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
-                  },
-                    React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-                      React.createElement('h3', { className: 'text-xl font-semibold text-gray-900' }, deal.titel),
-                      React.createElement('span', { 
-                        className: `px-2 py-1 rounded-full text-xs font-medium ${
-                          deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
-                          deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }` 
-                      }, `${deal.risico} risico`)
-                    ),
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {deals.map(deal => (
+                      <div key={deal.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
+                            deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {deal.risico} risico
+                          </span>
+                        </div>
 
-                    React.createElement('div', { className: 'space-y-2 text-sm mb-4' },
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(UserCheck, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, `Eigenaar: ${getUserById(deal.owner_id).name}`)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(MapPin, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.locatie)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Building, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.type)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Target, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.projectType)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Euro, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', { className: 'font-semibold' }, `€${deal.prijs.toLocaleString()}`)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(TrendingUp, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', { className: 'font-semibold text-green-600' }, `${deal.verwachtRendement}% rendement`)
-                      )
-                    ),
+                        <div className="space-y-2 text-sm mb-4">
+                          <div className="flex items-center space-x-2">
+                            <UserCheck size={16} className="text-gray-500" />
+                            <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <MapPin size={16} className="text-gray-500" />
+                            <span>{deal.locatie}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Building size={16} className="text-gray-500" />
+                            <span>{deal.type}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Target size={16} className="text-gray-500" />
+                            <span>{deal.projectType}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Euro size={16} className="text-gray-500" />
+                            <span className="font-semibold">€{deal.prijs.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <TrendingUp size={16} className="text-gray-500" />
+                            <span className="font-semibold text-green-600">{deal.verwachtRendement}% rendement</span>
+                          </div>
+                        </div>
 
-                    React.createElement('p', { className: 'text-sm text-gray-600 mb-4' }, deal.beschrijving),
+                        <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
 
-                    React.createElement('div', { className: 'space-y-2' },
-                      React.createElement('button', {
-                        onClick: () => {
-                          setMatches(findMatches(deal.id));
-                          setActiveTab('matching');
-                        },
-                        className: 'w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2'
-                      },
-                        React.createElement(Star, { size: 16 }),
-                        React.createElement('span', null, 'Vind Matches')
-                      ),
-                      React.createElement('button', {
-                        onClick: () => getDealInsights(deal.id),
-                        disabled: isLoadingAI,
-                        className: 'w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2'
-                      },
-                        React.createElement(Brain, { size: 16 }),
-                        React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'AI Analyse')
-                      )
-                    )
-                  )
-                )
-              )
-            ),
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => {
+                              setMatches(findMatches(deal.id));
+                              setActiveTab('matching');
+                            }}
+                            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                          >
+                            <Star size={16} />
+                            <span>Vind Matches</span>
+                          </button>
+                          <button
+                            onClick={() => getDealInsights(deal.id)}
+                            disabled={isLoadingAI}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                          >
+                            <Brain size={16} />
+                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            // Matching Tab
-            activeTab === 'matching' && React.createElement('div', null,
-              React.createElement('div', { className: 'mb-6' },
-                React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'AI-Powered Matching'),
-                
-                matches.length === 0 ? 
-                  React.createElement('div', { className: 'text-center py-12' },
-                    React.createElement(AlertCircle, { size: 48, className: 'text-gray-400 mx-auto mb-4' }),
-                    React.createElement('div', { className: 'space-y-2' },
-                      React.createElement('p', { className: 'text-gray-600 text-lg' }, 'Selecteer een deal om AI-powered matches te vinden'),
-                      React.createElement('p', { className: 'text-sm text-gray-500' }, 
-                        '💡 Tips: Ga naar "Deals" tab → klik "Vind Matches" bij een deal voor geavanceerde AI analyse'
-                      )
-                    )
-                  ) :
-                  React.createElement('div', null,
-                    React.createElement('div', { className: 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6' },
-                      React.createElement('h4', { className: 'font-semibold text-blue-800 mb-3' }, '🤖 AI-Enhanced Matching Features:'),
-                      React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700' },
-                        React.createElement('div', { className: 'space-y-2' },
-                          React.createElement('p', null, '• Smart Scoring: Regio & locatie matching'),
-                          React.createElement('p', null, '• Project Type: Turn-key, renovatie, transformatie'),
-                          React.createElement('p', null, '• Gedrag Analyse: Investeerder profiel matching'),
-                          React.createElement('p', null, '• Timing Optimalisatie: Beschikbaarheid & ervaring')
-                        ),
-                        React.createElement('div', { className: 'space-y-2' },
-                          React.createElement('p', null, '• Success Probability: AI voorspelling van deal succes'),
-                          React.createElement('p', null, '• Pitch Suggesties: Gepersonaliseerde aanbevelingen'),
-                          React.createElement('p', null, '• Onderhandeling Tips: Strategie per investeerder'),
-                          React.createElement('p', null, '• Project Match: Matching op ontwikkelingstype')
-                        )
-                      )
-                    ),
+              {activeTab === 'matching' && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold mb-4">AI-Powered Matching</h2>
+                    
+                    {matches.length === 0 ? (
+                      <div className="text-center py-12">
+                        <AlertCircle size={48} className="text-gray-400 mx-auto mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-gray-600 text-lg">Selecteer een deal om AI-powered matches te vinden</p>
+                          <p className="text-sm text-gray-500">
+                            💡 Tips: Ga naar "Deals" tab → klik "Vind Matches" bij een deal voor geavanceerde AI analyse
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+                          <h4 className="font-semibold text-blue-800 mb-3">🤖 AI-Enhanced Matching Features:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                            <div className="space-y-2">
+                              <p>• Smart Scoring: Regio & locatie matching</p>
+                              <p>• Project Type: Turn-key, renovatie, transformatie</p>
+                              <p>• Gedrag Analyse: Investeerder profiel matching</p>
+                              <p>• Timing Optimalisatie: Beschikbaarheid & ervaring</p>
+                            </div>
+                            <div className="space-y-2">
+                              <p>• Success Probability: AI voorspelling van deal succes</p>
+                              <p>• Pitch Suggesties: Gepersonaliseerde aanbevelingen</p>
+                              <p>• Onderhandeling Tips: Strategie per investeerder</p>
+                              <p>• Project Match: Matching op ontwikkelingstype</p>
+                            </div>
+                          </div>
+                        </div>
 
-                    React.createElement('div', { className: 'bg-blue-50 p-6 rounded-lg mb-6' },
-                      React.createElement('div', { className: 'flex flex-col lg:flex-row justify-between items-start lg:items-center' },
-                        React.createElement('div', { className: 'mb-4 lg:mb-0' },
-                          React.createElement('h3', { className: 'font-semibold text-lg mb-2' }, `🎯 Deal: ${matches[0].deal.titel}`),
-                          React.createElement('p', { className: 'text-sm text-gray-600 mb-2' }, matches[0].deal.beschrijving),
-                          React.createElement('div', { className: 'flex flex-wrap items-center gap-4 text-sm' },
-                            React.createElement('span', { className: 'text-blue-600 font-medium' }, `Deal eigenaar: ${getUserById(matches[0].deal.owner_id).name}`),
-                            React.createElement('span', { className: 'text-gray-600' }, `Type: ${matches[0].deal.type}`),
-                            React.createElement('span', { className: 'text-gray-600' }, `Project: ${matches[0].deal.projectType}`)
-                          )
-                        ),
-                        React.createElement('div', { className: 'text-center lg:text-right' },
-                          React.createElement('div', { className: 'text-3xl font-bold text-blue-600' }, matches.length),
-                          React.createElement('div', { className: 'text-sm text-gray-600' }, 'Matches gevonden')
-                        )
-                      )
-                    ),
+                        <div className="bg-blue-50 p-6 rounded-lg mb-6">
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                            <div className="mb-4 lg:mb-0">
+                              <h3 className="font-semibold text-lg mb-2">🎯 Deal: {matches[0].deal.titel}</h3>
+                              <p className="text-sm text-gray-600 mb-2">{matches[0].deal.beschrijving}</p>
+                              <div className="flex flex-wrap items-center gap-4 text-sm">
+                                <span className="text-blue-600 font-medium">Deal eigenaar: {getUserById(matches[0].deal.owner_id).name}</span>
+                                <span className="text-gray-600">Type: {matches[0].deal.type}</span>
+                                <span className="text-gray-600">Project: {matches[0].deal.projectType}</span>
+                              </div>
+                            </div>
+                            <div className="text-center lg:text-right">
+                              <div className="text-3xl font-bold text-blue-600">{matches.length}</div>
+                              <div className="text-sm text-gray-600">Matches gevonden</div>
+                            </div>
+                          </div>
+                        </div>
 
-                    React.createElement('div', { className: 'space-y-6' },
-                      matches.map((match, index) =>
-                        React.createElement('div', { 
-                          key: match.investor.id, 
-                          className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
-                        },
-                          React.createElement('div', { className: 'flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4' },
-                            React.createElement('div', { className: 'flex items-center space-x-4 mb-4 lg:mb-0' },
-                              React.createElement('div', { className: 'flex items-center space-x-2' },
-                                React.createElement('span', { 
-                                  className: `text-2xl font-bold ${
-                                    index === 0 ? 'text-yellow-500' : 
-                                    index === 1 ? 'text-gray-400' : 
-                                    index === 2 ? 'text-orange-400' : 'text-gray-600'
-                                  }` 
-                                }, `#${index + 1}`),
-                                React.createElement('div', null,
-                                  React.createElement('h3', { className: 'text-xl font-semibold' }, match.investor.naam),
-                                  React.createElement('p', { className: 'text-sm text-gray-600' }, match.investor.bedrijf)
-                                )
-                              )
-                            ),
-                            React.createElement('div', { className: 'flex items-center space-x-4' },
-                              React.createElement('span', { 
-                                className: `px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}` 
-                              }, `${match.matchScore}% match`),
-                              React.createElement('button', {
-                                onClick: () => createTransaction(match.deal.id, match.investor.id),
-                                className: 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2'
-                              },
-                                React.createElement(DollarSign, { size: 16 }),
-                                React.createElement('span', null, 'Start Deal')
-                              )
-                            )
-                          ),
+                        <div className="space-y-6">
+                          {matches.map((match, index) => (
+                            <div key={match.investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4">
+                                <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-2xl font-bold ${
+                                      index === 0 ? 'text-yellow-500' : 
+                                      index === 1 ? 'text-gray-400' : 
+                                      index === 2 ? 'text-orange-400' : 'text-gray-600'
+                                    }`}>
+                                      #{index + 1}
+                                    </span>
+                                    <div>
+                                      <h3 className="text-xl font-semibold">{match.investor.naam}</h3>
+                                      <p className="text-sm text-gray-600">{match.investor.bedrijf}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                  <span className={`px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}`}>
+                                    {match.matchScore}% match
+                                  </span>
+                                  <button
+                                    onClick={() => createTransaction(match.deal.id, match.investor.id)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                                  >
+                                    <DollarSign size={16} />
+                                    <span>Start Deal</span>
+                                  </button>
+                                </div>
+                              </div>
 
-                          React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                            React.createElement('div', null,
-                              React.createElement('h4', { className: 'font-semibold mb-3' }, 'Match Analyse:'),
-                              React.createElement('div', { className: 'space-y-2' },
-                                match.reasoning.slice(0, 5).map((reason, idx) =>
-                                  React.createElement('div', { 
-                                    key: idx,
-                                    className: 'text-sm p-2 bg-gray-50 rounded' 
-                                  }, reason)
-                                )
-                              )
-                            ),
-                            React.createElement('div', null,
-                              React.createElement('h4', { className: 'font-semibold mb-3' }, 'Investeerder Details:'),
-                              React.createElement('div', { className: 'space-y-2 text-sm' },
-                                React.createElement('p', null, `Budget: €${match.investor.minBudget.toLocaleString()} - €${match.investor.maxBudget.toLocaleString()}`),
-                                React.createElement('p', null, `Gewenst rendement: ${match.investor.gewenstRendement}%`),
-                                React.createElement('p', null, `Risicoprofiel: ${match.investor.risicoprofiel}`),
-                                React.createElement('p', null, `Ervaring: ${match.investor.ervaringLevel}`),
-                                React.createElement('p', null, `Beschikbaarheid: ${match.investor.beschikbaarheid}`)
-                              )
-                            )
-                          ),
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div>
+                                  <h4 className="font-semibold mb-3">Match Analyse:</h4>
+                                  <div className="space-y-2">
+                                    {match.reasoning.slice(0, 5).map((reason, idx) => (
+                                      <div key={idx} className="text-sm p-2 bg-gray-50 rounded">
+                                        {reason}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold mb-3">Investeerder Details:</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <p>Budget: €{match.investor.minBudget.toLocaleString()} - €{match.investor.maxBudget.toLocaleString()}</p>
+                                    <p>Gewenst rendement: {match.investor.gewenstRendement}%</p>
+                                    <p>Risicoprofiel: {match.investor.risicoprofiel}</p>
+                                    <p>Ervaring: {match.investor.ervaringLevel}</p>
+                                    <p>Beschikbaarheid: {match.investor.beschikbaarheid}</p>
+                                  </div>
+                                </div>
+                              </div>
 
-                          React.createElement('div', { className: 'mt-6 flex flex-wrap gap-2' },
-                            React.createElement('button', {
-                              onClick: () => getSmartMatchingInsights(match.deal.id, match.investor.id),
-                              disabled: isLoadingAI,
-                              className: 'bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2'
-                            },
-                              React.createElement(Brain, { size: 16 }),
-                              React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse')
-                            ),
-                            React.createElement('button', {
-                              onClick: () => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`),
-                              className: 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2'
-                            },
-                              React.createElement(Mail, { size: 16 }),
-                              React.createElement('span', null, 'Contact')
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-              )
-            ),
+                              <div className="mt-6 flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => getSmartMatchingInsights(match.deal.id, match.investor.id)}
+                                  disabled={isLoadingAI}
+                                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                                >
+                                  <Brain size={16} />
+                                  <span>{isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse'}</span>
+                                </button>
+                                <button
+                                  onClick={() => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`)}
+                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                                >
+                                  <Mail size={16} />
+                                  <span>Contact</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            // Transactions Tab
-            activeTab === 'transactions' && React.createElement('div', null,
-              React.createElement('div', { className: 'mb-6' },
-                React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Transacties & Commissies'),
-                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-4 mb-6' },
-                  React.createElement('div', { className: 'bg-white p-4 rounded-lg shadow border' },
-                    React.createElement('h3', { className: 'font-semibold text-gray-700' }, 'Totale Commissie'),
-                    React.createElement('p', { className: 'text-2xl font-bold text-green-600' }, 
-                      '€' + calculateCommissionSummary().totalCommission.toLocaleString()
-                    )
-                  ),
-                  React.createElement('div', { className: 'bg-white p-4 rounded-lg shadow border' },
-                    React.createElement('h3', { className: 'font-semibold text-gray-700' }, 'Afgeronde Deals'),
-                    React.createElement('p', { className: 'text-2xl font-bold text-blue-600' }, 
-                      calculateCommissionSummary().completedTransactions
-                    )
-                  ),
-                  React.createElement('div', { className: 'bg-white p-4 rounded-lg shadow border' },
-                    React.createElement('h3', { className: 'font-semibold text-gray-700' }, 'Pending Deals'),
-                    React.createElement('p', { className: 'text-2xl font-bold text-yellow-600' }, 
-                      calculateCommissionSummary().pendingTransactions
-                    )
-                  )
-                )
-              ),
+              {activeTab === 'transactions' && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold mb-4">Transacties & Commissies</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Totale Commissie</h3>
+                        <p className="text-2xl font-bold text-green-600">
+                          €{calculateCommissionSummary().totalCommission.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Afgeronde Deals</h3>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {calculateCommissionSummary().completedTransactions}
+                        </p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow border">
+                        <h3 className="font-semibold text-gray-700">Pending Deals</h3>
+                        <p className="text-2xl font-bold text-yellow-600">
+                          {calculateCommissionSummary().pendingTransactions}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              React.createElement('div', { className: 'space-y-6' },
-                transactions.map(transaction => {
-                  const deal = deals.find(d => d.id === transaction.deal_id);
-                  const investor = investors.find(i => i.id === transaction.investor_id);
-                  
-                  let participantCommissions = [];
-                  try {
-                    participantCommissions = transaction.participant_commissions ? 
-                      JSON.parse(transaction.participant_commissions) : [];
-                  } catch (e) {
-                    console.error('Error parsing participant commissions:', e);
-                  }
+                  <div className="space-y-6">
+                    {transactions.map(transaction => {
+                      const deal = deals.find(d => d.id === transaction.deal_id);
+                      const investor = investors.find(i => i.id === transaction.investor_id);
+                      
+                      let participantCommissions = [];
+                      try {
+                        participantCommissions = transaction.participant_commissions ? 
+                          JSON.parse(transaction.participant_commissions) : [];
+                      } catch (e) {
+                        console.error('Error parsing participant commissions:', e);
+                      }
 
-                  return React.createElement('div', { 
-                    key: transaction.id,
-                    className: 'bg-white rounded-lg shadow-md p-6 border' 
-                  },
-                    React.createElement('div', { className: 'flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4' },
-                      React.createElement('div', null,
-                        React.createElement('h3', { className: 'text-xl font-semibold mb-2' }, 
-                          deal?.titel || 'Onbekende Deal'
-                        ),
-                        React.createElement('div', { className: 'flex flex-wrap items-center gap-4 text-sm text-gray-600' },
-                          React.createElement('span', null, `Investeerder: ${investor?.naam || 'Onbekend'}`),
-                          React.createElement('span', null, `Waarde: €${transaction.transaction_amount.toLocaleString()}`),
-                          React.createElement('span', null, `Commissie: €${transaction.total_commission.toLocaleString()}`)
-                        )
-                      ),
-                      React.createElement('div', { className: 'mt-4 lg:mt-0' },
-                        React.createElement('span', { 
-                          className: `px-3 py-1 rounded-full text-sm font-medium ${
-                            transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }` 
-                        }, transaction.status === 'completed' ? 'Afgerond' : 'Pending')
-                      )
-                    ),
+                      return (
+                        <div key={transaction.id} className="bg-white rounded-lg shadow-md p-6 border">
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4">
+                            <div>
+                              <h3 className="text-xl font-semibold mb-2">
+                                {deal?.titel || 'Onbekende Deal'}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                <span>Investeerder: {investor?.naam || 'Onbekend'}</span>
+                                <span>Waarde: €{transaction.transaction_amount.toLocaleString()}</span>
+                                <span>Commissie: €{transaction.total_commission.toLocaleString()}</span>
+                              </div>
+                            </div>
+                            <div className="mt-4 lg:mt-0">
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
+                              </span>
+                            </div>
+                          </div>
 
-                    React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                      React.createElement('div', null,
-                        React.createElement('h4', { className: 'font-semibold mb-3' }, 'Deal Details:'),
-                        React.createElement('div', { className: 'space-y-2 text-sm' },
-                          React.createElement('p', null, `Locatie: ${deal?.locatie || 'Onbekend'}`),
-                          React.createElement('p', null, `Type: ${deal?.type || 'Onbekend'}`),
-                          React.createElement('p', null, `Project: ${deal?.projectType || 'Onbekend'}`),
-                          React.createElement('p', null, `Verwacht rendement: ${deal?.verwachtRendement || 0}%`)
-                        )
-                      ),
-                      React.createElement('div', null,
-                        React.createElement('h4', { className: 'font-semibold mb-3' }, 'Commissie Verdeling:'),
-                        React.createElement('div', { className: 'space-y-2' },
-                          participantCommissions.map((participant, index) => {
-                            const user = getUserById(participant.user_id);
-                            return React.createElement('div', { 
-                              key: index,
-                              className: 'flex justify-between items-center text-sm p-2 bg-gray-50 rounded' 
-                            },
-                              React.createElement('span', null, `${user.name} (${participant.role})`),
-                              React.createElement('span', { className: 'font-semibold' }, 
-                                `€${participant.commission_amount.toLocaleString()}`
-                              )
-                            );
-                          })
-                        )
-                      )
-                    )
-                  );
-                })
-              )
-            ),
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                              <h4 className="font-semibold mb-3">Deal Details:</h4>
+                              <div className="space-y-2 text-sm">
+                                <p>Locatie: {deal?.locatie || 'Onbekend'}</p>
+                                <p>Type: {deal?.type || 'Onbekend'}</p>
+                                <p>Project: {deal?.projectType || 'Onbekend'}</p>
+                                <p>Verwacht rendement: {deal?.verwachtRendement || 0}%</p>
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-3">Commissie Verdeling:</h4>
+                              <div className="space-y-2">
+                                {participantCommissions.map((participant, index) => {
+                                  const user = getUserById(participant.user_id);
+                                  return (
+                                    <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                                      <span>{user.name} ({participant.role})</span>
+                                      <span className="font-semibold">
+                                        €{participant.commission_amount.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-            // AI Insights Display
-            Object.keys(aiInsights).length > 0 && React.createElement('div', { className: 'fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border p-4 z-40' },
-              React.createElement('div', { className: 'flex justify-between items-center mb-2' },
-                React.createElement('h4', { className: 'font-semibold flex items-center space-x-2' },
-                  React.createElement(Brain, { size: 16 }),
-                  React.createElement('span', null, 'AI Insights')
-                ),
-                React.createElement('button', {
-                  onClick: () => setAiInsights({}),
-                  className: 'text-gray-400 hover:text-gray-600'
-                }, '✕')
-              ),
-              React.createElement('div', { className: 'text-sm space-y-2 max-h-96 overflow-y-auto' },
-                Object.entries(aiInsights).slice(-1).map(([key, insight]) =>
-                  React.createElement('div', { key: key },
-                    React.createElement('p', { className: 'font-medium' }, 
-                      key.includes('investor') ? 'Investeerder Analyse:' :
-                      key.includes('deal') ? 'Deal Analyse:' :
-                      key.includes('smart_match') ? 'Smart Match Analyse:' :
-                      'Markt Inzichten:'
-                    ),
-                    React.createElement('div', { className: 'text-xs text-gray-600 space-y-1' },
-                      typeof insight === 'object' ? 
-                        Object.entries(insight).slice(0, 3).map(([k, v]) =>
-                          React.createElement('p', { key: k }, `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-                        ) :
-                        React.createElement('p', null, insight)
-                    )
-                  )
-                )
-              )
-            )
+              {Object.keys(aiInsights).length > 0 && (
+                <div className="fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border p-4 z-40">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold flex items-center space-x-2">
+                      <Brain size={16} />
+                      <span>AI Insights</span>
+                    </h4>
+                    <button
+                      onClick={() => setAiInsights({})}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="text-sm space-y-2 max-h-96 overflow-y-auto">
+                    {Object.entries(aiInsights).slice(-1).map(([key, insight]) => (
+                      <div key={key}>
+                        <p className="font-medium">
+                          {key.includes('investor') ? 'Investeerder Analyse:' :
+                          key.includes('deal') ? 'Deal Analyse:' :
+                          key.includes('smart_match') ? 'Smart Match Analyse:' :
+                          'Markt Inzichten:'}
+                        </p>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          {typeof insight === 'object' ? 
+                            Object.entries(insight).slice(0, 3).map(([k, v]) => (
+                              <p key={k}>{k}: {Array.isArray(v) ? v.join(', ') : v}</p>
+                            )) :
+                            <p>{insight}</p>
+                          }
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         };
 
         // Initialize the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(VastgoedInvesteerderMatcher));
+        root.render(<VastgoedInvesteerderMatcher />);
 
         console.log('🚀 Vastgoed Matcher Pro AI geladen - Demo modus actief');
         console.log('📍 Deployment: Netlify Ready');
