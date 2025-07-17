@@ -946,18 +946,20 @@
                       React.createElement('div', { className: 'mb-4' },
                         React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Vastgoed Types'),
                         React.createElement('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-2' },
-                          ['Appartement', 'Kantoor', 'Retail', 'Industrie', 'Woning', 'Hotel', 'Studenten', 'Zorgvastgoed'].map(type =>
-                            React.createElement('label', { 
-                              key: type,
-                              className: 'flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50' 
-                            },
-                              React.createElement('input', {
-                                type: 'checkbox',
-                                checked: formData.vastgoedTypes.includes(type),
-                                onChange: () => handleTypeChange(type),
-                                className: 'text-blue-600'
-                              }),
-                              React.createElement('span', { className: 'text-sm' }, type)
+                          React.createElement(React.Fragment, null,
+                            ...['Appartement', 'Kantoor', 'Retail', 'Industrie', 'Woning', 'Hotel', 'Studenten', 'Zorgvastgoed'].map(type =>
+                              React.createElement('label', { 
+                                key: type,
+                                className: 'flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50' 
+                              },
+                                React.createElement('input', {
+                                  type: 'checkbox',
+                                  checked: formData.vastgoedTypes.includes(type),
+                                  onChange: () => handleTypeChange(type),
+                                  className: 'text-blue-600'
+                                }),
+                                React.createElement('span', { className: 'text-sm' }, type)
+                              )
                             )
                           )
                         )
@@ -965,18 +967,20 @@
                       React.createElement('div', null,
                         React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Project Types'),
                         React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-2' },
-                          ['Turn-key', 'Renovatie', 'Transformatie', 'Ontwikkeling', 'Gemengd'].map(type =>
-                            React.createElement('label', { 
-                              key: type,
-                              className: 'flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50' 
-                            },
-                              React.createElement('input', {
-                                type: 'checkbox',
-                                checked: formData.projectTypes.includes(type),
-                                onChange: () => handleProjectTypeChange(type),
-                                className: 'text-blue-600'
-                              }),
-                              React.createElement('span', { className: 'text-sm' }, type)
+                          React.createElement(React.Fragment, null,
+                            ...['Turn-key', 'Renovatie', 'Transformatie', 'Ontwikkeling', 'Gemengd'].map(type =>
+                              React.createElement('label', { 
+                                key: type,
+                                className: 'flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50' 
+                              },
+                                React.createElement('input', {
+                                  type: 'checkbox',
+                                  checked: formData.projectTypes.includes(type),
+                                  onChange: () => handleProjectTypeChange(type),
+                                  className: 'text-blue-600'
+                                }),
+                                React.createElement('span', { className: 'text-sm' }, type)
+                              )
                             )
                           )
                         )
@@ -1250,72 +1254,76 @@
 
                   React.createElement('div', { className: 'space-y-4 mb-6' },
                     React.createElement('h4', { className: 'font-semibold' }, 'Commissie Verdeling:'),
-                    commissionStructure.participants.map((participant, index) =>
-                      React.createElement('div', { 
-                        key: index,
-                        className: 'border rounded p-4 bg-gray-50' 
-                      },
-                        React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-4' },
-                          React.createElement('div', null,
-                            React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Rol'),
-                            React.createElement('select', {
-                              value: participant.role,
-                              onChange: (e) => updateParticipant(index, 'role', e.target.value),
-                              className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            },
-                              React.createElement('option', { value: 'deal_owner' }, 'Deal Eigenaar'),
-                              React.createElement('option', { value: 'investor_owner' }, 'Investeerder Eigenaar'),
-                              React.createElement('option', { value: 'referral' }, 'Verwijzer'),
-                              React.createElement('option', { value: 'manager' }, 'Manager'),
-                              React.createElement('option', { value: 'assistant' }, 'Assistent')
-                            )
-                          ),
-                          React.createElement('div', null,
-                            React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Gebruiker'),
-                            React.createElement('select', {
-                              value: participant.user_id || '',
-                              onChange: (e) => updateParticipant(index, 'user_id', e.target.value),
-                              className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            },
-                              React.createElement('option', { value: '' }, 'Selecteer gebruiker'),
-                              users.map(user =>
-                                React.createElement('option', { key: user.id, value: user.id }, user.name)
+                    React.createElement(React.Fragment, null,
+                      ...commissionStructure.participants.map((participant, index) =>
+                        React.createElement('div', { 
+                          key: index,
+                          className: 'border rounded p-4 bg-gray-50' 
+                        },
+                          React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-4' },
+                            React.createElement('div', null,
+                              React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Rol'),
+                              React.createElement('select', {
+                                value: participant.role,
+                                onChange: (e) => updateParticipant(index, 'role', e.target.value),
+                                className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                              },
+                                React.createElement('option', { value: 'deal_owner' }, 'Deal Eigenaar'),
+                                React.createElement('option', { value: 'investor_owner' }, 'Investeerder Eigenaar'),
+                                React.createElement('option', { value: 'referral' }, 'Verwijzer'),
+                                React.createElement('option', { value: 'manager' }, 'Manager'),
+                                React.createElement('option', { value: 'assistant' }, 'Assistent')
                               )
-                            )
-                          ),
-                          React.createElement('div', null,
-                            React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Type'),
-                            React.createElement('select', {
-                              value: participant.type,
-                              onChange: (e) => updateParticipant(index, 'type', e.target.value),
-                              className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            },
-                              React.createElement('option', { value: 'percentage' }, 'Percentage'),
-                              React.createElement('option', { value: 'fixed' }, 'Vast Bedrag')
-                            )
-                          ),
-                          React.createElement('div', null,
-                            React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 
-                              participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'
                             ),
-                            React.createElement('input', {
-                              type: 'number',
-                              step: participant.type === 'percentage' ? '0.1' : '1',
-                              value: participant.type === 'percentage' ? participant.percentage : participant.fixed_amount,
-                              onChange: (e) => updateParticipant(
-                                index, 
-                                participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
-                                parseFloat(e.target.value)
+                            React.createElement('div', null,
+                              React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Gebruiker'),
+                              React.createElement('select', {
+                                value: participant.user_id || '',
+                                onChange: (e) => updateParticipant(index, 'user_id', e.target.value),
+                                className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                              },
+                                React.createElement('option', { value: '' }, 'Selecteer gebruiker'),
+                                React.createElement(React.Fragment, null,
+                                  ...users.map(user =>
+                                    React.createElement('option', { key: user.id, value: user.id }, user.name)
+                                  )
+                                )
+                              )
+                            ),
+                            React.createElement('div', null,
+                              React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 'Type'),
+                              React.createElement('select', {
+                                value: participant.type,
+                                onChange: (e) => updateParticipant(index, 'type', e.target.value),
+                                className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                              },
+                                React.createElement('option', { value: 'percentage' }, 'Percentage'),
+                                React.createElement('option', { value: 'fixed' }, 'Vast Bedrag')
+                              )
+                            ),
+                            React.createElement('div', null,
+                              React.createElement('label', { className: 'block text-sm font-medium mb-1' }, 
+                                participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'
                               ),
-                              className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            })
-                          )
-                        ),
-                        commissionStructure.participants.length > 2 && 
-                          React.createElement('button', {
-                            onClick: () => removeParticipant(index),
-                            className: 'mt-2 text-red-600 hover:text-red-800 text-sm'
-                          }, 'Verwijder')
+                              React.createElement('input', {
+                                type: 'number',
+                                step: participant.type === 'percentage' ? '0.1' : '1',
+                                value: participant.type === 'percentage' ? participant.percentage : participant.fixed_amount,
+                                onChange: (e) => updateParticipant(
+                                  index, 
+                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
+                                  parseFloat(e.target.value)
+                                ),
+                                className: 'w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                              })
+                            )
+                          ),
+                          commissionStructure.participants.length > 2 && 
+                            React.createElement('button', {
+                              onClick: () => removeParticipant(index),
+                              className: 'mt-2 text-red-600 hover:text-red-800 text-sm'
+                            }, 'Verwijder')
+                        )
                       )
                     ),
                     
@@ -1331,20 +1339,22 @@
                   React.createElement('div', { className: 'bg-blue-50 p-4 rounded mb-6' },
                     React.createElement('h5', { className: 'font-semibold mb-2' }, 'Commissie Overzicht:'),
                     React.createElement('div', { className: 'space-y-1 text-sm' },
-                      commissionStructure.participants.map((participant, index) => {
-                        const user = getUserById(participant.user_id);
-                        const commission = participant.type === 'percentage' 
-                          ? totalCommission * (participant.percentage / 100)
-                          : participant.fixed_amount;
-                        
-                        return React.createElement('div', { 
-                          key: index,
-                          className: 'flex justify-between' 
-                        },
-                          React.createElement('span', null, `${user.name} (${participant.role})`),
-                          React.createElement('span', null, `€${commission.toLocaleString()}`)
-                        );
-                      }),
+                      React.createElement(React.Fragment, null,
+                        ...commissionStructure.participants.map((participant, index) => {
+                          const user = getUserById(participant.user_id);
+                          const commission = participant.type === 'percentage' 
+                            ? totalCommission * (participant.percentage / 100)
+                            : participant.fixed_amount;
+                          
+                          return React.createElement('div', { 
+                            key: index,
+                            className: 'flex justify-between' 
+                          },
+                            React.createElement('span', null, `${user.name} (${participant.role})`),
+                            React.createElement('span', null, `€${commission.toLocaleString()}`)
+                          );
+                        })
+                      ),
                       React.createElement('div', { className: 'border-t pt-1 font-semibold flex justify-between' },
                         React.createElement('span', null, 'Totaal:'),
                         React.createElement('span', null, `€${totalCommission.toLocaleString()}`)
@@ -1394,7 +1404,6 @@
 
             const handleDemoLogin = (email, password) => {
               console.log('🚀 Demo login:', email);
-              setFormData({ ...formData, email, password });
               handleLogin({ email, password });
             };
 
@@ -1437,8 +1446,8 @@
                     React.createElement('p', null, '3. Ververs de pagina en probeer opnieuw')
                   ),
                   
-                  // Register fields (conditionally rendered)
-                  authMode === 'register' ? React.createElement(React.Fragment, null,
+                  // Register fields (fixed conditional rendering)
+                  authMode === 'register' ? React.createElement('div', null,
                     React.createElement('div', null,
                       React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-1' }, 'Naam'),
                       React.createElement('input', {
@@ -1809,69 +1818,71 @@
               ),
 
               React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-                deals.map(deal =>
-                  React.createElement('div', { 
-                    key: deal.id, 
-                    className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
-                  },
-                    React.createElement('div', { className: 'flex items-center justify-between mb-4' },
-                      React.createElement('h3', { className: 'text-xl font-semibold text-gray-900' }, deal.titel),
-                      React.createElement('span', { 
-                        className: `px-2 py-1 rounded-full text-xs font-medium ${
-                          deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
-                          deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }` 
-                      }, `${deal.risico} risico`)
-                    ),
+                React.createElement(React.Fragment, null,
+                  ...deals.map(deal =>
+                    React.createElement('div', { 
+                      key: deal.id, 
+                      className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
+                    },
+                      React.createElement('div', { className: 'flex items-center justify-between mb-4' },
+                        React.createElement('h3', { className: 'text-xl font-semibold text-gray-900' }, deal.titel),
+                        React.createElement('span', { 
+                          className: `px-2 py-1 rounded-full text-xs font-medium ${
+                            deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
+                            deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }` 
+                        }, `${deal.risico} risico`)
+                      ),
 
-                    React.createElement('div', { className: 'space-y-2 text-sm mb-4' },
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(UserCheck, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, `Eigenaar: ${getUserById(deal.owner_id).name}`)
+                      React.createElement('div', { className: 'space-y-2 text-sm mb-4' },
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(UserCheck, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', null, `Eigenaar: ${getUserById(deal.owner_id).name}`)
+                        ),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(MapPin, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', null, deal.locatie)
+                        ),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(Building, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', null, deal.type)
+                        ),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(Target, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', null, deal.projectType)
+                        ),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(Euro, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', { className: 'font-semibold' }, `€${deal.prijs.toLocaleString()}`)
+                        ),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                          React.createElement(TrendingUp, { size: 16, className: 'text-gray-500' }),
+                          React.createElement('span', { className: 'font-semibold text-green-600' }, `${deal.verwachtRendement}% rendement`)
+                        )
                       ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(MapPin, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.locatie)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Building, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.type)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Target, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', null, deal.projectType)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(Euro, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', { className: 'font-semibold' }, `€${deal.prijs.toLocaleString()}`)
-                      ),
-                      React.createElement('div', { className: 'flex items-center space-x-2' },
-                        React.createElement(TrendingUp, { size: 16, className: 'text-gray-500' }),
-                        React.createElement('span', { className: 'font-semibold text-green-600' }, `${deal.verwachtRendement}% rendement`)
-                      )
-                    ),
 
-                    React.createElement('p', { className: 'text-sm text-gray-600 mb-4' }, deal.beschrijving),
+                      React.createElement('p', { className: 'text-sm text-gray-600 mb-4' }, deal.beschrijving),
 
-                    React.createElement('div', { className: 'space-y-2' },
-                      React.createElement('button', {
-                        onClick: () => {
-                          setMatches(findMatches(deal.id));
-                          setActiveTab('matching');
+                      React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('button', {
+                          onClick: () => {
+                            setMatches(findMatches(deal.id));
+                            setActiveTab('matching');
+                          },
+                          className: 'w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2'
                         },
-                        className: 'w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2'
-                      },
-                        React.createElement(Star, { size: 16 }),
-                        React.createElement('span', null, 'Vind Matches')
-                      ),
-                      React.createElement('button', {
-                        onClick: () => getDealInsights(deal.id),
-                        disabled: isLoadingAI,
-                        className: 'w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2'
-                      },
-                        React.createElement(Brain, { size: 16 }),
-                        React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'AI Analyse')
+                          React.createElement(Star, { size: 16 }),
+                          React.createElement('span', null, 'Vind Matches')
+                        ),
+                        React.createElement('button', {
+                          onClick: () => getDealInsights(deal.id),
+                          disabled: isLoadingAI,
+                          className: 'w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2'
+                        },
+                          React.createElement(Brain, { size: 16 }),
+                          React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'AI Analyse')
+                        )
                       )
                     )
                   )
@@ -1932,80 +1943,84 @@
                     ),
 
                     React.createElement('div', { className: 'space-y-6' },
-                      matches.map((match, index) =>
-                        React.createElement('div', { 
-                          key: match.investor.id, 
-                          className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
-                        },
-                          React.createElement('div', { className: 'flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4' },
-                            React.createElement('div', { className: 'flex items-center space-x-4 mb-4 lg:mb-0' },
-                              React.createElement('div', { className: 'flex items-center space-x-2' },
+                      React.createElement(React.Fragment, null,
+                        ...matches.map((match, index) =>
+                          React.createElement('div', { 
+                            key: match.investor.id, 
+                            className: 'bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow' 
+                          },
+                            React.createElement('div', { className: 'flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4' },
+                              React.createElement('div', { className: 'flex items-center space-x-4 mb-4 lg:mb-0' },
+                                React.createElement('div', { className: 'flex items-center space-x-2' },
+                                  React.createElement('span', { 
+                                    className: `text-2xl font-bold ${
+                                      index === 0 ? 'text-yellow-500' : 
+                                      index === 1 ? 'text-gray-400' : 
+                                      index === 2 ? 'text-orange-400' : 'text-gray-600'
+                                    }` 
+                                  }, `#${index + 1}`),
+                                  React.createElement('div', null,
+                                    React.createElement('h3', { className: 'text-xl font-semibold' }, match.investor.naam),
+                                    React.createElement('p', { className: 'text-sm text-gray-600' }, match.investor.bedrijf)
+                                  )
+                                )
+                              ),
+                              React.createElement('div', { className: 'flex items-center space-x-4' },
                                 React.createElement('span', { 
-                                  className: `text-2xl font-bold ${
-                                    index === 0 ? 'text-yellow-500' : 
-                                    index === 1 ? 'text-gray-400' : 
-                                    index === 2 ? 'text-orange-400' : 'text-gray-600'
-                                  }` 
-                                }, `#${index + 1}`),
-                                React.createElement('div', null,
-                                  React.createElement('h3', { className: 'text-xl font-semibold' }, match.investor.naam),
-                                  React.createElement('p', { className: 'text-sm text-gray-600' }, match.investor.bedrijf)
+                                  className: `px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}` 
+                                }, `${match.matchScore}% match`),
+                                React.createElement('button', {
+                                  onClick: () => createTransaction(match.deal.id, match.investor.id),
+                                  className: 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2'
+                                },
+                                  React.createElement(DollarSign, { size: 16 }),
+                                  React.createElement('span', null, 'Start Deal')
                                 )
                               )
                             ),
-                            React.createElement('div', { className: 'flex items-center space-x-4' },
-                              React.createElement('span', { 
-                                className: `px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}` 
-                              }, `${match.matchScore}% match`),
+
+                            React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                              React.createElement('div', null,
+                                React.createElement('h4', { className: 'font-semibold mb-3' }, 'Match Analyse:'),
+                                React.createElement('div', { className: 'space-y-2' },
+                                  React.createElement(React.Fragment, null,
+                                    ...match.reasoning.slice(0, 5).map((reason, idx) =>
+                                      React.createElement('div', { 
+                                        key: idx,
+                                        className: 'text-sm p-2 bg-gray-50 rounded' 
+                                      }, reason)
+                                    )
+                                  )
+                                )
+                              ),
+                              React.createElement('div', null,
+                                React.createElement('h4', { className: 'font-semibold mb-3' }, 'Investeerder Details:'),
+                                React.createElement('div', { className: 'space-y-2 text-sm' },
+                                  React.createElement('p', null, `Budget: €${match.investor.minBudget.toLocaleString()} - €${match.investor.maxBudget.toLocaleString()}`),
+                                  React.createElement('p', null, `Gewenst rendement: ${match.investor.gewenstRendement}%`),
+                                  React.createElement('p', null, `Risicoprofiel: ${match.investor.risicoprofiel}`),
+                                  React.createElement('p', null, `Ervaring: ${match.investor.ervaringLevel}`),
+                                  React.createElement('p', null, `Beschikbaarheid: ${match.investor.beschikbaarheid}`)
+                                )
+                              )
+                            ),
+
+                            React.createElement('div', { className: 'mt-6 flex flex-wrap gap-2' },
                               React.createElement('button', {
-                                onClick: () => createTransaction(match.deal.id, match.investor.id),
-                                className: 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2'
+                                onClick: () => getSmartMatchingInsights(match.deal.id, match.investor.id),
+                                disabled: isLoadingAI,
+                                className: 'bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2'
                               },
-                                React.createElement(DollarSign, { size: 16 }),
-                                React.createElement('span', null, 'Start Deal')
+                                React.createElement(Brain, { size: 16 }),
+                                React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse')
+                              ),
+                              React.createElement('button', {
+                                onClick: () => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`),
+                                className: 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2'
+                              },
+                                React.createElement(Mail, { size: 16 }),
+                                React.createElement('span', null, 'Contact')
                               )
-                            )
-                          ),
-
-                          React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                            React.createElement('div', null,
-                              React.createElement('h4', { className: 'font-semibold mb-3' }, 'Match Analyse:'),
-                              React.createElement('div', { className: 'space-y-2' },
-                                match.reasoning.slice(0, 5).map((reason, idx) =>
-                                  React.createElement('div', { 
-                                    key: idx,
-                                    className: 'text-sm p-2 bg-gray-50 rounded' 
-                                  }, reason)
-                                )
-                              )
-                            ),
-                            React.createElement('div', null,
-                              React.createElement('h4', { className: 'font-semibold mb-3' }, 'Investeerder Details:'),
-                              React.createElement('div', { className: 'space-y-2 text-sm' },
-                                React.createElement('p', null, `Budget: €${match.investor.minBudget.toLocaleString()} - €${match.investor.maxBudget.toLocaleString()}`),
-                                React.createElement('p', null, `Gewenst rendement: ${match.investor.gewenstRendement}%`),
-                                React.createElement('p', null, `Risicoprofiel: ${match.investor.risicoprofiel}`),
-                                React.createElement('p', null, `Ervaring: ${match.investor.ervaringLevel}`),
-                                React.createElement('p', null, `Beschikbaarheid: ${match.investor.beschikbaarheid}`)
-                              )
-                            )
-                          ),
-
-                          React.createElement('div', { className: 'mt-6 flex flex-wrap gap-2' },
-                            React.createElement('button', {
-                              onClick: () => getSmartMatchingInsights(match.deal.id, match.investor.id),
-                              disabled: isLoadingAI,
-                              className: 'bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2'
-                            },
-                              React.createElement(Brain, { size: 16 }),
-                              React.createElement('span', null, isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse')
-                            ),
-                            React.createElement('button', {
-                              onClick: () => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`),
-                              className: 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2'
-                            },
-                              React.createElement(Mail, { size: 16 }),
-                              React.createElement('span', null, 'Contact')
                             )
                           )
                         )
@@ -2042,72 +2057,76 @@
               ),
 
               React.createElement('div', { className: 'space-y-6' },
-                transactions.map(transaction => {
-                  const deal = deals.find(d => d.id === transaction.deal_id);
-                  const investor = investors.find(i => i.id === transaction.investor_id);
-                  
-                  let participantCommissions = [];
-                  try {
-                    participantCommissions = transaction.participant_commissions ? 
-                      JSON.parse(transaction.participant_commissions) : [];
-                  } catch (e) {
-                    console.error('Error parsing participant commissions:', e);
-                  }
+                React.createElement(React.Fragment, null,
+                  ...transactions.map(transaction => {
+                    const deal = deals.find(d => d.id === transaction.deal_id);
+                    const investor = investors.find(i => i.id === transaction.investor_id);
+                    
+                    let participantCommissions = [];
+                    try {
+                      participantCommissions = transaction.participant_commissions ? 
+                        JSON.parse(transaction.participant_commissions) : [];
+                    } catch (e) {
+                      console.error('Error parsing participant commissions:', e);
+                    }
 
-                  return React.createElement('div', { 
-                    key: transaction.id,
-                    className: 'bg-white rounded-lg shadow-md p-6 border' 
-                  },
-                    React.createElement('div', { className: 'flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4' },
-                      React.createElement('div', null,
-                        React.createElement('h3', { className: 'text-xl font-semibold mb-2' }, 
-                          deal?.titel || 'Onbekende Deal'
+                    return React.createElement('div', { 
+                      key: transaction.id,
+                      className: 'bg-white rounded-lg shadow-md p-6 border' 
+                    },
+                      React.createElement('div', { className: 'flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4' },
+                        React.createElement('div', null,
+                          React.createElement('h3', { className: 'text-xl font-semibold mb-2' }, 
+                            deal?.titel || 'Onbekende Deal'
+                          ),
+                          React.createElement('div', { className: 'flex flex-wrap items-center gap-4 text-sm text-gray-600' },
+                            React.createElement('span', null, `Investeerder: ${investor?.naam || 'Onbekend'}`),
+                            React.createElement('span', null, `Waarde: €${transaction.transaction_amount.toLocaleString()}`),
+                            React.createElement('span', null, `Commissie: €${transaction.total_commission.toLocaleString()}`)
+                          )
                         ),
-                        React.createElement('div', { className: 'flex flex-wrap items-center gap-4 text-sm text-gray-600' },
-                          React.createElement('span', null, `Investeerder: ${investor?.naam || 'Onbekend'}`),
-                          React.createElement('span', null, `Waarde: €${transaction.transaction_amount.toLocaleString()}`),
-                          React.createElement('span', null, `Commissie: €${transaction.total_commission.toLocaleString()}`)
+                        React.createElement('div', { className: 'mt-4 lg:mt-0' },
+                          React.createElement('span', { 
+                            className: `px-3 py-1 rounded-full text-sm font-medium ${
+                              transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }` 
+                          }, transaction.status === 'completed' ? 'Afgerond' : 'Pending')
                         )
                       ),
-                      React.createElement('div', { className: 'mt-4 lg:mt-0' },
-                        React.createElement('span', { 
-                          className: `px-3 py-1 rounded-full text-sm font-medium ${
-                            transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }` 
-                        }, transaction.status === 'completed' ? 'Afgerond' : 'Pending')
-                      )
-                    ),
 
-                    React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                      React.createElement('div', null,
-                        React.createElement('h4', { className: 'font-semibold mb-3' }, 'Deal Details:'),
-                        React.createElement('div', { className: 'space-y-2 text-sm' },
-                          React.createElement('p', null, `Locatie: ${deal?.locatie || 'Onbekend'}`),
-                          React.createElement('p', null, `Type: ${deal?.type || 'Onbekend'}`),
-                          React.createElement('p', null, `Project: ${deal?.projectType || 'Onbekend'}`),
-                          React.createElement('p', null, `Verwacht rendement: ${deal?.verwachtRendement || 0}%`)
-                        )
-                      ),
-                      React.createElement('div', null,
-                        React.createElement('h4', { className: 'font-semibold mb-3' }, 'Commissie Verdeling:'),
-                        React.createElement('div', { className: 'space-y-2' },
-                          participantCommissions.map((participant, index) => {
-                            const user = getUserById(participant.user_id);
-                            return React.createElement('div', { 
-                              key: index,
-                              className: 'flex justify-between items-center text-sm p-2 bg-gray-50 rounded' 
-                            },
-                              React.createElement('span', null, `${user.name} (${participant.role})`),
-                              React.createElement('span', { className: 'font-semibold' }, 
-                                `€${participant.commission_amount.toLocaleString()}`
-                              )
-                            );
-                          })
+                      React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                        React.createElement('div', null,
+                          React.createElement('h4', { className: 'font-semibold mb-3' }, 'Deal Details:'),
+                          React.createElement('div', { className: 'space-y-2 text-sm' },
+                            React.createElement('p', null, `Locatie: ${deal?.locatie || 'Onbekend'}`),
+                            React.createElement('p', null, `Type: ${deal?.type || 'Onbekend'}`),
+                            React.createElement('p', null, `Project: ${deal?.projectType || 'Onbekend'}`),
+                            React.createElement('p', null, `Verwacht rendement: ${deal?.verwachtRendement || 0}%`)
+                          )
+                        ),
+                        React.createElement('div', null,
+                          React.createElement('h4', { className: 'font-semibold mb-3' }, 'Commissie Verdeling:'),
+                          React.createElement('div', { className: 'space-y-2' },
+                            React.createElement(React.Fragment, null,
+                              ...participantCommissions.map((participant, index) => {
+                                const user = getUserById(participant.user_id);
+                                return React.createElement('div', { 
+                                  key: index,
+                                  className: 'flex justify-between items-center text-sm p-2 bg-gray-50 rounded' 
+                                },
+                                  React.createElement('span', null, `${user.name} (${participant.role})`),
+                                  React.createElement('span', { className: 'font-semibold' }, 
+                                    `€${participant.commission_amount.toLocaleString()}`
+                                  )
+                                );
+                              })
+                            )
+                          )
                         )
                       )
-                    )
-                  );
-                })
+                    );
+                  })
+                )
               )
             ),
 
@@ -2124,20 +2143,24 @@
                 }, '✕')
               ),
               React.createElement('div', { className: 'text-sm space-y-2 max-h-96 overflow-y-auto' },
-                Object.entries(aiInsights).slice(-1).map(([key, insight]) =>
-                  React.createElement('div', { key: key },
-                    React.createElement('p', { className: 'font-medium' }, 
-                      key.includes('investor') ? 'Investeerder Analyse:' :
-                      key.includes('deal') ? 'Deal Analyse:' :
-                      key.includes('smart_match') ? 'Smart Match Analyse:' :
-                      'Markt Inzichten:'
-                    ),
-                    React.createElement('div', { className: 'text-xs text-gray-600 space-y-1' },
-                      typeof insight === 'object' ? 
-                        Object.entries(insight).slice(0, 3).map(([k, v]) =>
-                          React.createElement('p', { key: k }, `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-                        ) :
-                        React.createElement('p', null, insight)
+                React.createElement(React.Fragment, null,
+                  ...Object.entries(aiInsights).slice(-1).map(([key, insight]) =>
+                    React.createElement('div', { key: key },
+                      React.createElement('p', { className: 'font-medium' }, 
+                        key.includes('investor') ? 'Investeerder Analyse:' :
+                        key.includes('deal') ? 'Deal Analyse:' :
+                        key.includes('smart_match') ? 'Smart Match Analyse:' :
+                        'Markt Inzichten:'
+                      ),
+                      React.createElement('div', { className: 'text-xs text-gray-600 space-y-1' },
+                        typeof insight === 'object' ? 
+                          React.createElement(React.Fragment, null,
+                            ...Object.entries(insight).slice(0, 3).map(([k, v]) =>
+                              React.createElement('p', { key: k }, `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+                            )
+                          ) :
+                          React.createElement('p', null, insight)
+                      )
                     )
                   )
                 )
@@ -2169,6 +2192,7 @@
         console.log('✅ Alle functionaliteit beschikbaar');
         console.log('🔑 Demo Accounts: admin@vastgoed.nl / admin123');
         console.log('💡 Tip: Alle login credentials werken in demo modus');
+        console.log('🚀 Voor debugging: check console voor login berichten');
     </script>
 </body>
 </html>
