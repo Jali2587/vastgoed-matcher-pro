@@ -361,8 +361,10 @@
                 locatie: 'Amsterdam',
                 minBudget: 100000,
                 maxBudget: 500000,
-                voorkeursRegio: ['Nederland', 'Duitsland'],
-                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem'],
+                voorkeursRegio: ['West-Europa'],
+                voorkeursLanden: ['Nederland', 'Duitsland'],
+                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
+                geografischeBereik: 'regionaal',
                 vastgoedTypes: ['Appartement', 'Kantoor'],
                 projectTypes: ['Turn-key', 'Renovatie'],
                 risicoprofiel: 'Gemiddeld',
@@ -761,11 +763,40 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           }, [user]);
 
-          // Enhanced matching algorithm with AI insights
+          // Enhanced matching algorithm with improved location matching
           const calculateMatchScore = (investor, deal) => {
             let score = 0;
             let maxScore = 0;
             let reasoningFactors = [];
+
+            // Get deal location info
+            const getDealLocationInfo = (dealLocatie) => {
+              for (const [land, data] of Object.entries({
+                'Nederland': { regio: 'West-Europa', steden: ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen'] },
+                'Duitsland': { regio: 'West-Europa', steden: ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'] },
+                'Frankrijk': { regio: 'West-Europa', steden: ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'] },
+                'Spanje': { regio: 'Zuid-Europa', steden: ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'] },
+                'Zwitserland': { regio: 'West-Europa', steden: ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'] },
+                'Verenigd Koninkrijk': { regio: 'West-Europa', steden: ['Londen', 'Manchester', 'Birmingham', 'Edinburgh', 'Glasgow', 'Liverpool', 'Bristol', 'Leeds', 'Cardiff', 'Belfast'] },
+                'België': { regio: 'West-Europa', steden: ['Brussel', 'Antwerpen', 'Gent', 'Charleroi', 'Luik', 'Brugge', 'Namen', 'Leuven', 'Mons', 'Aalst'] },
+                'Italië': { regio: 'Zuid-Europa', steden: ['Milaan', 'Rome', 'Florence', 'Venetië', 'Napels', 'Turijn', 'Bologna', 'Genua', 'Palermo', 'Catania'] },
+                'Oostenrijk': { regio: 'West-Europa', steden: ['Wenen', 'Salzburg', 'Innsbruck', 'Graz', 'Linz', 'Klagenfurt', 'Villach', 'Wels', 'St. Pölten', 'Dornbirn'] },
+                'Tsjechië': { regio: 'Oost-Europa', steden: ['Praag', 'Brno', 'Ostrava', 'Plzeň', 'Liberec', 'Olomouc', 'Ústí nad Labem', 'Hradec Králové', 'České Budějovice', 'Pardubice'] },
+                'Polen': { regio: 'Oost-Europa', steden: ['Warschau', 'Krakau', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Katowice'] },
+                'Hongarije': { regio: 'Oost-Europa', steden: ['Budapest', 'Debrecen', 'Miskolc', 'Szeged', 'Pécs', 'Győr', 'Nyíregyháza', 'Kecskemét', 'Székesfehérvár', 'Szombathely'] },
+                'Portugal': { regio: 'Zuid-Europa', steden: ['Porto', 'Lissabon', 'Vila Nova de Gaia', 'Amadora', 'Braga', 'Funchal', 'Coimbra', 'Setúbal', 'Almada', 'Agualva-Cacém'] },
+                'Ierland': { regio: 'West-Europa', steden: ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Drogheda', 'Dundalk', 'Swords', 'Bray', 'Navan'] },
+                'Scandinavië': { regio: 'Noord-Europa', steden: ['Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Göteborg', 'Malmö', 'Bergen', 'Trondheim', 'Tampere', 'Turku'] },
+                'Monaco': { regio: 'Zuid-Europa', steden: ['Monaco', 'Monte Carlo', 'La Condamine', 'Fontvieille'] }
+              })) {
+                if (data.steden.includes(dealLocatie)) {
+                  return { land, regio: data.regio, stad: dealLocatie };
+                }
+              }
+              return { land: 'Onbekend', regio: 'Onbekend', stad: dealLocatie };
+            };
+
+            const dealLocationInfo = getDealLocationInfo(deal.locatie);
 
             // Budget matching (25%)
             maxScore += 25;
@@ -780,53 +811,64 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               reasoningFactors.push(`✗ Deal prijs boven maximum budget`);
             }
 
-            // Location matching (20%)
-            maxScore += 20;
-            const locationMatch = investor.voorkeursLocaties?.includes(deal.locatie);
-            const regionMatch = investor.voorkeursRegio?.some(regio => {
-              const regioSteden = {
-                'Nederland': ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen'],
-                'Spanje': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'],
-                'Duitsland': ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
-                'Frankrijk': ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
-                'Zwitserland': ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'],
-                'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Dublin', 'Warschau', 'Porto', 'Florence', 'Monaco']
-              };
-              return regioSteden[regio]?.includes(deal.locatie);
-            });
+            // Enhanced Location matching (25% - increased importance)
+            maxScore += 25;
+            let locationScore = 0;
             
-            if (locationMatch) {
-              score += 20;
-              reasoningFactors.push(`✓ Exacte locatie match (${deal.locatie})`);
-            } else if (regionMatch) {
-              score += 15;
-              reasoningFactors.push(`✓ Regio match (${deal.locatie} in voorkeursregio)`);
-            } else {
-              reasoningFactors.push(`✗ Locatie niet in voorkeuren`);
+            // Exact city match (full points)
+            if ((investor.voorkeursLocaties || []).includes(deal.locatie)) {
+              locationScore = 25;
+              reasoningFactors.push(`✓ Exacte stad match (${deal.locatie})`);
             }
+            // Country match (good points)
+            else if ((investor.voorkeursLanden || []).includes(dealLocationInfo.land)) {
+              locationScore = 20;
+              reasoningFactors.push(`✓ Land match (${dealLocationInfo.land})`);
+            }
+            // Region match (decent points)
+            else if ((investor.voorkeursRegio || []).includes(dealLocationInfo.regio)) {
+              locationScore = 15;
+              reasoningFactors.push(`✓ Regio match (${dealLocationInfo.regio})`);
+            }
+            // Geographic scope match
+            else {
+              const bereik = investor.geografischeBereik || 'regionaal';
+              if (bereik === 'internationaal') {
+                locationScore = 10;
+                reasoningFactors.push(`~ Internationaal bereik - alle locaties acceptabel`);
+              } else if (bereik === 'nationaal' && dealLocationInfo.regio === 'West-Europa') {
+                locationScore = 8;
+                reasoningFactors.push(`~ Nationaal bereik - West-Europa acceptabel`);
+              } else {
+                locationScore = 2;
+                reasoningFactors.push(`✗ Locatie buiten voorkeuren`);
+              }
+            }
+            
+            score += locationScore;
 
             // Type vastgoed matching (15%)
             maxScore += 15;
-            if (investor.vastgoedTypes?.includes(deal.type)) {
+            if ((investor.vastgoedTypes || []).includes(deal.type)) {
               score += 15;
               reasoningFactors.push(`✓ Vastgoed type match (${deal.type})`);
-            } else if (investor.vastgoedTypes?.length > 0) {
-              reasoningFactors.push(`✗ Vastgoed type niet in voorkeuren`);
-            } else {
+            } else if ((investor.vastgoedTypes || []).length === 0) {
               score += 7;
               reasoningFactors.push(`~ Geen specifieke vastgoed type voorkeur`);
+            } else {
+              reasoningFactors.push(`✗ Vastgoed type niet in voorkeuren`);
             }
 
             // Project type matching (10%)
             maxScore += 10;
-            if (investor.projectTypes?.includes(deal.projectType)) {
+            if ((investor.projectTypes || []).includes(deal.projectType)) {
               score += 10;
               reasoningFactors.push(`✓ Project type match (${deal.projectType})`);
-            } else if (investor.projectTypes?.length > 0) {
-              reasoningFactors.push(`✗ Project type niet in voorkeuren`);
-            } else {
+            } else if ((investor.projectTypes || []).length === 0) {
               score += 5;
               reasoningFactors.push(`~ Geen specifieke project type voorkeur`);
+            } else {
+              reasoningFactors.push(`✗ Project type niet in voorkeuren`);
             }
 
             // Rendement matching (15%)
@@ -851,34 +893,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             score += risicoScore;
             reasoningFactors.push(`${risicoScore >= 8 ? '✓' : '⚠'} Risico match (${investor.risicoprofiel} profiel, ${deal.risico} risico)`);
 
-            // Experience level bonus (5%)
-            maxScore += 5;
-            if (investor.ervaringLevel === 'Ervaren' && deal.risico === 'Hoog') {
-              score += 5;
-              reasoningFactors.push(`✓ Ervaren investeerder geschikt voor hoog risico`);
-            } else if (investor.ervaringLevel === 'Beginner' && deal.risico === 'Laag') {
-              score += 5;
-              reasoningFactors.push(`✓ Beginner investeerder geschikt voor laag risico`);
-            } else {
-              score += 2;
-            }
-
-            // Availability bonus (5%)
-            maxScore += 5;
-            if (investor.beschikbaarheid === 'Direct') {
-              score += 5;
-              reasoningFactors.push(`✓ Direct beschikbaar voor investering`);
-            } else {
-              score += 2;
-            }
-
             const finalScore = Math.round((score / maxScore) * 100);
             
             return {
               score: finalScore,
               reasoning: reasoningFactors,
               maxScore,
-              actualScore: score
+              actualScore: score,
+              locationInfo: dealLocationInfo
             };
           };
 
@@ -1214,7 +1236,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               minBudget: '',
               maxBudget: '',
               voorkeursRegio: [],
+              voorkeursLanden: [],
               voorkeursLocaties: [],
+              geografischeBereik: 'regionaal', // lokaal, regionaal, nationaal, internationaal
               vastgoedTypes: [],
               projectTypes: [],
               risicoprofiel: 'Gemiddeld',
@@ -1226,13 +1250,105 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               beschikbaarheid: 'Direct'
             });
 
-            const regioSteden = {
-              'Nederland': ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen'],
-              'Spanje': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'],
-              'Duitsland': ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
-              'Frankrijk': ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
-              'Zwitserland': ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'],
-              'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Dublin', 'Warschau', 'Boedapest', 'Porto', 'Florence', 'Monaco']
+            const landenRegio = {
+              'Nederland': {
+                regio: 'West-Europa',
+                steden: ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen']
+              },
+              'Duitsland': {
+                regio: 'West-Europa', 
+                steden: ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig']
+              },
+              'Frankrijk': {
+                regio: 'West-Europa',
+                steden: ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille']
+              },
+              'Spanje': {
+                regio: 'Zuid-Europa',
+                steden: ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao']
+              },
+              'Zwitserland': {
+                regio: 'West-Europa',
+                steden: ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel']
+              },
+              'Verenigd Koninkrijk': {
+                regio: 'West-Europa',
+                steden: ['Londen', 'Manchester', 'Birmingham', 'Edinburgh', 'Glasgow', 'Liverpool', 'Bristol', 'Leeds', 'Cardiff', 'Belfast']
+              },
+              'België': {
+                regio: 'West-Europa',
+                steden: ['Brussel', 'Antwerpen', 'Gent', 'Charleroi', 'Luik', 'Brugge', 'Namen', 'Leuven', 'Mons', 'Aalst']
+              },
+              'Italië': {
+                regio: 'Zuid-Europa',
+                steden: ['Milaan', 'Rome', 'Florence', 'Venetië', 'Napels', 'Turijn', 'Bologna', 'Genua', 'Palermo', 'Catania']
+              },
+              'Oostenrijk': {
+                regio: 'West-Europa',
+                steden: ['Wenen', 'Salzburg', 'Innsbruck', 'Graz', 'Linz', 'Klagenfurt', 'Villach', 'Wels', 'St. Pölten', 'Dornbirn']
+              },
+              'Tsjechië': {
+                regio: 'Oost-Europa',
+                steden: ['Praag', 'Brno', 'Ostrava', 'Plzeň', 'Liberec', 'Olomouc', 'Ústí nad Labem', 'Hradec Králové', 'České Budějovice', 'Pardubice']
+              },
+              'Polen': {
+                regio: 'Oost-Europa',
+                steden: ['Warschau', 'Krakau', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Katowice']
+              },
+              'Hongarije': {
+                regio: 'Oost-Europa',
+                steden: ['Budapest', 'Debrecen', 'Miskolc', 'Szeged', 'Pécs', 'Győr', 'Nyíregyháza', 'Kecskemét', 'Székesfehérvár', 'Szombathely']
+              },
+              'Portugal': {
+                regio: 'Zuid-Europa',
+                steden: ['Porto', 'Lissabon', 'Vila Nova de Gaia', 'Amadora', 'Braga', 'Funchal', 'Coimbra', 'Setúbal', 'Almada', 'Agualva-Cacém']
+              },
+              'Ierland': {
+                regio: 'West-Europa',
+                steden: ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Drogheda', 'Dundalk', 'Swords', 'Bray', 'Navan']
+              },
+              'Scandinavië': {
+                regio: 'Noord-Europa',
+                steden: ['Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Göteborg', 'Malmö', 'Bergen', 'Trondheim', 'Tampere', 'Turku']
+              },
+              'Monaco': {
+                regio: 'Zuid-Europa',
+                steden: ['Monaco', 'Monte Carlo', 'La Condamine', 'Fontvieille']
+              }
+            };
+
+            const geografischeBereikOpties = [
+              { value: 'lokaal', label: 'Lokaal (zelfde stad/regio)', beschrijving: 'Alleen in eigen stad en directe omgeving' },
+              { value: 'regionaal', label: 'Regionaal (meerdere steden)', beschrijving: 'Binnen voorkeursregio\'s en landen' },
+              { value: 'nationaal', label: 'Nationaal (heel land)', beschrijving: 'Door heel Nederland en aangrenzende landen' },
+              { value: 'internationaal', label: 'Internationaal (Europa-breed)', beschrijving: 'Door heel Europa en daarbuiten' }
+            ];
+
+            const handleLandChange = (land) => {
+              setFormData(prev => {
+                const newLanden = (prev.voorkeursLanden || []).includes(land)
+                  ? (prev.voorkeursLanden || []).filter(l => l !== land)
+                  : [...(prev.voorkeursLanden || []), land];
+                
+                // Auto-add cities from selected countries
+                let newLocaties = [...(prev.voorkeursLocaties || [])];
+                if (newLanden.includes(land) && landenRegio[land]) {
+                  landenRegio[land].steden.forEach(stad => {
+                    if (!newLocaties.includes(stad)) {
+                      newLocaties.push(stad);
+                    }
+                  });
+                } else if (landenRegio[land]) {
+                  // Remove cities when country is deselected
+                  newLocaties = newLocaties.filter(stad => !landenRegio[land].steden.includes(stad));
+                }
+
+                return {
+                  ...prev,
+                  voorkeursLanden: newLanden,
+                  voorkeursLocaties: newLocaties
+                };
+              });
             };
 
             const handleRegioChange = (regio) => {
@@ -1241,20 +1357,43 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                   ? (prev.voorkeursRegio || []).filter(r => r !== regio)
                   : [...(prev.voorkeursRegio || []), regio];
                 
+                // Auto-add countries and cities from selected regions
+                let newLanden = [...(prev.voorkeursLanden || [])];
                 let newLocaties = [...(prev.voorkeursLocaties || [])];
-                if (newRegio.includes(regio)) {
-                  regioSteden[regio].forEach(stad => {
-                    if (!newLocaties.includes(stad)) {
-                      newLocaties.push(stad);
+                
+                Object.entries(landenRegio).forEach(([land, data]) => {
+                  if (data.regio === regio) {
+                    if (newRegio.includes(regio)) {
+                      // Add country and its cities
+                      if (!newLanden.includes(land)) {
+                        newLanden.push(land);
+                      }
+                      data.steden.forEach(stad => {
+                        if (!newLocaties.includes(stad)) {
+                          newLocaties.push(stad);
+                        }
+                      });
+                    } else {
+                      // Remove country and its cities if no other regions selected
+                      const otherRegions = newRegio.filter(r => r !== regio);
+                      const keepCountry = otherRegions.some(r => 
+                        Object.values(landenRegio).some(countryData => 
+                          countryData.regio === r && Object.keys(landenRegio).find(k => landenRegio[k] === countryData) === land
+                        )
+                      );
+                      
+                      if (!keepCountry) {
+                        newLanden = newLanden.filter(l => l !== land);
+                        newLocaties = newLocaties.filter(stad => !data.steden.includes(stad));
+                      }
                     }
-                  });
-                } else {
-                  newLocaties = newLocaties.filter(stad => !regioSteden[regio].includes(stad));
-                }
+                  }
+                });
 
                 return {
                   ...prev,
                   voorkeursRegio: newRegio,
+                  voorkeursLanden: newLanden,
                   voorkeursLocaties: newLocaties
                 };
               });
@@ -1471,6 +1610,97 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               required
                             />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Geografische Voorkeuren</h4>
+                        
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium mb-2">Geografisch Bereik</label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {geografischeBereikOpties.map(optie => (
+                              <label key={optie.value} className="flex items-start space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                                <input
+                                  type="radio"
+                                  name="geografischeBereik"
+                                  value={optie.value}
+                                  checked={formData.geografischeBereik === optie.value}
+                                  onChange={(e) => setFormData({...formData, geografischeBereik: e.target.value})}
+                                  className="text-blue-600 mt-1"
+                                />
+                                <div>
+                                  <span className="font-medium text-sm">{optie.label}</span>
+                                  <p className="text-xs text-gray-600 mt-1">{optie.beschrijving}</p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium mb-2">Voorkeurs Regio's</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {['West-Europa', 'Zuid-Europa', 'Noord-Europa', 'Oost-Europa'].map(regio => (
+                              <label key={regio} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={(formData.voorkeursRegio || []).includes(regio)}
+                                  onChange={() => handleRegioChange(regio)}
+                                  className="text-blue-600"
+                                />
+                                <span className="text-sm">{regio}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium mb-2">Voorkeurs Landen</label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded p-3">
+                            {Object.keys(landenRegio).map(land => (
+                              <label key={land} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={(formData.voorkeursLanden || []).includes(land)}
+                                  onChange={() => handleLandChange(land)}
+                                  className="text-blue-600"
+                                />
+                                <span className="text-sm">{land}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium mb-2">
+                            Specifieke Steden 
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({(formData.voorkeursLocaties || []).length} geselecteerd)
+                            </span>
+                          </label>
+                          <div className="max-h-48 overflow-y-auto border rounded p-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {Object.entries(landenRegio).map(([land, data]) => (
+                                <div key={land} className="mb-4">
+                                  <h6 className="font-medium text-xs text-gray-700 mb-2 border-b pb-1">{land}</h6>
+                                  <div className="space-y-1">
+                                    {data.steden.map(stad => (
+                                      <label key={stad} className="flex items-center space-x-2 text-xs">
+                                        <input
+                                          type="checkbox"
+                                          checked={(formData.voorkeursLocaties || []).includes(stad)}
+                                          onChange={() => handleLocationChange(stad)}
+                                          className="text-blue-600"
+                                        />
+                                        <span>{stad}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2417,6 +2647,44 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         </div>
 
                         <div className="mt-4">
+                          <p className="text-sm text-gray-600 mb-2">Geografische Voorkeuren:</p>
+                          <div className="space-y-2">
+                            {investor.geografischeBereik && (
+                              <div className="flex items-center space-x-2">
+                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                  {investor.geografischeBereik.charAt(0).toUpperCase() + investor.geografischeBereik.slice(1)} bereik
+                                </span>
+                              </div>
+                            )}
+                            {(investor.voorkeursRegio || []).length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                <span className="text-xs text-gray-500">Regio's:</span>
+                                {(investor.voorkeursRegio || []).map(regio => (
+                                  <span key={regio} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                    {regio}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {(investor.voorkeursLanden || []).length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                <span className="text-xs text-gray-500">Landen:</span>
+                                {(investor.voorkeursLanden || []).slice(0, 3).map(land => (
+                                  <span key={land} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    {land}
+                                  </span>
+                                ))}
+                                {(investor.voorkeursLanden || []).length > 3 && (
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                    +{(investor.voorkeursLanden || []).length - 3} meer
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
                           <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
                           <div className="flex flex-wrap gap-1">
                             {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
@@ -3039,6 +3307,13 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • ✅ Overig locatie categorie toegevoegd');
         console.log('   • ✅ Uncaught script errors opgelost');
         console.log('   • ✅ Uitgebreide internationale steden lijst');
+        console.log('🌍 NIEUW: Geavanceerde Locatie Matching:');
+        console.log('   • ✅ Multi-level geografische voorkeuren (stad/land/regio)');
+        console.log('   • ✅ Geografisch bereik opties (lokaal/regionaal/nationaal/internationaal)');
+        console.log('   • ✅ Automatische land/regio/stad matching in algoritme');
+        console.log('   • ✅ Enhanced locatie scoring (25% van totale match score)');
+        console.log('   • ✅ 15+ landen, 4 regio\'s, 100+ steden ondersteund');
+        console.log('   • ✅ Smart cascading selectie (regio → landen → steden)');
     </script>
 </body>
 </html>
