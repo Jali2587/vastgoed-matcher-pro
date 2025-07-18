@@ -358,6 +358,7 @@
                 email: 'peter@example.com',
                 telefoon: '06-12345678',
                 bedrijf: 'Berg Investments',
+                locatie: 'Amsterdam',
                 minBudget: 100000,
                 maxBudget: 500000,
                 voorkeursRegio: ['Nederland', 'Duitsland'],
@@ -789,7 +790,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 'Duitsland': ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
                 'Frankrijk': ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
                 'Zwitserland': ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'],
-                'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki']
+                'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Dublin', 'Warschau', 'Porto', 'Florence', 'Monaco']
               };
               return regioSteden[regio]?.includes(deal.locatie);
             });
@@ -1209,6 +1210,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               email: '',
               telefoon: '',
               bedrijf: '',
+              locatie: '',
               minBudget: '',
               maxBudget: '',
               voorkeursRegio: [],
@@ -1230,16 +1232,16 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               'Duitsland': ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
               'Frankrijk': ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
               'Zwitserland': ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'],
-              'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki']
+              'Overig': ['Londen', 'Brussel', 'Milaan', 'Wenen', 'Praag', 'Budapest', 'Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Dublin', 'Warschau', 'Boedapest', 'Porto', 'Florence', 'Monaco']
             };
 
             const handleRegioChange = (regio) => {
               setFormData(prev => {
-                const newRegio = prev.voorkeursRegio.includes(regio)
-                  ? prev.voorkeursRegio.filter(r => r !== regio)
-                  : [...prev.voorkeursRegio, regio];
+                const newRegio = (prev.voorkeursRegio || []).includes(regio)
+                  ? (prev.voorkeursRegio || []).filter(r => r !== regio)
+                  : [...(prev.voorkeursRegio || []), regio];
                 
-                let newLocaties = [...prev.voorkeursLocaties];
+                let newLocaties = [...(prev.voorkeursLocaties || [])];
                 if (newRegio.includes(regio)) {
                   regioSteden[regio].forEach(stad => {
                     if (!newLocaties.includes(stad)) {
@@ -1261,27 +1263,27 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             const handleLocationChange = (location) => {
               setFormData(prev => ({
                 ...prev,
-                voorkeursLocaties: prev.voorkeursLocaties.includes(location)
-                  ? prev.voorkeursLocaties.filter(l => l !== location)
-                  : [...prev.voorkeursLocaties, location]
+                voorkeursLocaties: (prev.voorkeursLocaties || []).includes(location)
+                  ? (prev.voorkeursLocaties || []).filter(l => l !== location)
+                  : [...(prev.voorkeursLocaties || []), location]
               }));
             };
 
             const handleProjectTypeChange = (type) => {
               setFormData(prev => ({
                 ...prev,
-                projectTypes: prev.projectTypes.includes(type)
-                  ? prev.projectTypes.filter(t => t !== type)
-                  : [...prev.projectTypes, type]
+                projectTypes: (prev.projectTypes || []).includes(type)
+                  ? (prev.projectTypes || []).filter(t => t !== type)
+                  : [...(prev.projectTypes || []), type]
               }));
             };
 
             const handleTypeChange = (type) => {
               setFormData(prev => ({
                 ...prev,
-                vastgoedTypes: prev.vastgoedTypes.includes(type)
-                  ? prev.vastgoedTypes.filter(t => t !== type)
-                  : [...prev.vastgoedTypes, type]
+                vastgoedTypes: (prev.vastgoedTypes || []).includes(type)
+                  ? (prev.vastgoedTypes || []).filter(t => t !== type)
+                  : [...(prev.vastgoedTypes || []), type]
               }));
             };
 
@@ -1346,6 +1348,93 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               placeholder="Naam van bedrijf of fonds"
                             />
                           </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium mb-1">Huidige Locatie/Hoofdkantoor</label>
+                            <select
+                              value={formData.locatie}
+                              onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Selecteer locatie</option>
+                              <optgroup label="Nederland">
+                                <option value="Amsterdam">Amsterdam</option>
+                                <option value="Rotterdam">Rotterdam</option>
+                                <option value="Utrecht">Utrecht</option>
+                                <option value="Den Haag">Den Haag</option>
+                                <option value="Eindhoven">Eindhoven</option>
+                                <option value="Tilburg">Tilburg</option>
+                                <option value="Haarlem">Haarlem</option>
+                                <option value="Almere">Almere</option>
+                                <option value="Breda">Breda</option>
+                                <option value="Nijmegen">Nijmegen</option>
+                              </optgroup>
+                              <optgroup label="Duitsland">
+                                <option value="Berlijn">Berlijn</option>
+                                <option value="München">München</option>
+                                <option value="Hamburg">Hamburg</option>
+                                <option value="Frankfurt">Frankfurt</option>
+                                <option value="Keulen">Keulen</option>
+                                <option value="Stuttgart">Stuttgart</option>
+                                <option value="Düsseldorf">Düsseldorf</option>
+                                <option value="Dortmund">Dortmund</option>
+                                <option value="Essen">Essen</option>
+                                <option value="Leipzig">Leipzig</option>
+                              </optgroup>
+                              <optgroup label="Frankrijk">
+                                <option value="Parijs">Parijs</option>
+                                <option value="Lyon">Lyon</option>
+                                <option value="Marseille">Marseille</option>
+                                <option value="Toulouse">Toulouse</option>
+                                <option value="Nice">Nice</option>
+                                <option value="Nantes">Nantes</option>
+                                <option value="Strasbourg">Strasbourg</option>
+                                <option value="Montpellier">Montpellier</option>
+                                <option value="Bordeaux">Bordeaux</option>
+                                <option value="Lille">Lille</option>
+                              </optgroup>
+                              <optgroup label="Spanje">
+                                <option value="Madrid">Madrid</option>
+                                <option value="Barcelona">Barcelona</option>
+                                <option value="Valencia">Valencia</option>
+                                <option value="Sevilla">Sevilla</option>
+                                <option value="Málaga">Málaga</option>
+                                <option value="Zaragoza">Zaragoza</option>
+                                <option value="Murcia">Murcia</option>
+                                <option value="Palma">Palma</option>
+                                <option value="Las Palmas">Las Palmas</option>
+                                <option value="Bilbao">Bilbao</option>
+                              </optgroup>
+                              <optgroup label="Zwitserland">
+                                <option value="Zürich">Zürich</option>
+                                <option value="Genève">Genève</option>
+                                <option value="Basel">Basel</option>
+                                <option value="Lausanne">Lausanne</option>
+                                <option value="Bern">Bern</option>
+                                <option value="Winterthur">Winterthur</option>
+                                <option value="Luzern">Luzern</option>
+                                <option value="St. Gallen">St. Gallen</option>
+                                <option value="Lugano">Lugano</option>
+                                <option value="Biel">Biel</option>
+                              </optgroup>
+                              <optgroup label="Overig">
+                                <option value="Londen">Londen</option>
+                                <option value="Brussel">Brussel</option>
+                                <option value="Milaan">Milaan</option>
+                                <option value="Wenen">Wenen</option>
+                                <option value="Praag">Praag</option>
+                                <option value="Budapest">Budapest</option>
+                                <option value="Stockholm">Stockholm</option>
+                                <option value="Kopenhagen">Kopenhagen</option>
+                                <option value="Oslo">Oslo</option>
+                                <option value="Helsinki">Helsinki</option>
+                                <option value="Dublin">Dublin</option>
+                                <option value="Warschau">Warschau</option>
+                                <option value="Porto">Porto</option>
+                                <option value="Florence">Florence</option>
+                                <option value="Monaco">Monaco</option>
+                              </optgroup>
+                            </select>
+                          </div>
                         </div>
                       </div>
 
@@ -1395,7 +1484,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <label key={type} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                 <input
                                   type="checkbox"
-                                  checked={formData.vastgoedTypes.includes(type)}
+                                  checked={(formData.vastgoedTypes || []).includes(type)}
                                   onChange={() => handleTypeChange(type)}
                                   className="text-blue-600"
                                 />
@@ -1411,7 +1500,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <label key={type} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                 <input
                                   type="checkbox"
-                                  checked={formData.projectTypes.includes(type)}
+                                  checked={(formData.projectTypes || []).includes(type)}
                                   onChange={() => handleProjectTypeChange(type)}
                                   className="text-blue-600"
                                 />
@@ -1581,6 +1670,23 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <option value="Basel">Basel</option>
                               <option value="Lausanne">Lausanne</option>
                               <option value="Bern">Bern</option>
+                            </optgroup>
+                            <optgroup label="Overig">
+                              <option value="Londen">Londen</option>
+                              <option value="Brussel">Brussel</option>
+                              <option value="Milaan">Milaan</option>
+                              <option value="Wenen">Wenen</option>
+                              <option value="Praag">Praag</option>
+                              <option value="Budapest">Budapest</option>
+                              <option value="Stockholm">Stockholm</option>
+                              <option value="Kopenhagen">Kopenhagen</option>
+                              <option value="Oslo">Oslo</option>
+                              <option value="Helsinki">Helsinki</option>
+                              <option value="Dublin">Dublin</option>
+                              <option value="Warschau">Warschau</option>
+                              <option value="Porto">Porto</option>
+                              <option value="Florence">Florence</option>
+                              <option value="Monaco">Monaco</option>
                             </optgroup>
                           </select>
                         </div>
@@ -1935,6 +2041,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
                       <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Commission Tracking</span>
                       <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
+                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">📍 Locatie Update</span>
                     </div>
                   </div>
 
@@ -2289,6 +2396,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <span className="font-medium">{investor.bedrijf}</span>
                             </div>
                           )}
+                          {investor.locatie && (
+                            <div className="flex items-center space-x-2">
+                              <MapPinIcon size={16} className="text-gray-500" />
+                              <span>Gevestigd in: {investor.locatie}</span>
+                            </div>
+                          )}
                           <div className="flex items-center space-x-2">
                             <MailIcon size={16} className="text-gray-500" />
                             <span>{investor.email}</span>
@@ -2306,14 +2419,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         <div className="mt-4">
                           <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
                           <div className="flex flex-wrap gap-1">
-                            {investor.vastgoedTypes.slice(0, 3).map(type => (
+                            {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
                               <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                                 {type}
                               </span>
                             ))}
-                            {investor.vastgoedTypes.length > 3 && (
+                            {(investor.vastgoedTypes || []).length > 3 && (
                               <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                +{investor.vastgoedTypes.length - 3} meer
+                                +{(investor.vastgoedTypes || []).length - 3} meer
                               </span>
                             )}
                           </div>
@@ -2322,14 +2435,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         <div className="mt-3">
                           <p className="text-sm text-gray-600 mb-2">Project Types:</p>
                           <div className="flex flex-wrap gap-1">
-                            {investor.projectTypes?.slice(0, 2).map(type => (
+                            {(investor.projectTypes || []).slice(0, 2).map(type => (
                               <span key={type} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                                 {type}
                               </span>
                             ))}
-                            {investor.projectTypes?.length > 2 && (
+                            {(investor.projectTypes || []).length > 2 && (
                               <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                +{investor.projectTypes.length - 2} meer
+                                +{(investor.projectTypes || []).length - 2} meer
                               </span>
                             )}
                           </div>
@@ -2920,6 +3033,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • ✅ Firebase real-time updates');
         console.log('   • ✅ Permissie controle (eigenaar/beheerder)');
         console.log('   • ✅ Cascade delete voor gerelateerde transacties');
+        console.log('🔧 FIXED: Script errors en UI verbeteringen:');
+        console.log('   • ✅ Array safety checks toegevoegd');
+        console.log('   • ✅ Locatie veld toegevoegd voor investeerders');
+        console.log('   • ✅ Overig locatie categorie toegevoegd');
+        console.log('   • ✅ Uncaught script errors opgelost');
+        console.log('   • ✅ Uitgebreide internationale steden lijst');
     </script>
 </body>
 </html>
