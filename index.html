@@ -972,6 +972,10 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const newInvestor = {
                 ...investorData,
+                // Convert string numbers to actual numbers
+                minBudget: parseInt(investorData.minBudget) || 0,
+                maxBudget: parseInt(investorData.maxBudget) || 0,
+                gewenstRendement: parseFloat(investorData.gewenstRendement) || 0,
                 owner_id: user.id,
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
@@ -1002,6 +1006,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const newDeal = {
                 ...dealData,
+                // Convert string numbers to actual numbers
+                prijs: parseInt(dealData.prijs) || 0,
+                verwachtRendement: parseFloat(dealData.verwachtRendement) || 0,
+                oppervlakte: parseInt(dealData.oppervlakte) || 0,
+                bouwjaar: parseInt(dealData.bouwjaar) || 0,
+                huurpotentie: parseInt(dealData.huurpotentie) || 0,
                 owner_id: user.id,
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
@@ -1234,7 +1244,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <input
                               type="number"
                               value={formData.minBudget}
-                              onChange={(e) => setFormData({...formData, minBudget: parseInt(e.target.value)})}
+                              onChange={(e) => setFormData({...formData, minBudget: e.target.value})}
                               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               required
                             />
@@ -1244,7 +1254,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <input
                               type="number"
                               value={formData.maxBudget}
-                              onChange={(e) => setFormData({...formData, maxBudget: parseInt(e.target.value)})}
+                              onChange={(e) => setFormData({...formData, maxBudget: e.target.value})}
                               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               required
                             />
@@ -1255,7 +1265,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               type="number"
                               step="0.1"
                               value={formData.gewenstRendement}
-                              onChange={(e) => setFormData({...formData, gewenstRendement: parseFloat(e.target.value)})}
+                              onChange={(e) => setFormData({...formData, gewenstRendement: e.target.value})}
                               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               required
                             />
@@ -1466,7 +1476,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           <input
                             type="number"
                             value={formData.prijs}
-                            onChange={(e) => setFormData({...formData, prijs: parseInt(e.target.value)})}
+                            onChange={(e) => setFormData({...formData, prijs: e.target.value})}
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                           />
@@ -1477,7 +1487,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             type="number"
                             step="0.1"
                             value={formData.verwachtRendement}
-                            onChange={(e) => setFormData({...formData, verwachtRendement: parseFloat(e.target.value)})}
+                            onChange={(e) => setFormData({...formData, verwachtRendement: e.target.value})}
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                           />
