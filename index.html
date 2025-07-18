@@ -166,6 +166,12 @@
             ]
           });
 
+          // ✅ NEW EDIT STATE MANAGEMENT
+          const [editingInvestor, setEditingInvestor] = useState(null);
+          const [editingDeal, setEditingDeal] = useState(null);
+          const [showEditInvestor, setShowEditInvestor] = useState(false);
+          const [showEditDeal, setShowEditDeal] = useState(false);
+
           // Real OpenAI API call via Netlify function (with fallback to mock data)
           const callOpenAI = async (prompt, type = 'analysis', data = null) => {
             setIsLoadingAI(true);
@@ -966,6 +972,83 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             setActiveTab('transactions');
           };
 
+          // ✅ NEW EDIT FUNCTIONS
+          const handleEditInvestor = (investor) => {
+            setEditingInvestor(investor);
+            setShowEditInvestor(true);
+          };
+
+          const handleEditDeal = (deal) => {
+            setEditingDeal(deal);
+            setShowEditDeal(true);
+          };
+
+          const handleUpdateInvestor = async (investorData) => {
+            try {
+              console.log('💾 Updating investor in Firebase...', editingInvestor.id);
+              
+              const updatedInvestor = {
+                ...investorData,
+                // Convert string numbers to actual numbers
+                minBudget: parseInt(investorData.minBudget) || 0,
+                maxBudget: parseInt(investorData.maxBudget) || 0,
+                gewenstRendement: parseFloat(investorData.gewenstRendement) || 0,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              // Update in Firebase
+              await db.collection('investors').doc(editingInvestor.id).update(updatedInvestor);
+              
+              // Update local state
+              setInvestors(prev => prev.map(inv => 
+                inv.id === editingInvestor.id ? { ...inv, ...updatedInvestor } : inv
+              ));
+              
+              setShowEditInvestor(false);
+              setEditingInvestor(null);
+              
+              console.log('✅ Investor updated in Firebase:', editingInvestor.id);
+              alert('✅ Investeerder succesvol bijgewerkt!');
+            } catch (error) {
+              console.error('❌ Error updating investor:', error);
+              alert('Fout bij bijwerken investeerder: ' + error.message);
+            }
+          };
+
+          const handleUpdateDeal = async (dealData) => {
+            try {
+              console.log('💾 Updating deal in Firebase...', editingDeal.id);
+              
+              const updatedDeal = {
+                ...dealData,
+                // Convert string numbers to actual numbers
+                prijs: parseInt(dealData.prijs) || 0,
+                verwachtRendement: parseFloat(dealData.verwachtRendement) || 0,
+                oppervlakte: parseInt(dealData.oppervlakte) || 0,
+                bouwjaar: parseInt(dealData.bouwjaar) || 0,
+                huurpotentie: parseInt(dealData.huurpotentie) || 0,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              // Update in Firebase
+              await db.collection('deals').doc(editingDeal.id).update(updatedDeal);
+              
+              // Update local state
+              setDeals(prev => prev.map(deal => 
+                deal.id === editingDeal.id ? { ...deal, ...updatedDeal } : deal
+              ));
+              
+              setShowEditDeal(false);
+              setEditingDeal(null);
+              
+              console.log('✅ Deal updated in Firebase:', editingDeal.id);
+              alert('✅ Deal succesvol bijgewerkt!');
+            } catch (error) {
+              console.error('❌ Error updating deal:', error);
+              alert('Fout bij bijwerken deal: ' + error.message);
+            }
+          };
+
           const handleAddInvestor = async (investorData) => {
             try {
               console.log('💾 Adding investor to Firebase...');
@@ -1055,6 +1138,34 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
+          // ✅ NEW DELETE DEAL FUNCTION
+          const handleDeleteDeal = async (dealId) => {
+            if (confirm('Weet je zeker dat je deze deal wilt verwijderen?\n\nLet op: Gerelateerde transacties worden ook verwijderd.')) {
+              try {
+                console.log('🗑️ Deleting deal from Firebase...');
+                
+                // Delete related transactions first
+                const relatedTransactions = transactions.filter(t => t.deal_id === dealId);
+                for (const transaction of relatedTransactions) {
+                  await db.collection('transactions').doc(transaction.id).delete();
+                }
+                
+                // Delete from Firebase
+                await db.collection('deals').doc(dealId).delete();
+                
+                // Remove from local state
+                setDeals(prev => prev.filter(d => d.id !== dealId));
+                setTransactions(prev => prev.filter(t => t.deal_id !== dealId));
+                
+                console.log('✅ Deal deleted from Firebase:', dealId);
+                alert('✅ Deal succesvol verwijderd!');
+              } catch (error) {
+                console.error('❌ Error deleting deal:', error);
+                alert('Fout bij verwijderen deal: ' + error.message);
+              }
+            }
+          };
+
           const getMatchColor = (score) => {
             if (score >= 80) return 'text-green-600 bg-green-100';
             if (score >= 60) return 'text-yellow-600 bg-yellow-100';
@@ -1091,9 +1202,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             };
           };
 
-          // Forms Components
-          const InvestorForm = ({ onSubmit, onCancel }) => {
-            const [formData, setFormData] = useState({
+          // ✅ ENHANCED FORMS WITH EDIT CAPABILITY
+          const InvestorForm = ({ onSubmit, onCancel, editData = null }) => {
+            const [formData, setFormData] = useState(editData || {
               naam: '',
               email: '',
               telefoon: '',
@@ -1184,7 +1295,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 <div className="bg-white rounded-lg w-full max-w-5xl h-full max-h-[95vh] flex flex-col">
                   <div className="p-6 border-b">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold">Nieuwe Investeerder Toevoegen</h3>
+                      <h3 className="text-xl font-bold">
+                        {editData ? '✏️ Investeerder Bewerken' : '➕ Nieuwe Investeerder Toevoegen'}
+                      </h3>
                       <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
                   </div>
@@ -1325,7 +1438,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         form="investor-form"
                         className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                       >
-                        Investeerder Toevoegen
+                        {editData ? '💾 Opslaan' : '➕ Toevoegen'}
                       </button>
                     </div>
                   </div>
@@ -1334,8 +1447,8 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          const DealForm = ({ onSubmit, onCancel }) => {
-            const [formData, setFormData] = useState({
+          const DealForm = ({ onSubmit, onCancel, editData = null }) => {
+            const [formData, setFormData] = useState(editData || {
               titel: '',
               locatie: '',
               type: '',
@@ -1364,7 +1477,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 <div className="bg-white rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
                   <div className="p-6 border-b">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold">Nieuwe Deal Toevoegen</h3>
+                      <h3 className="text-xl font-bold">
+                        {editData ? '✏️ Deal Bewerken' : '➕ Nieuwe Deal Toevoegen'}
+                      </h3>
                       <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
                   </div>
@@ -1525,6 +1640,45 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             required
                           />
                         </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Risico Level</label>
+                          <select
+                            value={formData.risico}
+                            onChange={(e) => setFormData({...formData, risico: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="Laag">Laag</option>
+                            <option value="Gemiddeld">Gemiddeld</option>
+                            <option value="Hoog">Hoog</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Oppervlakte (m²)</label>
+                          <input
+                            type="number"
+                            value={formData.oppervlakte}
+                            onChange={(e) => setFormData({...formData, oppervlakte: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Bouwjaar</label>
+                          <input
+                            type="number"
+                            value={formData.bouwjaar}
+                            onChange={(e) => setFormData({...formData, bouwjaar: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Huurpotentie (€/maand)</label>
+                          <input
+                            type="number"
+                            value={formData.huurpotentie}
+                            onChange={(e) => setFormData({...formData, huurpotentie: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
                       <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">Beschrijving</label>
@@ -1552,7 +1706,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         form="deal-form"
                         className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                       >
-                        Deal Toevoegen
+                        {editData ? '💾 Opslaan' : '➕ Toevoegen'}
                       </button>
                     </div>
                   </div>
@@ -1780,6 +1934,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
                       <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Commission Tracking</span>
+                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
                     </div>
                   </div>
 
@@ -1796,7 +1951,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           <p className="font-medium text-green-900">🎯 MVP Features</p>
                           <p className="text-green-700">• Real-time database synchronisatie</p>
                           <p className="text-green-700">• Team samenwerking mogelijk</p>
-                          <p className="text-green-700">• Automatische backup in cloud</p>
+                          <p className="text-green-700">• ✏️ NIEUW: Edit/Delete functionaliteit</p>
                         </div>
                       </div>
                     </div>
@@ -2020,6 +2175,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📍 Regio Matching</span>
                     <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🏗️ Project Types</span>
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Smart Commissies</span>
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 mt-4 lg:mt-0">
@@ -2189,14 +2345,24 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
                           </button>
                           
+                          {/* ✅ NEW EDIT/DELETE BUTTONS */}
                           {(user.role === 'beheerder' || investor.owner_id === user.id) && (
-                            <button
-                              onClick={() => handleDeleteInvestor(investor.id)}
-                              className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                            >
-                              <TrashIcon size={16} />
-                              <span>Verwijderen</span>
-                            </button>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditInvestor(investor)}
+                                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <EditIcon size={16} />
+                                <span>Bewerken</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteInvestor(investor.id)}
+                                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <TrashIcon size={16} />
+                                <span>Verwijderen</span>
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -2304,6 +2470,26 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <BrainIcon size={16} />
                             <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
                           </button>
+
+                          {/* ✅ NEW EDIT/DELETE BUTTONS */}
+                          {(user.role === 'beheerder' || deal.owner_id === user.id) && (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditDeal(deal)}
+                                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <EditIcon size={16} />
+                                <span>Bewerken</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDeal(deal.id)}
+                                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <TrashIcon size={16} />
+                                <span>Verwijderen</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -2675,6 +2861,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 </div>
               )}
 
+              {/* ✅ ENHANCED FORM MODALS WITH EDIT SUPPORT */}
               {showAddInvestor && (
                 <InvestorForm
                   onSubmit={handleAddInvestor}
@@ -2682,10 +2869,32 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 />
               )}
 
+              {showEditInvestor && editingInvestor && (
+                <InvestorForm
+                  editData={editingInvestor}
+                  onSubmit={handleUpdateInvestor}
+                  onCancel={() => {
+                    setShowEditInvestor(false);
+                    setEditingInvestor(null);
+                  }}
+                />
+              )}
+
               {showAddDeal && (
                 <DealForm
                   onSubmit={handleAddDeal}
                   onCancel={() => setShowAddDeal(false)}
+                />
+              )}
+
+              {showEditDeal && editingDeal && (
+                <DealForm
+                  editData={editingDeal}
+                  onSubmit={handleUpdateDeal}
+                  onCancel={() => {
+                    setShowEditDeal(false);
+                    setEditingDeal(null);
+                  }}
                 />
               )}
 
@@ -2704,6 +2913,13 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('💾 Data wordt automatisch gesynchroniseerd tussen alle teamleden');
         console.log('✅ Maak een nieuw account aan om te beginnen');
         console.log('📱 Real-time updates enabled!');
+        console.log('✏️ NIEUW: Edit/Delete functionaliteit geïmplementeerd!');
+        console.log('🎯 Edit/Update/Delete Features:');
+        console.log('   • ✅ Investeerders bewerken en verwijderen');
+        console.log('   • ✅ Deals bewerken en verwijderen');
+        console.log('   • ✅ Firebase real-time updates');
+        console.log('   • ✅ Permissie controle (eigenaar/beheerder)');
+        console.log('   • ✅ Cascade delete voor gerelateerde transacties');
     </script>
 </body>
 </html>
