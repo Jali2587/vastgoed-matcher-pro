@@ -1348,7 +1348,10 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               bouwjaar: '',
               huurpotentie: '',
               status: 'Beschikbaar',
-              bedrijfFonds: ''
+              bedrijfFonds: '',
+              contactpersoon: '',
+              telefoon: '',
+              email: ''
             });
 
             const handleSubmit = (e) => {
@@ -1387,6 +1390,36 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             onChange={(e) => setFormData({...formData, bedrijfFonds: e.target.value})}
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Naam van bedrijf of fonds"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Contactpersoon</label>
+                          <input
+                            type="text"
+                            value={formData.contactpersoon}
+                            onChange={(e) => setFormData({...formData, contactpersoon: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Naam contactpersoon"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Telefoon</label>
+                          <input
+                            type="tel"
+                            value={formData.telefoon}
+                            onChange={(e) => setFormData({...formData, telefoon: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Telefoonnummer"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Email</label>
+                          <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Email adres"
                           />
                         </div>
                         <div>
@@ -2208,6 +2241,24 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <div className="flex items-center space-x-2">
                               <BuildingIcon size={16} className="text-gray-500" />
                               <span className="font-medium">{deal.bedrijfFonds}</span>
+                            </div>
+                          )}
+                          {deal.contactpersoon && (
+                            <div className="flex items-center space-x-2">
+                              <UserIcon size={16} className="text-gray-500" />
+                              <span>{deal.contactpersoon}</span>
+                            </div>
+                          )}
+                          {deal.telefoon && (
+                            <div className="flex items-center space-x-2">
+                              <PhoneIcon size={16} className="text-gray-500" />
+                              <span>{deal.telefoon}</span>
+                            </div>
+                          )}
+                          {deal.email && (
+                            <div className="flex items-center space-x-2">
+                              <MailIcon size={16} className="text-gray-500" />
+                              <span>{deal.email}</span>
                             </div>
                           )}
                           <div className="flex items-center space-x-2">
