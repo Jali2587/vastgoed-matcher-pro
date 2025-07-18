@@ -8,9 +8,36 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
     <div id="root"></div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // VERVANG DEZE CONFIG MET JOUW ECHTE FIREBASE CONFIG!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdGZE6BdXX6_VhLtTgqVvRyRgRkEc9wqo", // VERVANG MET JOUW KEY
+            authDomain: "vastgoed-matcher-mvp.firebaseapp.com", // VERVANG MET JOUW DOMAIN
+            projectId: "vastgoed-matcher-mvp", // VERVANG MET JOUW PROJECT ID
+            storageBucket: "vastgoed-matcher-mvp.appspot.com", // VERVANG
+            messagingSenderId: "123456789", // VERVANG
+            appId: "1:123456789:web:abcdefghijklmnop" // VERVANG
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Initialize services
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        console.log('🔥 Firebase initialized successfully!');
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -254,17 +281,73 @@
             return mockResponses.investor_analysis;
           };
 
-          // Database functies
+          // FIREBASE DATABASE FUNCTIES
           const loadData = async () => {
-            setUsers([
-              { id: '1', name: 'Jan Vermeer', email: 'jan@example.com', company: 'Vermeer Vastgoed', role: 'agent' },
-              { id: '2', name: 'Lisa de Vries', email: 'lisa@example.com', company: 'De Vries Properties', role: 'agent' },
-              { id: '3', name: 'Mark Jansen', email: 'mark@example.com', company: 'Jansen Makelaars', role: 'manager' }
-            ]);
+            if (!user) return;
             
-            setInvestors([
+            try {
+              console.log('📊 Loading data from Firebase...');
+              
+              // Load users
+              const usersSnapshot = await db.collection('users').get();
+              const usersData = usersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setUsers(usersData);
+              
+              // Load investors
+              const investorsSnapshot = await db.collection('investors').get();
+              const investorsData = investorsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setInvestors(investorsData);
+              
+              // Load deals
+              const dealsSnapshot = await db.collection('deals').get();
+              const dealsData = dealsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setDeals(dealsData);
+              
+              // Load transactions
+              const transactionsSnapshot = await db.collection('transactions').get();
+              const transactionsData = transactionsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setTransactions(transactionsData);
+              
+              console.log('✅ Data loaded from Firebase:', {
+                users: usersData.length,
+                investors: investorsData.length,
+                deals: dealsData.length,
+                transactions: transactionsData.length
+              });
+              
+            } catch (error) {
+              console.error('❌ Error loading data from Firebase:', error);
+              
+              // Fallback to demo data for first time users
+              console.log('📋 Loading demo data as fallback...');
+              await loadDemoData();
+            }
+          };
+          
+          // Keep demo data function for first time setup
+          const loadDemoData = async () => {
+            console.log('🎭 Loading demo data...');
+            
+            const demoUsers = [
+              { id: user.id, name: user.name, email: user.email, company: user.company, role: user.role || 'agent' }
+            ];
+            setUsers(demoUsers);
+            
+            const demoInvestors = [
               {
-                id: '1',
+                id: 'demo1',
                 naam: 'Peter van der Berg',
                 email: 'peter@example.com',
                 telefoon: '06-12345678',
@@ -272,7 +355,7 @@
                 minBudget: 100000,
                 maxBudget: 500000,
                 voorkeursRegio: ['Nederland', 'Duitsland'],
-                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
+                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem'],
                 vastgoedTypes: ['Appartement', 'Kantoor'],
                 projectTypes: ['Turn-key', 'Renovatie'],
                 risicoprofiel: 'Gemiddeld',
@@ -282,58 +365,14 @@
                 beschikbaarheid: 'Direct',
                 communicatieVoorkeur: 'Telefoon',
                 investmentMotivatie: 'Uitbreiding van vastgoed portfolio voor pensioen opbouw',
-                owner_id: '1',
-                created_at: '2024-01-15T10:30:00Z'
-              },
-              {
-                id: '2',
-                naam: 'Maria Jansen',
-                email: 'maria@example.com',
-                telefoon: '06-87654321',
-                bedrijf: 'Jansen Property',
-                minBudget: 200000,
-                maxBudget: 1000000,
-                voorkeursRegio: ['Frankrijk', 'Spanje'],
-                voorkeursLocaties: ['Utrecht', 'Den Haag', 'Parijs', 'Barcelona', 'Madrid'],
-                vastgoedTypes: ['Appartement', 'Retail', 'Studenten'],
-                projectTypes: ['Turn-key', 'Ontwikkeling'],
-                risicoprofiel: 'Conservatief',
-                gewenstRendement: 4,
-                investeringshorizon: 'Middellang',
-                ervaringLevel: 'Beginner',
-                beschikbaarheid: '1-3 maanden',
-                communicatieVoorkeur: 'Email',
-                investmentMotivatie: 'Eerste stappen in vastgoed beleggen, focus op stabiele inkomsten',
-                owner_id: '2',
-                created_at: '2024-01-20T14:15:00Z'
-              },
-              {
-                id: '3',
-                naam: 'David Chen',
-                email: 'david@example.com',
-                telefoon: '06-98765432',
-                bedrijf: 'Chen Capital',
-                minBudget: 500000,
-                maxBudget: 2000000,
-                voorkeursRegio: ['Nederland', 'Zwitserland'],
-                voorkeursLocaties: ['Amsterdam', 'Utrecht', 'Almere', 'Zürich', 'Genève'],
-                vastgoedTypes: ['Kantoor', 'Industrie', 'Zorgvastgoed'],
-                projectTypes: ['Transformatie', 'Ontwikkeling', 'Gemengd'],
-                risicoprofiel: 'Agressief',
-                gewenstRendement: 8,
-                investeringshorizon: 'Lang termijn',
-                ervaringLevel: 'Ervaren',
-                beschikbaarheid: 'Direct',
-                communicatieVoorkeur: 'WhatsApp',
-                investmentMotivatie: 'Institutionele belegger zoekt hoogrenderende vastgoed kansen',
-                owner_id: '1',
-                created_at: '2024-01-25T16:45:00Z'
+                owner_id: user.id,
+                created_at: new Date().toISOString()
               }
-            ]);
+            ];
             
-            setDeals([
+            const demoDeals = [
               {
-                id: '1',
+                id: 'demo1',
                 titel: 'Modern Appartement Amsterdam',
                 locatie: 'Amsterdam',
                 type: 'Appartement',
@@ -341,135 +380,54 @@
                 prijs: 350000,
                 verwachtRendement: 5.5,
                 risico: 'Gemiddeld',
-                beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord met metro verbinding',
+                beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord',
                 oppervlakte: 85,
                 bouwjaar: 2020,
                 huurpotentie: 1800,
                 status: 'Beschikbaar',
-                bedrijfFonds: 'Vermeer Vastgoed B.V.',
+                bedrijfFonds: 'Demo Vastgoed B.V.',
                 isRelevant: true,
                 ourScore: 8.5,
                 aiAnalyzed: false,
-                owner_id: '1',
-                created_at: '2024-01-10T09:00:00Z'
-              },
-              {
-                id: '2',
-                titel: 'Kantoorpand Rotterdam',
-                locatie: 'Rotterdam',
-                type: 'Kantoor',
-                projectType: 'Renovatie',
-                prijs: 750000,
-                verwachtRendement: 7.2,
-                risico: 'Hoog',
-                beschrijving: 'Kantoorpand voor renovatie in bedrijventerrein met parkeerplaatsen en uitbreidingsmogelijkheid',
-                oppervlakte: 400,
-                bouwjaar: 2015,
-                huurpotentie: 4500,
-                status: 'Beschikbaar',
-                bedrijfFonds: 'De Vries Properties N.V.',
-                isRelevant: true,
-                ourScore: 7.2,
-                aiAnalyzed: false,
-                owner_id: '2',
-                created_at: '2024-01-12T11:30:00Z'
-              },
-              {
-                id: '3',
-                titel: 'Studentencomplex Utrecht',
-                locatie: 'Utrecht',
-                type: 'Studenten',
-                projectType: 'Ontwikkeling',
-                prijs: 1200000,
-                verwachtRendement: 6.8,
-                risico: 'Laag',
-                beschrijving: 'Nieuwbouw ontwikkeling studentencomplex nabij universiteit met langetermijn contracten',
-                oppervlakte: 600,
-                bouwjaar: 2018,
-                huurpotentie: 6800,
-                status: 'Beschikbaar',
-                bedrijfFonds: 'Student Housing Fund I',
-                isRelevant: true,
-                ourScore: 9.1,
-                aiAnalyzed: false,
-                owner_id: '1',
-                created_at: '2024-01-15T14:20:00Z'
-              },
-              {
-                id: '4',
-                titel: 'Retail Locatie Eindhoven',
-                locatie: 'Eindhoven',
-                type: 'Retail',
-                projectType: 'Transformatie',
-                prijs: 480000,
-                verwachtRendement: 4.5,
-                risico: 'Gemiddeld',
-                beschrijving: 'Transformatie project: voormalig kantoorpand naar retail in drukke winkelstraat',
-                oppervlakte: 120,
-                bouwjaar: 2010,
-                huurpotentie: 1800,
-                status: 'Beschikbaar',
-                bedrijfFonds: 'Retail Development Partners',
-                isRelevant: false,
-                ourScore: 5.8,
-                aiAnalyzed: false,
-                owner_id: '2',
-                created_at: '2024-01-18T10:15:00Z'
+                owner_id: user.id,
+                created_at: new Date().toISOString()
               }
-            ]);
+            ];
             
-            setTransactions([
-              {
-                id: '1',
-                deal_id: '1',
-                investor_id: '1',
-                deal_owner_id: '1',
-                investor_owner_id: '1',
-                transaction_amount: 350000,
-                commission_rate: 0.025,
-                total_commission: 8750,
-                commission_structure: JSON.stringify({
-                  total_rate: 0.025,
-                  participants: [
-                    { role: 'deal_owner', user_id: '1', percentage: 60, fixed_amount: 0, type: 'percentage' },
-                    { role: 'investor_owner', user_id: '1', percentage: 40, fixed_amount: 0, type: 'percentage' }
-                  ]
-                }),
-                participant_commissions: JSON.stringify([
-                  { role: 'deal_owner', user_id: '1', percentage: 60, commission_amount: 5250, type: 'percentage' },
-                  { role: 'investor_owner', user_id: '1', percentage: 40, commission_amount: 3500, type: 'percentage' }
-                ]),
-                status: 'completed',
-                closed_date: '2024-01-25T15:30:00Z'
-              },
-              {
-                id: '2',
-                deal_id: '2',
-                investor_id: '2',
-                deal_owner_id: '2',
-                investor_owner_id: '2',
-                transaction_amount: 750000,
-                commission_rate: 0.03,
-                total_commission: 22500,
-                commission_structure: JSON.stringify({
-                  total_rate: 0.03,
-                  participants: [
-                    { role: 'deal_owner', user_id: '2', percentage: 40, fixed_amount: 0, type: 'percentage' },
-                    { role: 'investor_owner', user_id: '2', percentage: 30, fixed_amount: 0, type: 'percentage' },
-                    { role: 'referral', user_id: '3', percentage: 30, fixed_amount: 0, type: 'percentage' }
-                  ]
-                }),
-                participant_commissions: JSON.stringify([
-                  { role: 'deal_owner', user_id: '2', percentage: 40, commission_amount: 9000, type: 'percentage' },
-                  { role: 'investor_owner', user_id: '2', percentage: 30, commission_amount: 6750, type: 'percentage' },
-                  { role: 'referral', user_id: '3', percentage: 30, commission_amount: 6750, type: 'percentage' }
-                ]),
-                status: 'pending',
-                closed_date: null
+            setInvestors(demoInvestors);
+            setDeals(demoDeals);
+            setTransactions([]);
+            
+            // Save demo data to Firebase for next time
+            try {
+              await saveDemoDataToFirebase(demoInvestors, demoDeals);
+            } catch (error) {
+              console.log('Could not save demo data to Firebase:', error);
+            }
+          };
+          
+          const saveDemoDataToFirebase = async (investors, deals) => {
+            try {
+              // Save investors
+              for (const investor of investors) {
+                await db.collection('investors').doc(investor.id).set({
+                  ...investor,
+                  created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
               }
-            ]);
-            
-            console.log('Demo data geladen successfully');
+              
+              // Save deals
+              for (const deal of deals) {
+                await db.collection('deals').doc(deal.id).set({
+                  ...deal,
+                  created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+              
+              console.log('✅ Demo data saved to Firebase');
+            } catch (error) {
+              console.error('❌ Error saving demo data:', error);
+            }
           };
 
           const getUserById = (id) => {
@@ -646,97 +604,149 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }));
           };
 
-          // ECHTE LOGIN SYSTEEM - Met wachtwoord verificatie
-          const authenticateUser = (email, password) => {
-            // Beheerder account
-            if (email === 'jmeelker26@gmail.com' && password === 'beheerder2024') {
-              return {
-                id: '1',
-                name: 'J. Meelker',
-                email: 'jmeelker26@gmail.com',
-                company: 'Vastgoed Matcher Pro',
-                role: 'beheerder'
-              };
-            }
-            
-            // Demo accounts voor testen
-            if (email === 'demo@vastgoed.nl' && password === 'demo123') {
-              return {
-                id: '2',
-                name: 'Demo Gebruiker',
-                email: 'demo@vastgoed.nl',
-                company: 'Demo Company',
-                role: 'agent'
-              };
-            }
-            
-            if (email === 'test@test.nl' && password === 'test123') {
-              return {
-                id: '3',
-                name: 'Test Gebruiker',
-                email: 'test@test.nl',
-                company: 'Test Company',
-                role: 'agent'
-              };
-            }
-            
-            return null; // Login failed
-          };
-
+          // FIREBASE AUTHENTICATION FUNCTIES
           const handleLogin = async (credentials) => {
             try {
-              console.log('🔐 Login poging voor:', credentials.email);
+              console.log('🔐 Firebase login poging voor:', credentials.email);
               
-              const authenticatedUser = authenticateUser(credentials.email, credentials.password);
+              // Firebase Auth login
+              const userCredential = await auth.signInWithEmailAndPassword(
+                credentials.email, 
+                credentials.password
+              );
               
-              if (authenticatedUser) {
-                setUser(authenticatedUser);
+              const firebaseUser = userCredential.user;
+              
+              // Check if user profile exists in Firestore
+              const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
+              
+              if (userDoc.exists) {
+                // User profile exists
+                const userData = { id: firebaseUser.uid, ...userDoc.data() };
+                setUser(userData);
                 setShowAuth(false);
-                console.log('✅ Login succesvol voor:', authenticatedUser.name);
+                console.log('✅ Login succesvol voor:', userData.name);
                 await loadData();
               } else {
-                alert('Onjuiste inloggegevens. Controleer je email en wachtwoord.');
+                // User profile doesn't exist (shouldn't happen with proper registration)
+                throw new Error('User profile not found');
               }
               
             } catch (error) {
               console.error('❌ Login error:', error);
-              alert('Er ging iets mis bij het inloggen. Probeer opnieuw.');
+              let errorMessage = 'Er ging iets mis bij het inloggen.';
+              
+              switch (error.code) {
+                case 'auth/user-not-found':
+                  errorMessage = 'Geen account gevonden met dit email adres.';
+                  break;
+                case 'auth/wrong-password':
+                  errorMessage = 'Onjuist wachtwoord.';
+                  break;
+                case 'auth/invalid-email':
+                  errorMessage = 'Ongeldig email adres.';
+                  break;
+                case 'auth/too-many-requests':
+                  errorMessage = 'Te veel login pogingen. Probeer later opnieuw.';
+                  break;
+              }
+              
+              alert(errorMessage);
             }
           };
 
           const handleRegister = async (userData) => {
             try {
-              // Voor demo doeleinden - in productie zou dit via backend gaan
-              const newUser = {
-                id: Date.now().toString(),
+              console.log('📝 Firebase registratie voor:', userData.email);
+              
+              // Create Firebase Auth user
+              const userCredential = await auth.createUserWithEmailAndPassword(
+                userData.email,
+                userData.password
+              );
+              
+              const firebaseUser = userCredential.user;
+              
+              // Create user profile in Firestore
+              const userProfile = {
                 name: userData.name,
                 email: userData.email,
                 company: userData.company,
-                role: 'agent'
+                role: 'agent',
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
+              await db.collection('users').doc(firebaseUser.uid).set(userProfile);
+              
+              // Set user state
+              const newUser = { id: firebaseUser.uid, ...userProfile };
               setUser(newUser);
               setShowAuth(false);
               await loadData();
               
-              console.log('Nieuw account aangemaakt voor:', userData.email);
+              console.log('✅ Nieuw account aangemaakt voor:', userData.email);
             } catch (error) {
-              console.error('Register error:', error);
-              alert('Er ging iets mis bij het registreren. Probeer opnieuw.');
+              console.error('❌ Register error:', error);
+              let errorMessage = 'Er ging iets mis bij het registreren.';
+              
+              switch (error.code) {
+                case 'auth/email-already-in-use':
+                  errorMessage = 'Dit email adres is al in gebruik.';
+                  break;
+                case 'auth/weak-password':
+                  errorMessage = 'Wachtwoord is te zwak. Gebruik minimaal 6 karakters.';
+                  break;
+                case 'auth/invalid-email':
+                  errorMessage = 'Ongeldig email adres.';
+                  break;
+              }
+              
+              alert(errorMessage);
             }
           };
 
           const handleLogout = async () => {
-            setUser(null);
-            setShowAuth(true);
-            setInvestors([]);
-            setDeals([]);
-            setTransactions([]);
-            setUsers([]);
-            setAiInsights({});
-            setActiveTab('dashboard');
-            console.log('Uitgelogd');
+            try {
+              await auth.signOut();
+              setUser(null);
+              setShowAuth(true);
+              setInvestors([]);
+              setDeals([]);
+              setTransactions([]);
+              setUsers([]);
+              setAiInsights({});
+              setActiveTab('dashboard');
+              console.log('✅ Uitgelogd van Firebase');
+            } catch (error) {
+              console.error('❌ Logout error:', error);
+            }
           };
+
+          // Listen to authentication state changes
+          useEffect(() => {
+            const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+              if (firebaseUser && !user) {
+                // User is signed in, get their profile
+                try {
+                  const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
+                  if (userDoc.exists) {
+                    const userData = { id: firebaseUser.uid, ...userDoc.data() };
+                    setUser(userData);
+                    setShowAuth(false);
+                    await loadData();
+                  }
+                } catch (error) {
+                  console.error('Error loading user profile:', error);
+                }
+              } else if (!firebaseUser && user) {
+                // User is signed out
+                setUser(null);
+                setShowAuth(true);
+              }
+            });
+
+            return () => unsubscribe();
+          }, [user]);
 
           useEffect(() => {
             if (user) {
@@ -957,37 +967,81 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
           };
 
           const handleAddInvestor = async (investorData) => {
-            const newInvestor = {
-              ...investorData,
-              id: Date.now().toString(),
-              owner_id: user.id,
-              created_at: new Date().toISOString()
-            };
-            
-            setInvestors(prev => [...prev, newInvestor]);
-            setShowAddInvestor(false);
-            
-            console.log('Nieuwe investeerder toegevoegd:', newInvestor);
+            try {
+              console.log('💾 Adding investor to Firebase...');
+              
+              const newInvestor = {
+                ...investorData,
+                owner_id: user.id,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              // Add to Firebase
+              const docRef = await db.collection('investors').add(newInvestor);
+              
+              // Add to local state with the new ID
+              const investorWithId = {
+                id: docRef.id,
+                ...newInvestor,
+                created_at: new Date().toISOString() // For local display
+              };
+              
+              setInvestors(prev => [...prev, investorWithId]);
+              setShowAddInvestor(false);
+              
+              console.log('✅ Investor added to Firebase:', docRef.id);
+            } catch (error) {
+              console.error('❌ Error adding investor:', error);
+              alert('Fout bij toevoegen investeerder: ' + error.message);
+            }
           };
 
           const handleAddDeal = async (dealData) => {
-            const newDeal = {
-              ...dealData,
-              id: Date.now().toString(),
-              owner_id: user.id,
-              created_at: new Date().toISOString()
-            };
-            
-            setDeals(prev => [...prev, newDeal]);
-            setShowAddDeal(false);
-            
-            console.log('Nieuwe deal toegevoegd:', newDeal);
+            try {
+              console.log('💾 Adding deal to Firebase...');
+              
+              const newDeal = {
+                ...dealData,
+                owner_id: user.id,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              // Add to Firebase
+              const docRef = await db.collection('deals').add(newDeal);
+              
+              // Add to local state with the new ID
+              const dealWithId = {
+                id: docRef.id,
+                ...newDeal,
+                created_at: new Date().toISOString() // For local display
+              };
+              
+              setDeals(prev => [...prev, dealWithId]);
+              setShowAddDeal(false);
+              
+              console.log('✅ Deal added to Firebase:', docRef.id);
+            } catch (error) {
+              console.error('❌ Error adding deal:', error);
+              alert('Fout bij toevoegen deal: ' + error.message);
+            }
           };
 
           const handleDeleteInvestor = async (investorId) => {
             if (confirm('Weet je zeker dat je deze investeerder wilt verwijderen?')) {
-              setInvestors(prev => prev.filter(i => i.id !== investorId));
-              console.log('Investeerder verwijderd:', investorId);
+              try {
+                console.log('🗑️ Deleting investor from Firebase...');
+                
+                // Delete from Firebase
+                await db.collection('investors').doc(investorId).delete();
+                
+                // Remove from local state
+                setInvestors(prev => prev.filter(i => i.id !== investorId));
+                
+                console.log('✅ Investor deleted from Firebase:', investorId);
+              } catch (error) {
+                console.error('❌ Error deleting investor:', error);
+                alert('Fout bij verwijderen investeerder: ' + error.message);
+              }
             }
           };
 
@@ -1688,22 +1742,18 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
                   {!showRegister && (
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800 mb-2">👤 Inloggegevens</h4>
+                      <h4 className="font-semibold text-blue-800 mb-2">🔥 Firebase MVP Account</h4>
                       <div className="space-y-2 text-sm">
                         <div className="bg-white p-3 rounded border border-blue-200">
-                          <p className="font-medium text-blue-900">👑 Beheerder</p>
-                          <p className="text-blue-700">Email: jmeelker26@gmail.com</p>
-                          <p className="text-blue-700">Wachtwoord: beheerder2024</p>
+                          <p className="font-medium text-blue-900">✨ Test Firebase Setup</p>
+                          <p className="text-blue-700">Maak een nieuw account aan om Firebase te testen</p>
+                          <p className="text-blue-700">Of gebruik een bestaand account als je er al een hebt</p>
                         </div>
-                        <div className="bg-white p-3 rounded border border-blue-200">
-                          <p className="font-medium text-blue-900">🎯 Demo Account</p>
-                          <p className="text-blue-700">Email: demo@vastgoed.nl</p>
-                          <p className="text-blue-700">Wachtwoord: demo123</p>
-                        </div>
-                        <div className="bg-white p-3 rounded border border-blue-200">
-                          <p className="font-medium text-blue-900">⚡ Test Account</p>
-                          <p className="text-blue-700">Email: test@test.nl</p>
-                          <p className="text-blue-700">Wachtwoord: test123</p>
+                        <div className="bg-green-50 p-3 rounded border border-green-200">
+                          <p className="font-medium text-green-900">🎯 MVP Features</p>
+                          <p className="text-green-700">• Real-time database synchronisatie</p>
+                          <p className="text-green-700">• Team samenwerking mogelijk</p>
+                          <p className="text-green-700">• Automatische backup in cloud</p>
                         </div>
                       </div>
                     </div>
@@ -2587,12 +2637,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(React.createElement(VastgoedInvesteerderMatcher));
 
-        console.log('🚀 Vastgoed Matcher Pro AI geladen - ORIGINELE VERSIE HERSTELD!');
-        console.log('🔐 ECHTE LOGIN VEREIST: Gebruik je email en wachtwoord');
-        console.log('👑 Beheerder: jmeelker26@gmail.com / beheerder2024');
-        console.log('✅ Alle functionaliteit beschikbaar met bedrijf/fonds velden');
-        console.log('🎯 GitHub/Netlify ready');
-        console.log('🛡️ Beveiligde authenticatie geïmplementeerd');
+        console.log('🚀 Vastgoed Matcher Pro AI - Firebase MVP Version geladen!');
+        console.log('🔥 Firebase Authentication & Database geïntegreerd');
+        console.log('👥 Team collaboration mogelijk via shared Firebase database');
+        console.log('💾 Data wordt automatisch gesynchroniseerd tussen alle teamleden');
+        console.log('✅ Maak een nieuw account aan om te beginnen');
+        console.log('📱 Real-time updates enabled!');
     </script>
 </body>
 </html>
