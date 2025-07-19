@@ -143,6 +143,15 @@
           width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', className 
         }, React.createElement('polyline', { points: '3,6 5,6 21,6' }), React.createElement('path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }), React.createElement('line', { x1: '10', y1: '11', x2: '10', y2: '17' }), React.createElement('line', { x1: '14', y1: '11', x2: '14', y2: '17' }));
 
+        // NEW ICON FOR COMMISSION
+        const PercentIcon = ({ size = 20, className = '' }) => React.createElement('svg', { 
+          width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', className 
+        }, React.createElement('line', { x1: '19', y1: '5', x2: '5', y2: '19' }), React.createElement('circle', { cx: '6.5', cy: '6.5', r: '2.5' }), React.createElement('circle', { cx: '17.5', cy: '17.5', r: '2.5' }));
+
+        const ExternalLinkIcon = ({ size = 20, className = '' }) => React.createElement('svg', { 
+          width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', className 
+        }, React.createElement('path', { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' }), React.createElement('polyline', { points: '15,3 21,3 21,9' }), React.createElement('line', { x1: '10', y1: '14', x2: '21', y2: '3' }));
+
         const VastgoedInvesteerderMatcher = () => {
           const [user, setUser] = useState(null);
           const [activeTab, setActiveTab] = useState('dashboard');
@@ -156,17 +165,13 @@
           const [showAuth, setShowAuth] = useState(true);
           const [aiInsights, setAiInsights] = useState({});
           const [isLoadingAI, setIsLoadingAI] = useState(false);
+          
+          // NEW: Commission structure management
           const [showCommissionEditor, setShowCommissionEditor] = useState(false);
+          const [editingDealCommission, setEditingDealCommission] = useState(null);
           const [currentTransaction, setCurrentTransaction] = useState(null);
-          const [commissionStructure, setCommissionStructure] = useState({
-            total_rate: 0.025,
-            participants: [
-              { role: 'deal_owner', user_id: null, percentage: 60, fixed_amount: 0, type: 'percentage' },
-              { role: 'investor_owner', user_id: null, percentage: 40, fixed_amount: 0, type: 'percentage' }
-            ]
-          });
 
-          // ✅ NEW EDIT STATE MANAGEMENT
+          // ✅ EDIT STATE MANAGEMENT
           const [editingInvestor, setEditingInvestor] = useState(null);
           const [editingDeal, setEditingDeal] = useState(null);
           const [showEditInvestor, setShowEditInvestor] = useState(false);
@@ -399,7 +404,22 @@
                 ourScore: 8.5,
                 aiAnalyzed: false,
                 owner_id: user.id,
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                // NEW: Default commission structure
+                commissionStructure: {
+                  total_rate: 0.025,
+                  participants: [
+                    { 
+                      role: 'deal_owner', 
+                      user_id: user.id, 
+                      percentage: 60, 
+                      fixed_amount: 0, 
+                      type: 'percentage',
+                      name: user.name,
+                      is_external: false
+                    }
+                  ]
+                }
               }
             ];
             
@@ -920,35 +940,66 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }).sort((a, b) => b.matchScore - a.matchScore);
           };
 
+          // NEW: Commission Management Functions
+          const openCommissionEditor = (deal) => {
+            setEditingDealCommission(deal);
+            setShowCommissionEditor(true);
+          };
+
+          const saveCommissionStructure = async (dealId, commissionStructure) => {
+            try {
+              console.log('💾 Saving commission structure for deal:', dealId);
+              
+              // Update in Firebase
+              await db.collection('deals').doc(dealId).update({
+                commissionStructure: commissionStructure,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              
+              // Update local state
+              setDeals(prev => prev.map(deal => 
+                deal.id === dealId ? { ...deal, commissionStructure } : deal
+              ));
+              
+              console.log('✅ Commission structure saved');
+              alert('✅ Commissie structuur succesvol opgeslagen!');
+            } catch (error) {
+              console.error('❌ Error saving commission structure:', error);
+              alert('Fout bij opslaan commissie structuur: ' + error.message);
+            }
+          };
+
           const createTransaction = async (dealId, investorId) => {
             const deal = deals.find(d => d.id === dealId);
             const investor = investors.find(i => i.id === investorId);
             
             if (!deal || !investor) return;
 
-            const initialCommissionStructure = {
+            // Use deal's commission structure or create default
+            const commissionStructure = deal.commissionStructure || {
               total_rate: 0.025,
               participants: [
-                { role: 'deal_owner', user_id: deal.owner_id, percentage: 60, fixed_amount: 0, type: 'percentage' },
-                { role: 'investor_owner', user_id: investor.owner_id, percentage: 40, fixed_amount: 0, type: 'percentage' }
+                { 
+                  role: 'deal_owner', 
+                  user_id: deal.owner_id, 
+                  percentage: 60, 
+                  fixed_amount: 0, 
+                  type: 'percentage',
+                  name: getUserById(deal.owner_id).name,
+                  is_external: false
+                },
+                { 
+                  role: 'investor_referral', 
+                  user_id: investor.owner_id, 
+                  percentage: 40, 
+                  fixed_amount: 0, 
+                  type: 'percentage',
+                  name: getUserById(investor.owner_id).name,
+                  is_external: false
+                }
               ]
             };
 
-            setCurrentTransaction({ deal, investor, dealId, investorId });
-            setCommissionStructure(initialCommissionStructure);
-            setShowCommissionEditor(true);
-          };
-
-          const finalizeTransaction = async () => {
-            if (!currentTransaction) return;
-
-            const { deal, investor, dealId, investorId } = currentTransaction;
-            
-            if (investorId === 'preview') {
-              alert('Dit is een preview. Ga naar "Matching" tab om een echte investeerder te selecteren.');
-              return;
-            }
-            
             const totalCommission = deal.prijs * commissionStructure.total_rate;
             
             const participantCommissions = commissionStructure.participants.map(participant => {
@@ -976,26 +1027,27 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               commission_structure: JSON.stringify(commissionStructure),
               participant_commissions: JSON.stringify(participantCommissions),
               status: 'pending',
-              closed_date: null
+              closed_date: null,
+              created_at: new Date().toISOString()
             };
 
-            setTransactions(prev => [...prev, transactionData]);
-            setShowCommissionEditor(false);
-            setCurrentTransaction(null);
-            
-            setCommissionStructure({
-              total_rate: 0.025,
-              participants: [
-                { role: 'deal_owner', user_id: null, percentage: 60, fixed_amount: 0, type: 'percentage' },
-                { role: 'investor_owner', user_id: null, percentage: 40, fixed_amount: 0, type: 'percentage' }
-              ]
-            });
-            
-            console.log('Nieuwe transactie toegevoegd:', transactionData);
-            setActiveTab('transactions');
+            try {
+              // Save to Firebase
+              await db.collection('transactions').add(transactionData);
+              
+              // Update local state
+              setTransactions(prev => [...prev, transactionData]);
+              
+              console.log('✅ Transaction created:', transactionData);
+              alert('✅ Transactie succesvol aangemaakt! Ga naar "Transacties" tab om de details te bekijken.');
+              setActiveTab('transactions');
+            } catch (error) {
+              console.error('❌ Error creating transaction:', error);
+              alert('Fout bij aanmaken transactie: ' + error.message);
+            }
           };
 
-          // ✅ NEW EDIT FUNCTIONS
+          // ✅ EDIT FUNCTIONS
           const handleEditInvestor = (investor) => {
             setEditingInvestor(investor);
             setShowEditInvestor(true);
@@ -1050,6 +1102,8 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 oppervlakte: parseInt(dealData.oppervlakte) || 0,
                 bouwjaar: parseInt(dealData.bouwjaar) || 0,
                 huurpotentie: parseInt(dealData.huurpotentie) || 0,
+                // Keep existing commission structure
+                commissionStructure: editingDeal.commissionStructure,
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
@@ -1119,6 +1173,21 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 bouwjaar: parseInt(dealData.bouwjaar) || 0,
                 huurpotentie: parseInt(dealData.huurpotentie) || 0,
                 owner_id: user.id,
+                // Add default commission structure
+                commissionStructure: {
+                  total_rate: 0.025,
+                  participants: [
+                    { 
+                      role: 'deal_owner', 
+                      user_id: user.id, 
+                      percentage: 100, 
+                      fixed_amount: 0, 
+                      type: 'percentage',
+                      name: user.name,
+                      is_external: false
+                    }
+                  ]
+                },
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
@@ -1161,7 +1230,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
-          // ✅ NEW DELETE DEAL FUNCTION
+          // ✅ DELETE DEAL FUNCTION
           const handleDeleteDeal = async (dealId) => {
             if (confirm('Weet je zeker dat je deze deal wilt verwijderen?\n\nLet op: Gerelateerde transacties worden ook verwijderd.')) {
               try {
@@ -1223,6 +1292,331 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               pendingTransactions: pendingTransactions.length,
               totalVolume: userTransactions.reduce((sum, t) => sum + t.transaction_amount, 0)
             };
+          };
+
+          // NEW: Enhanced Commission Editor Component
+          const CommissionEditor = () => {
+            if (!showCommissionEditor || !editingDealCommission) return null;
+
+            const [commissionStructure, setCommissionStructure] = useState(
+              editingDealCommission.commissionStructure || {
+                total_rate: 0.025,
+                participants: [
+                  { 
+                    role: 'deal_owner', 
+                    user_id: editingDealCommission.owner_id, 
+                    percentage: 100, 
+                    fixed_amount: 0, 
+                    type: 'percentage',
+                    name: getUserById(editingDealCommission.owner_id).name,
+                    is_external: false
+                  }
+                ]
+              }
+            );
+
+            const totalCommission = editingDealCommission.prijs * commissionStructure.total_rate;
+
+            const updateParticipant = (index, field, value) => {
+              const newParticipants = [...commissionStructure.participants];
+              newParticipants[index] = { ...newParticipants[index], [field]: value };
+              
+              // Update name when user_id changes
+              if (field === 'user_id' && !newParticipants[index].is_external) {
+                const user = getUserById(value);
+                newParticipants[index].name = user.name;
+              }
+              
+              setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+            };
+
+            const addParticipant = (isExternal = false) => {
+              setCommissionStructure({
+                ...commissionStructure,
+                participants: [
+                  ...commissionStructure.participants,
+                  { 
+                    role: 'referral', 
+                    user_id: null, 
+                    percentage: 0, 
+                    fixed_amount: 0, 
+                    type: 'percentage',
+                    name: '',
+                    email: '',
+                    company: '',
+                    is_external: isExternal
+                  }
+                ]
+              });
+            };
+
+            const removeParticipant = (index) => {
+              if (commissionStructure.participants.length > 1) {
+                const newParticipants = commissionStructure.participants.filter((_, i) => i !== index);
+                setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+              }
+            };
+
+            const handleSave = async () => {
+              // Validate percentages
+              const totalPercentage = commissionStructure.participants
+                .filter(p => p.type === 'percentage')
+                .reduce((sum, p) => sum + (p.percentage || 0), 0);
+              
+              if (totalPercentage > 100) {
+                alert('Totaal percentage kan niet meer dan 100% zijn!');
+                return;
+              }
+
+              await saveCommissionStructure(editingDealCommission.id, commissionStructure);
+              setShowCommissionEditor(false);
+              setEditingDealCommission(null);
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b">
+                    <h3 className="text-xl font-bold flex items-center space-x-2">
+                      <PercentIcon size={20} />
+                      <span>Commissie Structuur Beheren</span>
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Deal: {editingDealCommission.titel} - €{editingDealCommission.prijs.toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  <div className="p-6">
+                    {/* Total Rate Setting */}
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={commissionStructure.total_rate * 100}
+                          onChange={(e) => setCommissionStructure({
+                            ...commissionStructure,
+                            total_rate: parseFloat(e.target.value) / 100
+                          })}
+                          className="w-32 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-lg font-semibold text-blue-600">
+                          = €{totalCommission.toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          van €{editingDealCommission.prijs.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Participants */}
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">Commissie Verdeling:</h4>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => addParticipant(false)}
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                          >
+                            <PlusIcon size={14} />
+                            <span>Teamlid</span>
+                          </button>
+                          <button
+                            onClick={() => addParticipant(true)}
+                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                          >
+                            <ExternalLinkIcon size={14} />
+                            <span>Extern</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {commissionStructure.participants.map((participant, index) => (
+                        <div key={index} className="border rounded p-4 bg-gray-50">
+                          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                            {/* Role */}
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Rol</label>
+                              <select
+                                value={participant.role}
+                                onChange={(e) => updateParticipant(index, 'role', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              >
+                                <option value="deal_owner">Deal Eigenaar</option>
+                                <option value="investor_referral">Investeerder Referral</option>
+                                <option value="referral">Verwijzer</option>
+                                <option value="manager">Manager</option>
+                                <option value="assistant">Assistent</option>
+                                <option value="broker">Makelaar</option>
+                                <option value="consultant">Consultant</option>
+                              </select>
+                            </div>
+
+                            {/* Person Selection */}
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                {participant.is_external ? 'Naam' : 'Teamlid'}
+                              </label>
+                              {participant.is_external ? (
+                                <input
+                                  type="text"
+                                  value={participant.name}
+                                  onChange={(e) => updateParticipant(index, 'name', e.target.value)}
+                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  placeholder="Volledige naam"
+                                />
+                              ) : (
+                                <select
+                                  value={participant.user_id || ''}
+                                  onChange={(e) => updateParticipant(index, 'user_id', e.target.value)}
+                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                  <option value="">Selecteer...</option>
+                                  {users.map(user => (
+                                    <option key={user.id} value={user.id}>{user.name}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+
+                            {/* Additional fields for external participants */}
+                            {participant.is_external && (
+                              <>
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Email</label>
+                                  <input
+                                    type="email"
+                                    value={participant.email || ''}
+                                    onChange={(e) => updateParticipant(index, 'email', e.target.value)}
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="email@example.com"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Bedrijf</label>
+                                  <input
+                                    type="text"
+                                    value={participant.company || ''}
+                                    onChange={(e) => updateParticipant(index, 'company', e.target.value)}
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Bedrijfsnaam"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {/* Commission Type */}
+                            <div className={participant.is_external ? '' : 'md:col-start-4'}>
+                              <label className="block text-sm font-medium mb-1">Type</label>
+                              <select
+                                value={participant.type}
+                                onChange={(e) => updateParticipant(index, 'type', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              >
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Vast Bedrag</option>
+                              </select>
+                            </div>
+
+                            {/* Amount */}
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
+                              </label>
+                              <input
+                                type="number"
+                                step={participant.type === 'percentage' ? '0.1' : '1'}
+                                value={participant.type === 'percentage' ? participant.percentage : participant.fixed_amount}
+                                onChange={(e) => updateParticipant(
+                                  index, 
+                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
+                                  parseFloat(e.target.value)
+                                )}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-end">
+                              {commissionStructure.participants.length > 1 && (
+                                <button
+                                  onClick={() => removeParticipant(index)}
+                                  className="text-red-600 hover:text-red-800 text-sm p-2"
+                                >
+                                  <TrashIcon size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Show commission calculation */}
+                          <div className="mt-2 text-sm text-gray-600">
+                            Commissie: €{participant.type === 'percentage' 
+                              ? (totalCommission * (participant.percentage / 100)).toLocaleString()
+                              : (participant.fixed_amount || 0).toLocaleString()
+                            }
+                            {participant.is_external && (
+                              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                                Extern
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Summary */}
+                    <div className="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
+                      <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
+                      <div className="space-y-1 text-sm">
+                        {commissionStructure.participants.map((participant, index) => {
+                          const commission = participant.type === 'percentage' 
+                            ? totalCommission * (participant.percentage / 100)
+                            : participant.fixed_amount;
+                          
+                          const displayName = participant.is_external 
+                            ? participant.name 
+                            : getUserById(participant.user_id).name;
+                          
+                          return (
+                            <div key={index} className="flex justify-between">
+                              <span>
+                                {displayName} ({participant.role})
+                                {participant.is_external && <span className="text-green-600 ml-1">📧</span>}
+                              </span>
+                              <span>€{commission.toLocaleString()}</span>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t pt-1 font-semibold flex justify-between">
+                          <span>Totaal:</span>
+                          <span>€{totalCommission.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4">
+                    <button
+                      onClick={() => {
+                        setShowCommissionEditor(false);
+                        setEditingDealCommission(null);
+                      }}
+                      className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      💾 Opslaan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
           };
 
           // ✅ ENHANCED FORMS WITH EDIT CAPABILITY
@@ -2051,187 +2445,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          // Commission Editor Component
-          const CommissionEditor = () => {
-            if (!showCommissionEditor || !currentTransaction) return null;
-
-            const { deal, investor } = currentTransaction;
-            const totalCommission = deal.prijs * commissionStructure.total_rate;
-
-            const updateParticipant = (index, field, value) => {
-              const newParticipants = [...commissionStructure.participants];
-              newParticipants[index] = { ...newParticipants[index], [field]: value };
-              setCommissionStructure({ ...commissionStructure, participants: newParticipants });
-            };
-
-            const addParticipant = () => {
-              setCommissionStructure({
-                ...commissionStructure,
-                participants: [
-                  ...commissionStructure.participants,
-                  { role: 'referral', user_id: null, percentage: 0, fixed_amount: 0, type: 'percentage' }
-                ]
-              });
-            };
-
-            const removeParticipant = (index) => {
-              if (commissionStructure.participants.length > 2) {
-                const newParticipants = commissionStructure.participants.filter((_, i) => i !== index);
-                setCommissionStructure({ ...commissionStructure, participants: newParticipants });
-              }
-            };
-
-            return (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg w-full max-w-4xl">
-                  <div className="p-6 border-b">
-                    <h3 className="text-xl font-bold">Commissie Structuur Instellen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Deal: {deal.titel} - Investeerder: {investor.naam}
-                    </p>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
-                      <input
-                        type="number"
-                        step="0.001"
-                        value={commissionStructure.total_rate * 100}
-                        onChange={(e) => setCommissionStructure({
-                          ...commissionStructure,
-                          total_rate: parseFloat(e.target.value) / 100
-                        })}
-                        className="w-32 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-600">
-                        = €{totalCommission.toLocaleString()} van €{deal.prijs.toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="space-y-4 mb-6">
-                      <h4 className="font-semibold">Commissie Verdeling:</h4>
-                      {commissionStructure.participants.map((participant, index) => (
-                        <div key={index} className="border rounded p-4 bg-gray-50">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Rol</label>
-                              <select
-                                value={participant.role}
-                                onChange={(e) => updateParticipant(index, 'role', e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="deal_owner">Deal Eigenaar</option>
-                                <option value="investor_owner">Investeerder Eigenaar</option>
-                                <option value="referral">Verwijzer</option>
-                                <option value="manager">Manager</option>
-                                <option value="assistant">Assistent</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Gebruiker</label>
-                              <select
-                                value={participant.user_id || ''}
-                                onChange={(e) => updateParticipant(index, 'user_id', e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="">Selecteer gebruiker</option>
-                                {users.map(user => (
-                                  <option key={user.id} value={user.id}>{user.name}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Type</label>
-                              <select
-                                value={participant.type}
-                                onChange={(e) => updateParticipant(index, 'type', e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="percentage">Percentage</option>
-                                <option value="fixed">Vast Bedrag</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
-                              </label>
-                              <input
-                                type="number"
-                                step={participant.type === 'percentage' ? '0.1' : '1'}
-                                value={participant.type === 'percentage' ? participant.percentage : participant.fixed_amount}
-                                onChange={(e) => updateParticipant(
-                                  index, 
-                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
-                                  parseFloat(e.target.value)
-                                )}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                            </div>
-                          </div>
-                          {commissionStructure.participants.length > 2 && (
-                            <button
-                              onClick={() => removeParticipant(index)}
-                              className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Verwijder
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      
-                      <button
-                        onClick={addParticipant}
-                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <PlusIcon size={16} />
-                        <span>Deelnemer Toevoegen</span>
-                      </button>
-                    </div>
-
-                    <div className="bg-blue-50 p-4 rounded mb-6">
-                      <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
-                      <div className="space-y-1 text-sm">
-                        {commissionStructure.participants.map((participant, index) => {
-                          const user = getUserById(participant.user_id);
-                          const commission = participant.type === 'percentage' 
-                            ? totalCommission * (participant.percentage / 100)
-                            : participant.fixed_amount;
-                          
-                          return (
-                            <div key={index} className="flex justify-between">
-                              <span>{user.name} ({participant.role})</span>
-                              <span>€{commission.toLocaleString()}</span>
-                            </div>
-                          );
-                        })}
-                        <div className="border-t pt-1 font-semibold flex justify-between">
-                          <span>Totaal:</span>
-                          <span>€{totalCommission.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4">
-                    <button
-                      onClick={() => setShowCommissionEditor(false)}
-                      className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-100"
-                    >
-                      Annuleren
-                    </button>
-                    <button
-                      onClick={finalizeTransaction}
-                      className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Transactie Afronden
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          };
-
           // PROFESSIONELE AUTH FORM - Alleen email/wachtwoord
           const AuthForm = () => {
             const [formData, setFormData] = useState({
@@ -2269,26 +2482,25 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     <div className="flex items-center justify-center space-x-2 mt-3">
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Commission Tracking</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Flex Commission</span>
                       <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
-                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">📍 Locatie Update</span>
                     </div>
                   </div>
 
                   {!showRegister && (
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800 mb-2">🔥 Firebase MVP Account</h4>
+                      <h4 className="font-semibold text-blue-800 mb-2">🔥 Flexibele Commissie Structuur</h4>
                       <div className="space-y-2 text-sm">
                         <div className="bg-white p-3 rounded border border-blue-200">
-                          <p className="font-medium text-blue-900">✨ Test Firebase Setup</p>
-                          <p className="text-blue-700">Maak een nieuw account aan om Firebase te testen</p>
-                          <p className="text-blue-700">Of gebruik een bestaand account als je er al een hebt</p>
+                          <p className="font-medium text-blue-900">💼 Per Deal Configureerbaar</p>
+                          <p className="text-blue-700">Stel commissie structuur in per deal</p>
+                          <p className="text-blue-700">Voeg teamleden en externe partners toe</p>
                         </div>
                         <div className="bg-green-50 p-3 rounded border border-green-200">
-                          <p className="font-medium text-green-900">🎯 MVP Features</p>
-                          <p className="text-green-700">• Real-time database synchronisatie</p>
-                          <p className="text-green-700">• Team samenwerking mogelijk</p>
-                          <p className="text-green-700">• ✏️ NIEUW: Edit/Delete functionaliteit</p>
+                          <p className="font-medium text-green-900">🎯 Nieuwe Features</p>
+                          <p className="text-green-700">• ✏️ Edit/Delete functionaliteit</p>
+                          <p className="text-green-700">• 📧 Externe commissie partners</p>
+                          <p className="text-green-700">• 🔄 Real-time updates</p>
                         </div>
                       </div>
                     </div>
@@ -2506,13 +2718,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">Vastgoed Matcher Pro AI</h1>
-                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! ({user.role}) AI-powered matching, internationale regio targeting, project type filtering & geavanceerde commissie structuren</p>
+                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! ({user.role}) AI-powered matching met flexibele commissie structuren per deal</p>
                   <div className="flex flex-wrap items-center space-x-2 space-y-1 sm:space-y-0">
                     <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📍 Regio Matching</span>
                     <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🏗️ Project Types</span>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Smart Commissies</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Flex Commissies</span>
                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">📧 Externe Partners</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 mt-4 lg:mt-0">
@@ -2726,7 +2939,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
                           </button>
                           
-                          {/* ✅ NEW EDIT/DELETE BUTTONS */}
+                          {/* ✅ EDIT/DELETE BUTTONS */}
                           {(user.role === 'beheerder' || investor.owner_id === user.id) && (
                             <div className="flex space-x-2">
                               <button
@@ -2830,6 +3043,21 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                         </div>
 
+                        {/* NEW: Commission Structure Display */}
+                        {deal.commissionStructure && (
+                          <div className="mb-4 p-3 bg-gray-50 rounded border">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-700">Commissie Structuur</span>
+                              <span className="text-sm text-gray-600">
+                                {(deal.commissionStructure.total_rate * 100).toFixed(2)}%
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {deal.commissionStructure.participants?.length || 0} deelnemers geconfigureerd
+                            </div>
+                          </div>
+                        )}
+
                         <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
 
                         <div className="space-y-2">
@@ -2843,16 +3071,28 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <StarIcon size={16} />
                             <span>Vind Matches</span>
                           </button>
-                          <button
-                            onClick={() => getDealInsights(deal.id)}
-                            disabled={isLoadingAI}
-                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
-                          >
-                            <BrainIcon size={16} />
-                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
-                          </button>
+                          
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => getDealInsights(deal.id)}
+                              disabled={isLoadingAI}
+                              className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                            >
+                              <BrainIcon size={16} />
+                              <span>{isLoadingAI ? 'AI...' : 'AI Analyse'}</span>
+                            </button>
+                            
+                            {/* NEW: Commission Structure Button */}
+                            <button
+                              onClick={() => openCommissionEditor(deal)}
+                              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <PercentIcon size={16} />
+                              <span>Commissie</span>
+                            </button>
+                          </div>
 
-                          {/* ✅ NEW EDIT/DELETE BUTTONS */}
+                          {/* ✅ EDIT/DELETE BUTTONS */}
                           {(user.role === 'beheerder' || deal.owner_id === user.id) && (
                             <div className="flex space-x-2">
                               <button
@@ -2908,7 +3148,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <p>• Success Probability: AI voorspelling van deal succes</p>
                               <p>• Pitch Suggesties: Gepersonaliseerde aanbevelingen</p>
                               <p>• Onderhandeling Tips: Strategie per investeerder</p>
-                              <p>• Project Match: Matching op ontwikkelingstype</p>
+                              <p>• Flexibele Commissies: Per deal aanpasbaar</p>
                             </div>
                           </div>
                         </div>
@@ -3093,10 +3333,20 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <h4 className="font-semibold mb-3">Commissie Verdeling:</h4>
                               <div className="space-y-2">
                                 {participantCommissions.map((participant, index) => {
-                                  const user = getUserById(participant.user_id);
+                                  const userName = participant.is_external 
+                                    ? participant.name 
+                                    : getUserById(participant.user_id).name;
+                                  
                                   return (
                                     <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                                      <span>{user.name} ({participant.role})</span>
+                                      <span className="flex items-center space-x-2">
+                                        <span>{userName} ({participant.role})</span>
+                                        {participant.is_external && (
+                                          <span className="px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                                            Extern
+                                          </span>
+                                        )}
+                                      </span>
                                       <span className="font-semibold">
                                         €{participant.commission_amount.toLocaleString()}
                                       </span>
@@ -3104,6 +3354,29 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                   );
                                 })}
                               </div>
+                              
+                              {/* Show external participants contact info */}
+                              {participantCommissions.some(p => p.is_external) && (
+                                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                                  <h5 className="font-medium text-green-800 mb-2">Externe Partners:</h5>
+                                  <div className="space-y-2 text-sm">
+                                    {participantCommissions
+                                      .filter(p => p.is_external)
+                                      .map((participant, index) => (
+                                        <div key={index} className="flex flex-col space-y-1">
+                                          <span className="font-medium">{participant.name}</span>
+                                          {participant.email && (
+                                            <span className="text-gray-600">📧 {participant.email}</span>
+                                          )}
+                                          {participant.company && (
+                                            <span className="text-gray-600">🏢 {participant.company}</span>
+                                          )}
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -3279,6 +3552,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 />
               )}
 
+              {/* NEW: Commission Editor */}
               <CommissionEditor />
             </div>
           );
@@ -3288,32 +3562,31 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(React.createElement(VastgoedInvesteerderMatcher));
 
-        console.log('🚀 Vastgoed Matcher Pro AI - Firebase MVP Version geladen!');
+        console.log('🚀 Vastgoed Matcher Pro AI - Flexibele Commissie Versie geladen!');
         console.log('🔥 Firebase Authentication & Database geïntegreerd');
-        console.log('👥 Team collaboration mogelijk via shared Firebase database');
-        console.log('💾 Data wordt automatisch gesynchroniseerd tussen alle teamleden');
-        console.log('✅ Maak een nieuw account aan om te beginnen');
-        console.log('📱 Real-time updates enabled!');
-        console.log('✏️ NIEUW: Edit/Delete functionaliteit geïmplementeerd!');
-        console.log('🎯 Edit/Update/Delete Features:');
+        console.log('💰 Nieuwe Features:');
+        console.log('   • ✅ Commissie structuur per deal configureerbaar');
+        console.log('   • ✅ Teamleden en externe partners toevoegen');
+        console.log('   • ✅ Percentage en vast bedrag commissies');
+        console.log('   • ✅ Externe partner contactgegevens opslaan');
+        console.log('   • ✅ Real-time commissie berekeningen');
+        console.log('   • ✅ Flexibele rollen toewijzing');
+        console.log('🎯 Commissie Management:');
+        console.log('   • 💼 Per deal aanpasbare commissie rate');
+        console.log('   • 👥 Meerdere deelnemers per deal');
+        console.log('   • 📧 Externe partners met contactinfo');
+        console.log('   • 🔄 Percentage en vast bedrag combinaties');
+        console.log('   • 💾 Firebase opslag van commissie structuren');
+        console.log('✏️ Edit Features behouden:');
         console.log('   • ✅ Investeerders bewerken en verwijderen');
         console.log('   • ✅ Deals bewerken en verwijderen');
-        console.log('   • ✅ Firebase real-time updates');
-        console.log('   • ✅ Permissie controle (eigenaar/beheerder)');
-        console.log('   • ✅ Cascade delete voor gerelateerde transacties');
-        console.log('🔧 FIXED: Script errors en UI verbeteringen:');
-        console.log('   • ✅ Array safety checks toegevoegd');
-        console.log('   • ✅ Locatie veld toegevoegd voor investeerders');
-        console.log('   • ✅ Overig locatie categorie toegevoegd');
-        console.log('   • ✅ Uncaught script errors opgelost');
-        console.log('   • ✅ Uitgebreide internationale steden lijst');
-        console.log('🌍 NIEUW: Geavanceerde Locatie Matching:');
-        console.log('   • ✅ Multi-level geografische voorkeuren (stad/land/regio)');
-        console.log('   • ✅ Geografisch bereik opties (lokaal/regionaal/nationaal/internationaal)');
-        console.log('   • ✅ Automatische land/regio/stad matching in algoritme');
-        console.log('   • ✅ Enhanced locatie scoring (25% van totale match score)');
-        console.log('   • ✅ 15+ landen, 4 regio\'s, 100+ steden ondersteund');
-        console.log('   • ✅ Smart cascading selectie (regio → landen → steden)');
+        console.log('   • ✅ Real-time updates tussen teamleden');
+        console.log('   • ✅ Permissie controle');
+        console.log('🌍 Alle andere features behouden:');
+        console.log('   • ✅ AI-powered matching');
+        console.log('   • ✅ Internationale locatie matching');
+        console.log('   • ✅ Project type filtering');
+        console.log('   • ✅ Team collaboration via Firebase');
     </script>
 </body>
 </html>
