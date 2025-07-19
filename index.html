@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vastgoed Matcher Pro AI</title>
+    <title>Vastgoed Matcher Pro AI - Enhanced</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -143,7 +143,6 @@
           width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', className 
         }, React.createElement('polyline', { points: '3,6 5,6 21,6' }), React.createElement('path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }), React.createElement('line', { x1: '10', y1: '11', x2: '10', y2: '17' }), React.createElement('line', { x1: '14', y1: '11', x2: '14', y2: '17' }));
 
-        // NEW ICON FOR COMMISSION
         const PercentIcon = ({ size = 20, className = '' }) => React.createElement('svg', { 
           width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', className 
         }, React.createElement('line', { x1: '19', y1: '5', x2: '5', y2: '19' }), React.createElement('circle', { cx: '6.5', cy: '6.5', r: '2.5' }), React.createElement('circle', { cx: '17.5', cy: '17.5', r: '2.5' }));
@@ -166,18 +165,16 @@
           const [aiInsights, setAiInsights] = useState({});
           const [isLoadingAI, setIsLoadingAI] = useState(false);
           
-          // NEW: Commission structure management
           const [showCommissionEditor, setShowCommissionEditor] = useState(false);
           const [editingDealCommission, setEditingDealCommission] = useState(null);
           const [currentTransaction, setCurrentTransaction] = useState(null);
 
-          // ✅ EDIT STATE MANAGEMENT
           const [editingInvestor, setEditingInvestor] = useState(null);
           const [editingDeal, setEditingDeal] = useState(null);
           const [showEditInvestor, setShowEditInvestor] = useState(false);
           const [showEditDeal, setShowEditDeal] = useState(false);
 
-          // Real OpenAI API call via Netlify function (with fallback to mock data)
+          // 🔥 ENHANCED AI MATCHING WITH SEMANTIC ANALYSIS
           const callOpenAI = async (prompt, type = 'analysis', data = null) => {
             setIsLoadingAI(true);
             
@@ -197,10 +194,27 @@
               console.log('OpenAI API niet beschikbaar, gebruik demo data:', error);
             }
             
-            // Fallback to mock data
+            // Enhanced fallback with semantic matching simulation
             await new Promise(resolve => setTimeout(resolve, 1500));
             
             const mockResponses = {
+              enhanced_matching: {
+                semanticScore: 85,
+                semanticReasons: [
+                  'Sterke match: "stabiele huurinkomsten" ↔ "gegarandeerde huurder 5 jaar"',
+                  'Perfecte match: "geen renovatie" ↔ "turn-key appartement"', 
+                  'Goede match: "duurzaamheid belangrijk" ↔ "energielabel A"',
+                  'Match: "ervaring met appartementen" ↔ "luxe appartement complex"'
+                ],
+                conflictAnalysis: [],
+                overallCompatibility: 92,
+                pitchRecommendations: [
+                  'Benadruk de gegarandeerde huurinkomsten van 5 jaar',
+                  'Vermeld turn-key voordeel: direct rendement zonder werk',
+                  'Highlight duurzaamheid: energielabel A en lage kosten',
+                  'Toon vergelijkbare succesvolle projecten in portfolio'
+                ]
+              },
               investor_analysis: {
                 financialStrength: 'Hoog - Stabiele inkomstenbron via vastgoedbeleggingen',
                 riskAppetite: 'Gemiddeld tot hoog - Ervaren investeerder met diversified portfolio',
@@ -234,72 +248,25 @@
                 marketTrends: 'Prijzen in dit gebied stijgen 3-5% per jaar',
                 demographicAnalysis: 'Populair bij young professionals en small families',
                 futureOutlook: 'Positieve ontwikkeling verwacht door infrastructuurprojecten'
-              },
-              smart_matching: {
-                matchScore: 87,
-                reasoningFactors: [
-                  'Budget perfect match (€350k binnen €100k-€500k range)',
-                  'Locatie voorkeur Amsterdam komt overeen',
-                  'Risicoprofiel past bij deal karakteristieken',
-                  'Verwacht rendement 5.5% boven minimum van 4%',
-                  'Project type turn-key past bij conservatieve benadering'
-                ],
-                aiRecommendations: [
-                  'Benadruk stabiele huurinkomsten in pitch',
-                  'Vermeld turn-key voordeel: geen ontwikkelingsrisico',
-                  'Vermeld renovatiepotentieel voor waardestijging',
-                  'Deel marktanalyse van vergelijkbare panden',
-                  'Toon demografische trends in de buurt'
-                ],
-                timingAdvice: 'Optimaal moment - investeerder recent actief in vergelijkbare deals',
-                negotiationStrategy: 'Start met asking price, investeerder waardeert transparantie',
-                successProbability: 0.72
-              },
-              market_insights: {
-                regionalTrends: {
-                  'Nederland': { growth: 4.2, hotspots: ['Amsterdam', 'Rotterdam'], outlook: 'Positief' },
-                  'Duitsland': { growth: 3.8, hotspots: ['Berlijn', 'München'], outlook: 'Stabiel' },
-                  'Frankrijk': { growth: 5.1, hotspots: ['Parijs', 'Lyon'], outlook: 'Zeer positief' },
-                  'Spanje': { growth: 6.2, hotspots: ['Madrid', 'Barcelona'], outlook: 'Zeer positief' },
-                  'Zwitserland': { growth: 2.8, hotspots: ['Zürich', 'Genève'], outlook: 'Conservatief' }
-                },
-                priceForecasts: {
-                  'Amsterdam': '+3.5% next 12 months',
-                  'Berlijn': '+2.8% next 12 months',
-                  'Parijs': '+4.2% next 12 months',
-                  'Madrid': '+5.1% next 12 months',
-                  'Zürich': '+1.8% next 12 months'
-                },
-                bestOpportunities: [
-                  'Studentenhuisvesting in universiteitssteden',
-                  'Duurzame nieuwbouw in groeikernen',
-                  'Herbestemming kantoren naar woningen',
-                  'Vakantievastgoed in Spanje',
-                  'Luxe vastgoed in Zwitserse steden',
-                  'Turn-key studentenhuisvesting',
-                  'Transformatie projecten in stadscentra'
-                ]
               }
             };
 
             setIsLoadingAI(false);
             
+            if (type === 'enhanced_matching') return mockResponses.enhanced_matching;
             if (type === 'investor_analysis') return mockResponses.investor_analysis;
-            if (type === 'deal_analysis') return mockResponses.deal_analysis;  
-            if (type === 'smart_matching') return mockResponses.smart_matching;
-            if (type === 'market_insights') return mockResponses.market_insights;
+            if (type === 'deal_analysis') return mockResponses.deal_analysis;
             
-            return mockResponses.investor_analysis;
+            return mockResponses.enhanced_matching;
           };
 
-          // FIREBASE DATABASE FUNCTIES
+          // FIREBASE DATABASE FUNCTIES (unchanged)
           const loadData = async () => {
             if (!user) return;
             
             try {
               console.log('📊 Loading data from Firebase...');
               
-              // Load users
               const usersSnapshot = await db.collection('users').get();
               const usersData = usersSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -307,7 +274,6 @@
               }));
               setUsers(usersData);
               
-              // Load investors
               const investorsSnapshot = await db.collection('investors').get();
               const investorsData = investorsSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -315,7 +281,6 @@
               }));
               setInvestors(investorsData);
               
-              // Load deals
               const dealsSnapshot = await db.collection('deals').get();
               const dealsData = dealsSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -323,7 +288,6 @@
               }));
               setDeals(dealsData);
               
-              // Load transactions
               const transactionsSnapshot = await db.collection('transactions').get();
               const transactionsData = transactionsSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -340,14 +304,11 @@
               
             } catch (error) {
               console.error('❌ Error loading data from Firebase:', error);
-              
-              // Fallback to demo data for first time users
               console.log('📋 Loading demo data as fallback...');
               await loadDemoData();
             }
           };
-          
-          // Keep demo data function for first time setup
+
           const loadDemoData = async () => {
             console.log('🎭 Loading demo data...');
             
@@ -366,10 +327,10 @@
                 locatie: 'Amsterdam',
                 minBudget: 100000,
                 maxBudget: 500000,
-                voorkeursRegio: ['West-Europa'],
+                // 🔥 SIMPLIFIED LOCATION FIELDS
                 voorkeursLanden: ['Nederland', 'Duitsland'],
-                voorkeursLocaties: ['Amsterdam', 'Rotterdam', 'Haarlem', 'Berlijn', 'München'],
-                geografischeBereik: 'regionaal',
+                voorkeursRegio: ['West-Europa'],
+                locatieDetails: 'Amsterdam centrum bij de ring, nabij openbaar vervoer. Liever geen Zuidoost of Noord.',
                 vastgoedTypes: ['Appartement', 'Kantoor'],
                 projectTypes: ['Turn-key', 'Renovatie'],
                 risicoprofiel: 'Gemiddeld',
@@ -378,7 +339,9 @@
                 ervaringLevel: 'Ervaren',
                 beschikbaarheid: 'Direct',
                 communicatieVoorkeur: 'Telefoon',
-                investmentMotivatie: 'Uitbreiding van vastgoed portfolio voor pensioen opbouw',
+                // 🔥 ENHANCED WITH SEMANTIC CONTENT
+                investmentMotivatie: 'Zoek stabiele huurinkomsten voor pensioenopbouw. Geen renovatie projecten, liever turn-key appartementen. Ervaring met studentenhuisvesting. Duurzaamheid steeds belangrijker.',
+                bijzonderheden: 'Heeft voorkeur voor energiezuinige panden. Geen ground floor retail. Ervaring met vastgoedbeheer.',
                 owner_id: user.id,
                 created_at: new Date().toISOString()
               }
@@ -394,18 +357,22 @@
                 prijs: 350000,
                 verwachtRendement: 5.5,
                 risico: 'Gemiddeld',
-                beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord',
+                // 🔥 ENHANCED DESCRIPTION FOR SEMANTIC MATCHING  
+                beschrijving: 'Kant-en-klaar nieuwbouw appartement in opkomende wijk Noord. Energielabel A, zonnepanelen, warmtepomp. Gegarandeerde huurder voor 5 jaar via corporatie. Nabij metro, 15 min naar centrum. Turn-key: direct rendement, geen werk aan.',
                 oppervlakte: 85,
                 bouwjaar: 2020,
                 huurpotentie: 1800,
                 status: 'Beschikbaar',
                 bedrijfFonds: 'Demo Vastgoed B.V.',
+                bijzonderheden: 'Duurzaam gebouwd, lage servicekosten. Professioneel beheer beschikbaar. Uitstekende buurt met goede voorzieningen.',
+                contactpersoon: 'Maria Janssen',
+                telefoon: '020-1234567',
+                email: 'maria@demovastgoed.nl',
                 isRelevant: true,
                 ourScore: 8.5,
                 aiAnalyzed: false,
                 owner_id: user.id,
                 created_at: new Date().toISOString(),
-                // NEW: Default commission structure
                 commissionStructure: {
                   total_rate: 0.025,
                   participants: [
@@ -427,7 +394,6 @@
             setDeals(demoDeals);
             setTransactions([]);
             
-            // Save demo data to Firebase for next time
             try {
               await saveDemoDataToFirebase(demoInvestors, demoDeals);
             } catch (error) {
@@ -437,7 +403,6 @@
           
           const saveDemoDataToFirebase = async (investors, deals) => {
             try {
-              // Save investors
               for (const investor of investors) {
                 await db.collection('investors').doc(investor.id).set({
                   ...investor,
@@ -445,7 +410,6 @@
                 });
               }
               
-              // Save deals
               for (const deal of deals) {
                 await db.collection('deals').doc(deal.id).set({
                   ...deal,
@@ -463,7 +427,6 @@
             return users.find(u => u.id === id) || { name: 'Onbekend', email: '' };
           };
 
-          // VERBETERDE AI CONNECTIE TESTEN
           const testAIConnection = async () => {
             setIsLoadingAI(true);
             try {
@@ -493,7 +456,6 @@
             }
           };
 
-          // VEEL BETERE AI FUNCTIES met real-time feedback
           const getInvestorInsights = async (investorId) => {
             const investor = investors.find(i => i.id === investorId);
             if (!investor) return;
@@ -511,15 +473,20 @@ BASISGEGEVENS:
 - Risicoprofiel: ${investor.risicoprofiel}
 - Ervaring: ${investor.ervaringLevel}
 - Voorkeursregio's: ${investor.voorkeursRegio?.join(', ')}
+- Voorkeurslanden: ${investor.voorkeursLanden?.join(', ')}
+- Locatie details: ${investor.locatieDetails || 'Niet opgegeven'}
 - Vastgoedtypes: ${investor.vastgoedTypes?.join(', ')}
 - Project types: ${investor.projectTypes?.join(', ')}
 - Communicatie voorkeur: ${investor.communicatieVoorkeur}
 - Beschikbaarheid: ${investor.beschikbaarheid}
-- Motivatie: ${investor.investmentMotivatie}
+
+MOTIVATIE & BIJZONDERHEDEN:
+- Investment motivatie: ${investor.investmentMotivatie || 'Niet opgegeven'}
+- Bijzonderheden: ${investor.bijzonderheden || 'Niet opgegeven'}
 
 ANALYSEER DIEPGAAND:
 1. Financiële sterkte en capaciteit
-2. Psychologisch profiel en gedrag
+2. Psychologisch profiel en gedrag op basis van motivatie
 3. Optimale deal karakteristieken
 4. Risico tolerantie analyse
 5. Onderhandelingsstrategie
@@ -557,7 +524,11 @@ DEAL GEGEVENS:
 - Oppervlakte: ${deal.oppervlakte}m²
 - Bouwjaar: ${deal.bouwjaar}
 - Huurpotentie: €${deal.huurpotentie}
+
+BESCHRIJVING & DETAILS:
 - Beschrijving: ${deal.beschrijving}
+- Bijzonderheden: ${deal.bijzonderheden || 'Niet opgegeven'}
+- Contactpersoon: ${deal.contactpersoon || 'Niet opgegeven'}
 
 ANALYSEER DIEPGAAND:
 1. Marktpositie en concurrentie analyse
@@ -579,6 +550,7 @@ Geef een professionele, gedetailleerde analyse in Nederlandse taal met concrete 
             }));
           };
 
+          // 🔥 ENHANCED MATCHING WITH SEMANTIC ANALYSIS
           const getSmartMatchingInsights = async (dealId, investorId) => {
             const deal = deals.find(d => d.id === dealId);
             const investor = investors.find(i => i.id === investorId);
@@ -587,7 +559,7 @@ Geef een professionele, gedetailleerde analyse in Nederlandse taal met concrete 
             setIsLoadingAI(true);
             
             const detailedPrompt = `
-GEAVANCEERDE MATCHING ANALYSE:
+🤖 GEAVANCEERDE AI SEMANTIC MATCHING ANALYSE:
 
 DEAL: ${deal.titel}
 - Bedrijf/Fonds: ${deal.bedrijfFonds || 'Niet opgegeven'}
@@ -596,6 +568,8 @@ DEAL: ${deal.titel}
 - Prijs: €${deal.prijs.toLocaleString()}
 - Rendement: ${deal.verwachtRendement}%
 - Risico: ${deal.risico}
+- Deal beschrijving: "${deal.beschrijving}"
+- Deal bijzonderheden: "${deal.bijzonderheden || 'Geen'}"
 
 INVESTEERDER: ${investor.naam}
 - Bedrijf: ${investor.bedrijf || 'Niet opgegeven'}
@@ -604,60 +578,65 @@ INVESTEERDER: ${investor.naam}
 - Risicoprofiel: ${investor.risicoprofiel}
 - Ervaring: ${investor.ervaringLevel}
 - Voorkeuren: ${investor.vastgoedTypes?.join(', ')}
+- Locatie details: "${investor.locatieDetails || 'Geen specifieke eisen'}"
+- Investment motivatie: "${investor.investmentMotivatie || 'Niet opgegeven'}"
+- Bijzonderheden: "${investor.bijzonderheden || 'Geen'}"
 
-ANALYSEER:
-1. Compatibility score met uitleg
-2. Financiële match analyse
-3. Psychologische fit beoordeling
-4. Timing en markt factoren
-5. Onderhandelingsstrategie
-6. Gepersonaliseerde pitch aanbevelingen
-7. Potentiële bezwaren en oplossingen
-8. Success probability met argumentatie
+🎯 VOER SEMANTIC MATCHING UIT:
+
+1. SEMANTIC ANALYSE van deal beschrijving vs investeerder motivatie
+   - Zoek naar overlappende concepten, synoniemen, gerelateerde termen
+   - Bijvoorbeeld: "stabiele huurinkomsten" ↔ "gegarandeerde huurder"
+   - Bijvoorbeeld: "geen renovatie" ↔ "turn-key" 
+   - Bijvoorbeeld: "duurzaamheid" ↔ "energielabel A"
+
+2. CONFLICT DETECTIE
+   - Zoek naar tegenstrijdigheden tussen wensen en aanbod
+   - Bijvoorbeeld: "geen renovatie" vs "renovatie project"
+
+3. COMPATIBILITY SCORE (0-100)
+   - Combineer traditionele factoren + semantic matching
+   - Geef uitleg per component
+
+4. GEPERSONALISEERDE PITCH STRATEGIE
+   - Welke aspecten van de deal benadrukken?
+   - Hoe deal presenteren aan deze specifieke investeerder?
+   - Welke voordelen matchen met hun motivatie?
+
+5. SUCCESS PROBABILITY & TIMING
+   - Kans op succesvolle deal
+   - Optimaal moment voor approach
 
 Geef concrete, actionable aanbevelingen voor deze specifieke match.
             `;
             
-            const insights = await callOpenAI(detailedPrompt, 'smart_matching', { deal, investor });
+            const insights = await callOpenAI(detailedPrompt, 'enhanced_matching', { deal, investor });
             setAiInsights(prev => ({
               ...prev,
-              [`smart_match_${dealId}_${investorId}`]: insights
+              [`enhanced_match_${dealId}_${investorId}`]: insights
             }));
           };
 
-          const getMarketInsights = async () => {
-            const insights = await callOpenAI(`Markt inzichten`, 'market_insights');
-            setAiInsights(prev => ({
-              ...prev,
-              market_insights: insights
-            }));
-          };
-
-          // FIREBASE AUTHENTICATION FUNCTIES
+          // FIREBASE AUTHENTICATION FUNCTIES (unchanged)
           const handleLogin = async (credentials) => {
             try {
               console.log('🔐 Firebase login poging voor:', credentials.email);
               
-              // Firebase Auth login
               const userCredential = await auth.signInWithEmailAndPassword(
                 credentials.email, 
                 credentials.password
               );
               
               const firebaseUser = userCredential.user;
-              
-              // Check if user profile exists in Firestore
               const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
               
               if (userDoc.exists) {
-                // User profile exists
                 const userData = { id: firebaseUser.uid, ...userDoc.data() };
                 setUser(userData);
                 setShowAuth(false);
                 console.log('✅ Login succesvol voor:', userData.name);
                 await loadData();
               } else {
-                // User profile doesn't exist (shouldn't happen with proper registration)
                 throw new Error('User profile not found');
               }
               
@@ -688,7 +667,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             try {
               console.log('📝 Firebase registratie voor:', userData.email);
               
-              // Create Firebase Auth user
               const userCredential = await auth.createUserWithEmailAndPassword(
                 userData.email,
                 userData.password
@@ -696,7 +674,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const firebaseUser = userCredential.user;
               
-              // Create user profile in Firestore
               const userProfile = {
                 name: userData.name,
                 email: userData.email,
@@ -707,7 +684,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               await db.collection('users').doc(firebaseUser.uid).set(userProfile);
               
-              // Set user state
               const newUser = { id: firebaseUser.uid, ...userProfile };
               setUser(newUser);
               setShowAuth(false);
@@ -751,11 +727,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
-          // Listen to authentication state changes
           useEffect(() => {
             const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
               if (firebaseUser && !user) {
-                // User is signed in, get their profile
                 try {
                   const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
                   if (userDoc.exists) {
@@ -768,7 +742,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                   console.error('Error loading user profile:', error);
                 }
               } else if (!firebaseUser && user) {
-                // User is signed out
                 setUser(null);
                 setShowAuth(true);
               }
@@ -783,86 +756,45 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           }, [user]);
 
-          // Enhanced matching algorithm with improved location matching
+          // 🔥 ENHANCED MATCHING ALGORITHM WITH SEMANTIC ANALYSIS
           const calculateMatchScore = (investor, deal) => {
             let score = 0;
             let maxScore = 0;
             let reasoningFactors = [];
 
-            // Get deal location info
-            const getDealLocationInfo = (dealLocatie) => {
-              for (const [land, data] of Object.entries({
-                'Nederland': { regio: 'West-Europa', steden: ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen'] },
-                'Duitsland': { regio: 'West-Europa', steden: ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'] },
-                'Frankrijk': { regio: 'West-Europa', steden: ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'] },
-                'Spanje': { regio: 'Zuid-Europa', steden: ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'] },
-                'Zwitserland': { regio: 'West-Europa', steden: ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel'] },
-                'Verenigd Koninkrijk': { regio: 'West-Europa', steden: ['Londen', 'Manchester', 'Birmingham', 'Edinburgh', 'Glasgow', 'Liverpool', 'Bristol', 'Leeds', 'Cardiff', 'Belfast'] },
-                'België': { regio: 'West-Europa', steden: ['Brussel', 'Antwerpen', 'Gent', 'Charleroi', 'Luik', 'Brugge', 'Namen', 'Leuven', 'Mons', 'Aalst'] },
-                'Italië': { regio: 'Zuid-Europa', steden: ['Milaan', 'Rome', 'Florence', 'Venetië', 'Napels', 'Turijn', 'Bologna', 'Genua', 'Palermo', 'Catania'] },
-                'Oostenrijk': { regio: 'West-Europa', steden: ['Wenen', 'Salzburg', 'Innsbruck', 'Graz', 'Linz', 'Klagenfurt', 'Villach', 'Wels', 'St. Pölten', 'Dornbirn'] },
-                'Tsjechië': { regio: 'Oost-Europa', steden: ['Praag', 'Brno', 'Ostrava', 'Plzeň', 'Liberec', 'Olomouc', 'Ústí nad Labem', 'Hradec Králové', 'České Budějovice', 'Pardubice'] },
-                'Polen': { regio: 'Oost-Europa', steden: ['Warschau', 'Krakau', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Katowice'] },
-                'Hongarije': { regio: 'Oost-Europa', steden: ['Budapest', 'Debrecen', 'Miskolc', 'Szeged', 'Pécs', 'Győr', 'Nyíregyháza', 'Kecskemét', 'Székesfehérvár', 'Szombathely'] },
-                'Portugal': { regio: 'Zuid-Europa', steden: ['Porto', 'Lissabon', 'Vila Nova de Gaia', 'Amadora', 'Braga', 'Funchal', 'Coimbra', 'Setúbal', 'Almada', 'Agualva-Cacém'] },
-                'Ierland': { regio: 'West-Europa', steden: ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Drogheda', 'Dundalk', 'Swords', 'Bray', 'Navan'] },
-                'Scandinavië': { regio: 'Noord-Europa', steden: ['Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Göteborg', 'Malmö', 'Bergen', 'Trondheim', 'Tampere', 'Turku'] },
-                'Monaco': { regio: 'Zuid-Europa', steden: ['Monaco', 'Monte Carlo', 'La Condamine', 'Fontvieille'] }
-              })) {
-                if (data.steden.includes(dealLocatie)) {
-                  return { land, regio: data.regio, stad: dealLocatie };
-                }
-              }
-              return { land: 'Onbekend', regio: 'Onbekend', stad: dealLocatie };
-            };
-
-            const dealLocationInfo = getDealLocationInfo(deal.locatie);
-
-            // Budget matching (25%)
-            maxScore += 25;
+            // Budget matching (20% - reduced to make room for semantic)
+            maxScore += 20;
             if (deal.prijs >= investor.minBudget && deal.prijs <= investor.maxBudget) {
-              score += 25;
+              score += 20;
               reasoningFactors.push(`✓ Budget perfect match (€${deal.prijs.toLocaleString()} binnen €${investor.minBudget.toLocaleString()}-€${investor.maxBudget.toLocaleString()} range)`);
             } else if (deal.prijs < investor.minBudget) {
-              const budgetScore = Math.max(0, 25 - ((investor.minBudget - deal.prijs) / investor.minBudget * 25));
+              const budgetScore = Math.max(0, 20 - ((investor.minBudget - deal.prijs) / investor.minBudget * 20));
               score += budgetScore;
-              reasoningFactors.push(`⚠ Deal prijs onder minimum budget (${budgetScore.toFixed(1)}/25 punten)`);
+              reasoningFactors.push(`⚠ Deal prijs onder minimum budget (${budgetScore.toFixed(1)}/20 punten)`);
             } else {
               reasoningFactors.push(`✗ Deal prijs boven maximum budget`);
             }
 
-            // Enhanced Location matching (25% - increased importance)
-            maxScore += 25;
+            // 🔥 SIMPLIFIED LOCATION MATCHING (15% - reduced)
+            maxScore += 15;
             let locationScore = 0;
             
-            // Exact city match (full points)
-            if ((investor.voorkeursLocaties || []).includes(deal.locatie)) {
-              locationScore = 25;
-              reasoningFactors.push(`✓ Exacte stad match (${deal.locatie})`);
-            }
-            // Country match (good points)
-            else if ((investor.voorkeursLanden || []).includes(dealLocationInfo.land)) {
-              locationScore = 20;
-              reasoningFactors.push(`✓ Land match (${dealLocationInfo.land})`);
-            }
-            // Region match (decent points)
-            else if ((investor.voorkeursRegio || []).includes(dealLocationInfo.regio)) {
+            // Check country match
+            if ((investor.voorkeursLanden || []).some(land => 
+              deal.locatie.toLowerCase().includes(land.toLowerCase())
+            )) {
               locationScore = 15;
-              reasoningFactors.push(`✓ Regio match (${dealLocationInfo.regio})`);
+              reasoningFactors.push(`✓ Land match gevonden in locatie`);
             }
-            // Geographic scope match
+            // Check region match 
+            else if ((investor.voorkeursRegio || []).length > 0) {
+              locationScore = 8;
+              reasoningFactors.push(`~ Regio voorkeur aanwezig`);
+            }
+            // Default geographic scope
             else {
-              const bereik = investor.geografischeBereik || 'regionaal';
-              if (bereik === 'internationaal') {
-                locationScore = 10;
-                reasoningFactors.push(`~ Internationaal bereik - alle locaties acceptabel`);
-              } else if (bereik === 'nationaal' && dealLocationInfo.regio === 'West-Europa') {
-                locationScore = 8;
-                reasoningFactors.push(`~ Nationaal bereik - West-Europa acceptabel`);
-              } else {
-                locationScore = 2;
-                reasoningFactors.push(`✗ Locatie buiten voorkeuren`);
-              }
+              locationScore = 5;
+              reasoningFactors.push(`~ Geen specifieke locatie eisen`);
             }
             
             score += locationScore;
@@ -913,6 +845,60 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             score += risicoScore;
             reasoningFactors.push(`${risicoScore >= 8 ? '✓' : '⚠'} Risico match (${investor.risicoprofiel} profiel, ${deal.risico} risico)`);
 
+            // 🔥 NEW: SEMANTIC MATCHING (15% - new powerful feature)
+            maxScore += 15;
+            let semanticScore = 0;
+            let semanticReasons = [];
+            
+            const investorText = [
+              investor.investmentMotivatie || '',
+              investor.bijzonderheden || '',
+              investor.locatieDetails || ''
+            ].join(' ').toLowerCase();
+            
+            const dealText = [
+              deal.beschrijving || '',
+              deal.bijzonderheden || ''
+            ].join(' ').toLowerCase();
+
+            // Semantic keyword matching
+            const semanticMatches = [
+              { investor: ['stabiel', 'huurinkomst', 'gegarandeerd'], deal: ['gegarandeerd', 'huurder', 'corporatie'], points: 5, desc: 'Stabiele huurinkomsten match' },
+              { investor: ['turn-key', 'geen renovatie', 'kant-en-klaar'], deal: ['turn-key', 'kant-en-klaar', 'direct'], points: 4, desc: 'Turn-key voorkeur match' },
+              { investor: ['duurzaam', 'energie', 'milieu'], deal: ['energielabel', 'duurzaam', 'zonnepanel', 'warmtepomp'], points: 3, desc: 'Duurzaamheid match' },
+              { investor: ['student', 'universiteit'], deal: ['student', 'universiteit', 'campus'], points: 3, desc: 'Studenten segment match' },
+              { investor: ['centrum', 'bereikbaar', 'transport'], deal: ['centrum', 'metro', 'transport', 'bereikbaar'], points: 2, desc: 'Locatie bereikbaarheid match' }
+            ];
+
+            semanticMatches.forEach(match => {
+              const investorHasKeywords = match.investor.some(keyword => investorText.includes(keyword));
+              const dealHasKeywords = match.deal.some(keyword => dealText.includes(keyword));
+              
+              if (investorHasKeywords && dealHasKeywords) {
+                semanticScore += match.points;
+                semanticReasons.push(`✓ ${match.desc}`);
+              }
+            });
+
+            // Conflict detection
+            const conflicts = [
+              { investor: ['geen renovatie', 'turn-key'], deal: ['renovatie', 'opknappen'], desc: 'Renovatie conflict' },
+              { investor: ['centrum'], deal: ['buitenwijk', 'periferie'], desc: 'Locatie voorkeur conflict' }
+            ];
+
+            conflicts.forEach(conflict => {
+              const investorWants = conflict.investor.some(keyword => investorText.includes(keyword));
+              const dealOffers = conflict.deal.some(keyword => dealText.includes(keyword));
+              
+              if (investorWants && dealOffers) {
+                semanticScore -= 3;
+                semanticReasons.push(`⚠ ${conflict.desc} gedetecteerd`);
+              }
+            });
+
+            score += Math.max(0, Math.min(15, semanticScore));
+            reasoningFactors.push(...semanticReasons);
+
             const finalScore = Math.round((score / maxScore) * 100);
             
             return {
@@ -920,7 +906,8 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               reasoning: reasoningFactors,
               maxScore,
               actualScore: score,
-              locationInfo: dealLocationInfo
+              semanticScore: semanticScore,
+              semanticReasons: semanticReasons
             };
           };
 
@@ -935,12 +922,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 deal,
                 matchScore: matchResult.score,
                 reasoning: matchResult.reasoning,
+                semanticScore: matchResult.semanticScore,
+                semanticReasons: matchResult.semanticReasons,
                 aiInsights: null
               };
             }).sort((a, b) => b.matchScore - a.matchScore);
           };
 
-          // NEW: Commission Management Functions
+          // Commission Management Functions (unchanged)
           const openCommissionEditor = (deal) => {
             setEditingDealCommission(deal);
             setShowCommissionEditor(true);
@@ -950,13 +939,11 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             try {
               console.log('💾 Saving commission structure for deal:', dealId);
               
-              // Update in Firebase
               await db.collection('deals').doc(dealId).update({
                 commissionStructure: commissionStructure,
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
               });
               
-              // Update local state
               setDeals(prev => prev.map(deal => 
                 deal.id === dealId ? { ...deal, commissionStructure } : deal
               ));
@@ -975,7 +962,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             
             if (!deal || !investor) return;
 
-            // Use deal's commission structure or create default
             const commissionStructure = deal.commissionStructure || {
               total_rate: 0.025,
               participants: [
@@ -1032,10 +1018,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             };
 
             try {
-              // Save to Firebase
               await db.collection('transactions').add(transactionData);
-              
-              // Update local state
               setTransactions(prev => [...prev, transactionData]);
               
               console.log('✅ Transaction created:', transactionData);
@@ -1047,7 +1030,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
-          // ✅ EDIT FUNCTIONS
+          // Edit Functions (unchanged)
           const handleEditInvestor = (investor) => {
             setEditingInvestor(investor);
             setShowEditInvestor(true);
@@ -1064,17 +1047,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const updatedInvestor = {
                 ...investorData,
-                // Convert string numbers to actual numbers
                 minBudget: parseInt(investorData.minBudget) || 0,
                 maxBudget: parseInt(investorData.maxBudget) || 0,
                 gewenstRendement: parseFloat(investorData.gewenstRendement) || 0,
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
-              // Update in Firebase
               await db.collection('investors').doc(editingInvestor.id).update(updatedInvestor);
               
-              // Update local state
               setInvestors(prev => prev.map(inv => 
                 inv.id === editingInvestor.id ? { ...inv, ...updatedInvestor } : inv
               ));
@@ -1096,21 +1076,17 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const updatedDeal = {
                 ...dealData,
-                // Convert string numbers to actual numbers
                 prijs: parseInt(dealData.prijs) || 0,
                 verwachtRendement: parseFloat(dealData.verwachtRendement) || 0,
                 oppervlakte: parseInt(dealData.oppervlakte) || 0,
                 bouwjaar: parseInt(dealData.bouwjaar) || 0,
                 huurpotentie: parseInt(dealData.huurpotentie) || 0,
-                // Keep existing commission structure
                 commissionStructure: editingDeal.commissionStructure,
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
-              // Update in Firebase
               await db.collection('deals').doc(editingDeal.id).update(updatedDeal);
               
-              // Update local state
               setDeals(prev => prev.map(deal => 
                 deal.id === editingDeal.id ? { ...deal, ...updatedDeal } : deal
               ));
@@ -1132,7 +1108,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const newInvestor = {
                 ...investorData,
-                // Convert string numbers to actual numbers
                 minBudget: parseInt(investorData.minBudget) || 0,
                 maxBudget: parseInt(investorData.maxBudget) || 0,
                 gewenstRendement: parseFloat(investorData.gewenstRendement) || 0,
@@ -1140,14 +1115,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
-              // Add to Firebase
               const docRef = await db.collection('investors').add(newInvestor);
               
-              // Add to local state with the new ID
               const investorWithId = {
                 id: docRef.id,
                 ...newInvestor,
-                created_at: new Date().toISOString() // For local display
+                created_at: new Date().toISOString()
               };
               
               setInvestors(prev => [...prev, investorWithId]);
@@ -1166,14 +1139,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               
               const newDeal = {
                 ...dealData,
-                // Convert string numbers to actual numbers
                 prijs: parseInt(dealData.prijs) || 0,
                 verwachtRendement: parseFloat(dealData.verwachtRendement) || 0,
                 oppervlakte: parseInt(dealData.oppervlakte) || 0,
                 bouwjaar: parseInt(dealData.bouwjaar) || 0,
                 huurpotentie: parseInt(dealData.huurpotentie) || 0,
                 owner_id: user.id,
-                // Add default commission structure
                 commissionStructure: {
                   total_rate: 0.025,
                   participants: [
@@ -1191,14 +1162,12 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
               };
               
-              // Add to Firebase
               const docRef = await db.collection('deals').add(newDeal);
               
-              // Add to local state with the new ID
               const dealWithId = {
                 id: docRef.id,
                 ...newDeal,
-                created_at: new Date().toISOString() // For local display
+                created_at: new Date().toISOString()
               };
               
               setDeals(prev => [...prev, dealWithId]);
@@ -1216,10 +1185,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               try {
                 console.log('🗑️ Deleting investor from Firebase...');
                 
-                // Delete from Firebase
                 await db.collection('investors').doc(investorId).delete();
-                
-                // Remove from local state
                 setInvestors(prev => prev.filter(i => i.id !== investorId));
                 
                 console.log('✅ Investor deleted from Firebase:', investorId);
@@ -1230,22 +1196,18 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
-          // ✅ DELETE DEAL FUNCTION
           const handleDeleteDeal = async (dealId) => {
             if (confirm('Weet je zeker dat je deze deal wilt verwijderen?\n\nLet op: Gerelateerde transacties worden ook verwijderd.')) {
               try {
                 console.log('🗑️ Deleting deal from Firebase...');
                 
-                // Delete related transactions first
                 const relatedTransactions = transactions.filter(t => t.deal_id === dealId);
                 for (const transaction of relatedTransactions) {
                   await db.collection('transactions').doc(transaction.id).delete();
                 }
                 
-                // Delete from Firebase
                 await db.collection('deals').doc(dealId).delete();
                 
-                // Remove from local state
                 setDeals(prev => prev.filter(d => d.id !== dealId));
                 setTransactions(prev => prev.filter(t => t.deal_id !== dealId));
                 
@@ -1294,7 +1256,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             };
           };
 
-          // NEW: Enhanced Commission Editor Component
+          // Commission Editor Component (unchanged)
           const CommissionEditor = () => {
             if (!showCommissionEditor || !editingDealCommission) return null;
 
@@ -1321,7 +1283,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               const newParticipants = [...commissionStructure.participants];
               newParticipants[index] = { ...newParticipants[index], [field]: value };
               
-              // Update name when user_id changes
               if (field === 'user_id' && !newParticipants[index].is_external) {
                 const user = getUserById(value);
                 newParticipants[index].name = user.name;
@@ -1358,7 +1319,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             };
 
             const handleSave = async () => {
-              // Validate percentages
               const totalPercentage = commissionStructure.participants
                 .filter(p => p.type === 'percentage')
                 .reduce((sum, p) => sum + (p.percentage || 0), 0);
@@ -1387,7 +1347,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                   </div>
                   
                   <div className="p-6">
-                    {/* Total Rate Setting */}
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
                       <div className="flex items-center space-x-4">
@@ -1410,7 +1369,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       </div>
                     </div>
 
-                    {/* Participants */}
                     <div className="space-y-4 mb-6">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold">Commissie Verdeling:</h4>
@@ -1435,7 +1393,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       {commissionStructure.participants.map((participant, index) => (
                         <div key={index} className="border rounded p-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                            {/* Role */}
                             <div>
                               <label className="block text-sm font-medium mb-1">Rol</label>
                               <select
@@ -1453,7 +1410,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               </select>
                             </div>
 
-                            {/* Person Selection */}
                             <div>
                               <label className="block text-sm font-medium mb-1">
                                 {participant.is_external ? 'Naam' : 'Teamlid'}
@@ -1480,7 +1436,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               )}
                             </div>
 
-                            {/* Additional fields for external participants */}
                             {participant.is_external && (
                               <>
                                 <div>
@@ -1506,7 +1461,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               </>
                             )}
 
-                            {/* Commission Type */}
                             <div className={participant.is_external ? '' : 'md:col-start-4'}>
                               <label className="block text-sm font-medium mb-1">Type</label>
                               <select
@@ -1519,7 +1473,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               </select>
                             </div>
 
-                            {/* Amount */}
                             <div>
                               <label className="block text-sm font-medium mb-1">
                                 {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
@@ -1537,7 +1490,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               />
                             </div>
 
-                            {/* Actions */}
                             <div className="flex items-end">
                               {commissionStructure.participants.length > 1 && (
                                 <button
@@ -1550,7 +1502,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             </div>
                           </div>
 
-                          {/* Show commission calculation */}
                           <div className="mt-2 text-sm text-gray-600">
                             Commissie: €{participant.type === 'percentage' 
                               ? (totalCommission * (participant.percentage / 100)).toLocaleString()
@@ -1566,7 +1517,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       ))}
                     </div>
 
-                    {/* Summary */}
                     <div className="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
                       <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
                       <div className="space-y-1 text-sm">
@@ -1619,7 +1569,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          // ✅ ENHANCED FORMS WITH EDIT CAPABILITY
+          // 🔥 SIMPLIFIED INVESTOR FORM
           const InvestorForm = ({ onSubmit, onCancel, editData = null }) => {
             const [formData, setFormData] = useState(editData || {
               naam: '',
@@ -1629,176 +1579,47 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               locatie: '',
               minBudget: '',
               maxBudget: '',
+              // 🔥 SIMPLIFIED LOCATION FIELDS
               voorkeursRegio: [],
               voorkeursLanden: [],
-              voorkeursLocaties: [],
-              geografischeBereik: 'regionaal', // lokaal, regionaal, nationaal, internationaal
+              locatieDetails: '', // 🔥 NEW: Free text for location preferences
               vastgoedTypes: [],
               projectTypes: [],
               risicoprofiel: 'Gemiddeld',
               gewenstRendement: '',
               investeringshorizon: 'Middellang',
               ervaringLevel: 'Gemiddeld',
-              investmentMotivatie: '',
+              // 🔥 ENHANCED WITH SEMANTIC FIELDS
+              investmentMotivatie: '', // 🔥 ENHANCED: For semantic matching
+              bijzonderheden: '', // 🔥 NEW: Additional notes for semantic matching
               communicatieVoorkeur: 'Email',
               beschikbaarheid: 'Direct'
             });
 
-            const landenRegio = {
-              'Nederland': {
-                regio: 'West-Europa',
-                steden: ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen']
-              },
-              'Duitsland': {
-                regio: 'West-Europa', 
-                steden: ['Berlijn', 'Hamburg', 'München', 'Keulen', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig']
-              },
-              'Frankrijk': {
-                regio: 'West-Europa',
-                steden: ['Parijs', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille']
-              },
-              'Spanje': {
-                regio: 'Zuid-Europa',
-                steden: ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao']
-              },
-              'Zwitserland': {
-                regio: 'West-Europa',
-                steden: ['Zürich', 'Genève', 'Basel', 'Lausanne', 'Bern', 'Winterthur', 'Luzern', 'St. Gallen', 'Lugano', 'Biel']
-              },
-              'Verenigd Koninkrijk': {
-                regio: 'West-Europa',
-                steden: ['Londen', 'Manchester', 'Birmingham', 'Edinburgh', 'Glasgow', 'Liverpool', 'Bristol', 'Leeds', 'Cardiff', 'Belfast']
-              },
-              'België': {
-                regio: 'West-Europa',
-                steden: ['Brussel', 'Antwerpen', 'Gent', 'Charleroi', 'Luik', 'Brugge', 'Namen', 'Leuven', 'Mons', 'Aalst']
-              },
-              'Italië': {
-                regio: 'Zuid-Europa',
-                steden: ['Milaan', 'Rome', 'Florence', 'Venetië', 'Napels', 'Turijn', 'Bologna', 'Genua', 'Palermo', 'Catania']
-              },
-              'Oostenrijk': {
-                regio: 'West-Europa',
-                steden: ['Wenen', 'Salzburg', 'Innsbruck', 'Graz', 'Linz', 'Klagenfurt', 'Villach', 'Wels', 'St. Pölten', 'Dornbirn']
-              },
-              'Tsjechië': {
-                regio: 'Oost-Europa',
-                steden: ['Praag', 'Brno', 'Ostrava', 'Plzeň', 'Liberec', 'Olomouc', 'Ústí nad Labem', 'Hradec Králové', 'České Budějovice', 'Pardubice']
-              },
-              'Polen': {
-                regio: 'Oost-Europa',
-                steden: ['Warschau', 'Krakau', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Katowice']
-              },
-              'Hongarije': {
-                regio: 'Oost-Europa',
-                steden: ['Budapest', 'Debrecen', 'Miskolc', 'Szeged', 'Pécs', 'Győr', 'Nyíregyháza', 'Kecskemét', 'Székesfehérvár', 'Szombathely']
-              },
-              'Portugal': {
-                regio: 'Zuid-Europa',
-                steden: ['Porto', 'Lissabon', 'Vila Nova de Gaia', 'Amadora', 'Braga', 'Funchal', 'Coimbra', 'Setúbal', 'Almada', 'Agualva-Cacém']
-              },
-              'Ierland': {
-                regio: 'West-Europa',
-                steden: ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Drogheda', 'Dundalk', 'Swords', 'Bray', 'Navan']
-              },
-              'Scandinavië': {
-                regio: 'Noord-Europa',
-                steden: ['Stockholm', 'Kopenhagen', 'Oslo', 'Helsinki', 'Göteborg', 'Malmö', 'Bergen', 'Trondheim', 'Tampere', 'Turku']
-              },
-              'Monaco': {
-                regio: 'Zuid-Europa',
-                steden: ['Monaco', 'Monte Carlo', 'La Condamine', 'Fontvieille']
-              }
-            };
-
-            const geografischeBereikOpties = [
-              { value: 'lokaal', label: 'Lokaal (zelfde stad/regio)', beschrijving: 'Alleen in eigen stad en directe omgeving' },
-              { value: 'regionaal', label: 'Regionaal (meerdere steden)', beschrijving: 'Binnen voorkeursregio\'s en landen' },
-              { value: 'nationaal', label: 'Nationaal (heel land)', beschrijving: 'Door heel Nederland en aangrenzende landen' },
-              { value: 'internationaal', label: 'Internationaal (Europa-breed)', beschrijving: 'Door heel Europa en daarbuiten' }
+            // 🔥 SIMPLIFIED LOCATION OPTIONS
+            const hoofdLanden = [
+              'Nederland', 'Duitsland', 'Frankrijk', 'Spanje', 'Zwitserland', 
+              'België', 'Verenigd Koninkrijk', 'Italië', 'Oostenrijk', 
+              'Tsjechië', 'Polen', 'Portugal', 'Scandinavië'
             ];
 
-            const handleLandChange = (land) => {
-              setFormData(prev => {
-                const newLanden = (prev.voorkeursLanden || []).includes(land)
-                  ? (prev.voorkeursLanden || []).filter(l => l !== land)
-                  : [...(prev.voorkeursLanden || []), land];
-                
-                // Auto-add cities from selected countries
-                let newLocaties = [...(prev.voorkeursLocaties || [])];
-                if (newLanden.includes(land) && landenRegio[land]) {
-                  landenRegio[land].steden.forEach(stad => {
-                    if (!newLocaties.includes(stad)) {
-                      newLocaties.push(stad);
-                    }
-                  });
-                } else if (landenRegio[land]) {
-                  // Remove cities when country is deselected
-                  newLocaties = newLocaties.filter(stad => !landenRegio[land].steden.includes(stad));
-                }
+            const regios = ['West-Europa', 'Zuid-Europa', 'Noord-Europa', 'Oost-Europa'];
 
-                return {
-                  ...prev,
-                  voorkeursLanden: newLanden,
-                  voorkeursLocaties: newLocaties
-                };
-              });
+            const handleLandChange = (land) => {
+              setFormData(prev => ({
+                ...prev,
+                voorkeursLanden: (prev.voorkeursLanden || []).includes(land)
+                  ? (prev.voorkeursLanden || []).filter(l => l !== land)
+                  : [...(prev.voorkeursLanden || []), land]
+              }));
             };
 
             const handleRegioChange = (regio) => {
-              setFormData(prev => {
-                const newRegio = (prev.voorkeursRegio || []).includes(regio)
-                  ? (prev.voorkeursRegio || []).filter(r => r !== regio)
-                  : [...(prev.voorkeursRegio || []), regio];
-                
-                // Auto-add countries and cities from selected regions
-                let newLanden = [...(prev.voorkeursLanden || [])];
-                let newLocaties = [...(prev.voorkeursLocaties || [])];
-                
-                Object.entries(landenRegio).forEach(([land, data]) => {
-                  if (data.regio === regio) {
-                    if (newRegio.includes(regio)) {
-                      // Add country and its cities
-                      if (!newLanden.includes(land)) {
-                        newLanden.push(land);
-                      }
-                      data.steden.forEach(stad => {
-                        if (!newLocaties.includes(stad)) {
-                          newLocaties.push(stad);
-                        }
-                      });
-                    } else {
-                      // Remove country and its cities if no other regions selected
-                      const otherRegions = newRegio.filter(r => r !== regio);
-                      const keepCountry = otherRegions.some(r => 
-                        Object.values(landenRegio).some(countryData => 
-                          countryData.regio === r && Object.keys(landenRegio).find(k => landenRegio[k] === countryData) === land
-                        )
-                      );
-                      
-                      if (!keepCountry) {
-                        newLanden = newLanden.filter(l => l !== land);
-                        newLocaties = newLocaties.filter(stad => !data.steden.includes(stad));
-                      }
-                    }
-                  }
-                });
-
-                return {
-                  ...prev,
-                  voorkeursRegio: newRegio,
-                  voorkeursLanden: newLanden,
-                  voorkeursLocaties: newLocaties
-                };
-              });
-            };
-
-            const handleLocationChange = (location) => {
               setFormData(prev => ({
                 ...prev,
-                voorkeursLocaties: (prev.voorkeursLocaties || []).includes(location)
-                  ? (prev.voorkeursLocaties || []).filter(l => l !== location)
-                  : [...(prev.voorkeursLocaties || []), location]
+                voorkeursRegio: (prev.voorkeursRegio || []).includes(regio)
+                  ? (prev.voorkeursRegio || []).filter(r => r !== regio)
+                  : [...(prev.voorkeursRegio || []), regio]
               }));
             };
 
@@ -1827,7 +1648,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
             return (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg w-full max-w-5xl h-full max-h-[95vh] flex flex-col">
+                <div className="bg-white rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
                   <div className="p-6 border-b">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold">
@@ -1835,6 +1656,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       </h3>
                       <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
+                    <p className="text-sm text-purple-600 mt-2">
+                      🔥 Enhanced: Vereenvoudigde invoer met AI semantic matching
+                    </p>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto p-6">
@@ -1883,90 +1707,13 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                           <div className="md:col-span-2">
                             <label className="block text-sm font-medium mb-1">Huidige Locatie/Hoofdkantoor</label>
-                            <select
+                            <input
+                              type="text"
                               value={formData.locatie}
                               onChange={(e) => setFormData({...formData, locatie: e.target.value})}
                               className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="">Selecteer locatie</option>
-                              <optgroup label="Nederland">
-                                <option value="Amsterdam">Amsterdam</option>
-                                <option value="Rotterdam">Rotterdam</option>
-                                <option value="Utrecht">Utrecht</option>
-                                <option value="Den Haag">Den Haag</option>
-                                <option value="Eindhoven">Eindhoven</option>
-                                <option value="Tilburg">Tilburg</option>
-                                <option value="Haarlem">Haarlem</option>
-                                <option value="Almere">Almere</option>
-                                <option value="Breda">Breda</option>
-                                <option value="Nijmegen">Nijmegen</option>
-                              </optgroup>
-                              <optgroup label="Duitsland">
-                                <option value="Berlijn">Berlijn</option>
-                                <option value="München">München</option>
-                                <option value="Hamburg">Hamburg</option>
-                                <option value="Frankfurt">Frankfurt</option>
-                                <option value="Keulen">Keulen</option>
-                                <option value="Stuttgart">Stuttgart</option>
-                                <option value="Düsseldorf">Düsseldorf</option>
-                                <option value="Dortmund">Dortmund</option>
-                                <option value="Essen">Essen</option>
-                                <option value="Leipzig">Leipzig</option>
-                              </optgroup>
-                              <optgroup label="Frankrijk">
-                                <option value="Parijs">Parijs</option>
-                                <option value="Lyon">Lyon</option>
-                                <option value="Marseille">Marseille</option>
-                                <option value="Toulouse">Toulouse</option>
-                                <option value="Nice">Nice</option>
-                                <option value="Nantes">Nantes</option>
-                                <option value="Strasbourg">Strasbourg</option>
-                                <option value="Montpellier">Montpellier</option>
-                                <option value="Bordeaux">Bordeaux</option>
-                                <option value="Lille">Lille</option>
-                              </optgroup>
-                              <optgroup label="Spanje">
-                                <option value="Madrid">Madrid</option>
-                                <option value="Barcelona">Barcelona</option>
-                                <option value="Valencia">Valencia</option>
-                                <option value="Sevilla">Sevilla</option>
-                                <option value="Málaga">Málaga</option>
-                                <option value="Zaragoza">Zaragoza</option>
-                                <option value="Murcia">Murcia</option>
-                                <option value="Palma">Palma</option>
-                                <option value="Las Palmas">Las Palmas</option>
-                                <option value="Bilbao">Bilbao</option>
-                              </optgroup>
-                              <optgroup label="Zwitserland">
-                                <option value="Zürich">Zürich</option>
-                                <option value="Genève">Genève</option>
-                                <option value="Basel">Basel</option>
-                                <option value="Lausanne">Lausanne</option>
-                                <option value="Bern">Bern</option>
-                                <option value="Winterthur">Winterthur</option>
-                                <option value="Luzern">Luzern</option>
-                                <option value="St. Gallen">St. Gallen</option>
-                                <option value="Lugano">Lugano</option>
-                                <option value="Biel">Biel</option>
-                              </optgroup>
-                              <optgroup label="Overig">
-                                <option value="Londen">Londen</option>
-                                <option value="Brussel">Brussel</option>
-                                <option value="Milaan">Milaan</option>
-                                <option value="Wenen">Wenen</option>
-                                <option value="Praag">Praag</option>
-                                <option value="Budapest">Budapest</option>
-                                <option value="Stockholm">Stockholm</option>
-                                <option value="Kopenhagen">Kopenhagen</option>
-                                <option value="Oslo">Oslo</option>
-                                <option value="Helsinki">Helsinki</option>
-                                <option value="Dublin">Dublin</option>
-                                <option value="Warschau">Warschau</option>
-                                <option value="Porto">Porto</option>
-                                <option value="Florence">Florence</option>
-                                <option value="Monaco">Monaco</option>
-                              </optgroup>
-                            </select>
+                              placeholder="Bijvoorbeeld: Amsterdam, Berlijn, etc."
+                            />
                           </div>
                         </div>
                       </div>
@@ -2008,35 +1755,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         </div>
                       </div>
 
+                      {/* 🔥 SIMPLIFIED LOCATION PREFERENCES */}
                       <div className="mb-8">
-                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Geografische Voorkeuren</h4>
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">🗺️ Locatie Voorkeuren (Vereenvoudigd)</h4>
                         
-                        <div className="mb-6">
-                          <label className="block text-sm font-medium mb-2">Geografisch Bereik</label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {geografischeBereikOpties.map(optie => (
-                              <label key={optie.value} className="flex items-start space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
-                                <input
-                                  type="radio"
-                                  name="geografischeBereik"
-                                  value={optie.value}
-                                  checked={formData.geografischeBereik === optie.value}
-                                  onChange={(e) => setFormData({...formData, geografischeBereik: e.target.value})}
-                                  className="text-blue-600 mt-1"
-                                />
-                                <div>
-                                  <span className="font-medium text-sm">{optie.label}</span>
-                                  <p className="text-xs text-gray-600 mt-1">{optie.beschrijving}</p>
-                                </div>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
                         <div className="mb-6">
                           <label className="block text-sm font-medium mb-2">Voorkeurs Regio's</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {['West-Europa', 'Zuid-Europa', 'Noord-Europa', 'Oost-Europa'].map(regio => (
+                            {regios.map(regio => (
                               <label key={regio} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                 <input
                                   type="checkbox"
@@ -2053,7 +1779,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         <div className="mb-6">
                           <label className="block text-sm font-medium mb-2">Voorkeurs Landen</label>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded p-3">
-                            {Object.keys(landenRegio).map(land => (
+                            {hoofdLanden.map(land => (
                               <label key={land} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                 <input
                                   type="checkbox"
@@ -2067,35 +1793,21 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                         </div>
 
+                        {/* 🔥 NEW: FREE TEXT LOCATION DETAILS */}
                         <div className="mb-6">
                           <label className="block text-sm font-medium mb-2">
-                            Specifieke Steden 
-                            <span className="text-xs text-gray-500 ml-2">
-                              ({(formData.voorkeursLocaties || []).length} geselecteerd)
-                            </span>
+                            🔥 Specifieke Locatie Eisen (Vrije Tekst)
                           </label>
-                          <div className="max-h-48 overflow-y-auto border rounded p-3">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                              {Object.entries(landenRegio).map(([land, data]) => (
-                                <div key={land} className="mb-4">
-                                  <h6 className="font-medium text-xs text-gray-700 mb-2 border-b pb-1">{land}</h6>
-                                  <div className="space-y-1">
-                                    {data.steden.map(stad => (
-                                      <label key={stad} className="flex items-center space-x-2 text-xs">
-                                        <input
-                                          type="checkbox"
-                                          checked={(formData.voorkeursLocaties || []).includes(stad)}
-                                          onChange={() => handleLocationChange(stad)}
-                                          className="text-blue-600"
-                                        />
-                                        <span>{stad}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                          <textarea
+                            value={formData.locatieDetails}
+                            onChange={(e) => setFormData({...formData, locatieDetails: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                            placeholder="Bijvoorbeeld: Amsterdam centrum, nabij openbaar vervoer, geen Zuidoost. Berlijn Mitte of Prenzlauer Berg. Goede bereikbaarheid belangrijk..."
+                          />
+                          <p className="text-xs text-purple-600 mt-1">
+                            💡 AI gebruikt deze tekst voor slimme matching met deal beschrijvingen
+                          </p>
                         </div>
                       </div>
 
@@ -2134,6 +1846,81 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                         </div>
                       </div>
+
+                      {/* 🔥 ENHANCED SEMANTIC FIELDS */}
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">🤖 Investment Profiel (Voor AI Matching)</h4>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">
+                            Investment Motivatie & Doelen
+                          </label>
+                          <textarea
+                            value={formData.investmentMotivatie}
+                            onChange={(e) => setFormData({...formData, investmentMotivatie: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                            placeholder="Bijvoorbeeld: Zoek stabiele huurinkomsten voor pensioenopbouw. Geen renovatie projecten, liever turn-key. Duurzaamheid steeds belangrijker. Ervaring met studentenhuisvesting..."
+                          />
+                          <p className="text-xs text-purple-600 mt-1">
+                            💡 AI matcht deze tekst met deal beschrijvingen voor betere matches
+                          </p>
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">
+                            Bijzonderheden & Voorkeuren
+                          </label>
+                          <textarea
+                            value={formData.bijzonderheden}
+                            onChange={(e) => setFormData({...formData, bijzonderheden: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Bijvoorbeeld: Voorkeur voor energiezuinige panden. Geen ground floor retail. Ervaring met vastgoedbeheer. Snel beslissen bij goede deals..."
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Risicoprofiel</label>
+                            <select
+                              value={formData.risicoprofiel}
+                              onChange={(e) => setFormData({...formData, risicoprofiel: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="Conservatief">Conservatief</option>
+                              <option value="Gemiddeld">Gemiddeld</option>
+                              <option value="Agressief">Agressief</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Ervaring Level</label>
+                            <select
+                              value={formData.ervaringLevel}
+                              onChange={(e) => setFormData({...formData, ervaringLevel: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="Beginner">Beginner</option>
+                              <option value="Gemiddeld">Gemiddeld</option>
+                              <option value="Ervaren">Ervaren</option>
+                              <option value="Expert">Expert</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Beschikbaarheid</label>
+                            <select
+                              value={formData.beschikbaarheid}
+                              onChange={(e) => setFormData({...formData, beschikbaarheid: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="Direct">Direct beschikbaar</option>
+                              <option value="Binnen 1 maand">Binnen 1 maand</option>
+                              <option value="Binnen 3 maanden">Binnen 3 maanden</option>
+                              <option value="Flexibel">Flexibel</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </form>
                   </div>
                   
@@ -2160,6 +1947,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
+          // 🔥 SIMPLIFIED DEAL FORM
           const DealForm = ({ onSubmit, onCancel, editData = null }) => {
             const [formData, setFormData] = useState(editData || {
               titel: '',
@@ -2170,6 +1958,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               verwachtRendement: '',
               risico: 'Gemiddeld',
               beschrijving: '',
+              bijzonderheden: '', // 🔥 NEW: For semantic matching
               oppervlakte: '',
               bouwjaar: '',
               huurpotentie: '',
@@ -2195,6 +1984,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                       </h3>
                       <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
+                    <p className="text-sm text-purple-600 mt-2">
+                      🔥 Enhanced: Uitgebreide beschrijvingen voor AI semantic matching
+                    </p>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto p-6">
@@ -2252,67 +2044,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">Locatie *</label>
-                          <select
+                          <input
+                            type="text"
                             value={formData.locatie}
                             onChange={(e) => setFormData({...formData, locatie: e.target.value})}
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Bijvoorbeeld: Amsterdam, Berlijn, etc."
                             required
-                          >
-                            <option value="">Selecteer locatie</option>
-                            <optgroup label="Nederland">
-                              <option value="Amsterdam">Amsterdam</option>
-                              <option value="Rotterdam">Rotterdam</option>
-                              <option value="Utrecht">Utrecht</option>
-                              <option value="Den Haag">Den Haag</option>
-                              <option value="Eindhoven">Eindhoven</option>
-                              <option value="Tilburg">Tilburg</option>
-                            </optgroup>
-                            <optgroup label="Duitsland">
-                              <option value="Berlijn">Berlijn</option>
-                              <option value="München">München</option>
-                              <option value="Hamburg">Hamburg</option>
-                              <option value="Frankfurt">Frankfurt</option>
-                              <option value="Keulen">Keulen</option>
-                            </optgroup>
-                            <optgroup label="Frankrijk">
-                              <option value="Parijs">Parijs</option>
-                              <option value="Lyon">Lyon</option>
-                              <option value="Marseille">Marseille</option>
-                              <option value="Toulouse">Toulouse</option>
-                              <option value="Nice">Nice</option>
-                            </optgroup>
-                            <optgroup label="Spanje">
-                              <option value="Madrid">Madrid</option>
-                              <option value="Barcelona">Barcelona</option>
-                              <option value="Valencia">Valencia</option>
-                              <option value="Sevilla">Sevilla</option>
-                              <option value="Málaga">Málaga</option>
-                            </optgroup>
-                            <optgroup label="Zwitserland">
-                              <option value="Zürich">Zürich</option>
-                              <option value="Genève">Genève</option>
-                              <option value="Basel">Basel</option>
-                              <option value="Lausanne">Lausanne</option>
-                              <option value="Bern">Bern</option>
-                            </optgroup>
-                            <optgroup label="Overig">
-                              <option value="Londen">Londen</option>
-                              <option value="Brussel">Brussel</option>
-                              <option value="Milaan">Milaan</option>
-                              <option value="Wenen">Wenen</option>
-                              <option value="Praag">Praag</option>
-                              <option value="Budapest">Budapest</option>
-                              <option value="Stockholm">Stockholm</option>
-                              <option value="Kopenhagen">Kopenhagen</option>
-                              <option value="Oslo">Oslo</option>
-                              <option value="Helsinki">Helsinki</option>
-                              <option value="Dublin">Dublin</option>
-                              <option value="Warschau">Warschau</option>
-                              <option value="Porto">Porto</option>
-                              <option value="Florence">Florence</option>
-                              <option value="Monaco">Monaco</option>
-                            </optgroup>
-                          </select>
+                          />
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">Type *</label>
@@ -2410,14 +2149,40 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           />
                         </div>
                       </div>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Beschrijving</label>
-                        <textarea
-                          value={formData.beschrijving}
-                          onChange={(e) => setFormData({...formData, beschrijving: e.target.value})}
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3"
-                        />
+                      
+                      {/* 🔥 ENHANCED DESCRIPTIONS FOR SEMANTIC MATCHING */}
+                      <div className="mb-6">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">🤖 Deal Beschrijving (Voor AI Matching)</h4>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1">Hoofdbeschrijving</label>
+                          <textarea
+                            value={formData.beschrijving}
+                            onChange={(e) => setFormData({...formData, beschrijving: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                            placeholder="Bijvoorbeeld: Kant-en-klaar nieuwbouw appartement in opkomende wijk. Energielabel A, zonnepanelen. Gegarandeerde huurder voor 5 jaar via corporatie. Nabij metro, 15 min naar centrum..."
+                          />
+                          <p className="text-xs text-purple-600 mt-1">
+                            💡 AI matcht deze tekst met investeerder motivaties
+                          </p>
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1">
+                            🔥 Bijzonderheden & USP's
+                          </label>
+                          <textarea
+                            value={formData.bijzonderheden}
+                            onChange={(e) => setFormData({...formData, bijzonderheden: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Bijvoorbeeld: Duurzaam gebouwd, lage servicekosten. Professioneel beheer beschikbaar. Uitstekende buurt met goede voorzieningen. Turn-key: direct rendement, geen werk aan..."
+                          />
+                          <p className="text-xs text-purple-600 mt-1">
+                            💡 Extra details die AI gebruikt voor slimme matching
+                          </p>
+                        </div>
                       </div>
                     </form>
                   </div>
@@ -2445,7 +2210,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          // PROFESSIONELE AUTH FORM - Alleen email/wachtwoord
+          // Auth Form (unchanged)
           const AuthForm = () => {
             const [formData, setFormData] = useState({
               email: '',
@@ -2481,26 +2246,27 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     </p>
                     <div className="flex items-center justify-center space-x-2 mt-3">
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 International</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🌍 Simplified</span>
                       <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Flex Commission</span>
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
+                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🔥 Semantic</span>
                     </div>
                   </div>
 
                   {!showRegister && (
-                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800 mb-2">🔥 Flexibele Commissie Structuur</h4>
+                    <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <h4 className="font-semibold text-purple-800 mb-2">🔥 Enhanced Matching Features</h4>
                       <div className="space-y-2 text-sm">
-                        <div className="bg-white p-3 rounded border border-blue-200">
-                          <p className="font-medium text-blue-900">💼 Per Deal Configureerbaar</p>
-                          <p className="text-blue-700">Stel commissie structuur in per deal</p>
-                          <p className="text-blue-700">Voeg teamleden en externe partners toe</p>
+                        <div className="bg-white p-3 rounded border border-purple-200">
+                          <p className="font-medium text-purple-900">🗺️ Vereenvoudigde Locatie Invoer</p>
+                          <p className="text-purple-700">Minder dropdowns, meer vrije tekst input</p>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-purple-200">
+                          <p className="font-medium text-purple-900">🤖 AI Semantic Matching</p>
+                          <p className="text-purple-700">AI matcht opmerkingen en beschrijvingen intelligent</p>
                         </div>
                         <div className="bg-green-50 p-3 rounded border border-green-200">
-                          <p className="font-medium text-green-900">🎯 Nieuwe Features</p>
-                          <p className="text-green-700">• ✏️ Edit/Delete functionaliteit</p>
-                          <p className="text-green-700">• 📧 Externe commissie partners</p>
-                          <p className="text-green-700">• 🔄 Real-time updates</p>
+                          <p className="font-medium text-green-900">🎯 Betere Match Kwaliteit</p>
+                          <p className="text-green-700">• Vrije tekst matching • Conflict detectie • Genuanceerde voorkeuren</p>
                         </div>
                       </div>
                     </div>
@@ -2717,15 +2483,15 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             <div className="max-w-7xl mx-auto p-6">
               <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Vastgoed Matcher Pro AI</h1>
-                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! ({user.role}) AI-powered matching met flexibele commissie structuren per deal</p>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Vastgoed Matcher Pro AI - Enhanced</h1>
+                  <p className="text-gray-600 mb-3">Welkom terug, {user.name}! ({user.role}) Enhanced matching met vereenvoudigde invoer en AI semantic analysis</p>
                   <div className="flex flex-wrap items-center space-x-2 space-y-1 sm:space-y-0">
                     <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">🤖 AI-Enhanced</span>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📍 Regio Matching</span>
-                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🏗️ Project Types</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">🗺️ Simplified Location</span>
+                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">🔥 Semantic Matching</span>
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">💰 Flex Commissies</span>
                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">✏️ Edit Features</span>
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">📧 Externe Partners</span>
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">💬 Free Text Input</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 mt-4 lg:mt-0">
@@ -2786,7 +2552,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                   }`}
                 >
                   <StarIcon size={20} />
-                  <span>AI Matching</span>
+                  <span>🔥 Enhanced Matching</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('transactions')}
@@ -2859,16 +2625,24 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                         </div>
 
+                        {/* 🔥 ENHANCED: Show semantic fields */}
+                        {investor.locatieDetails && (
+                          <div className="mt-4 p-3 bg-purple-50 rounded border border-purple-200">
+                            <p className="text-sm text-purple-800 font-medium mb-1">🗺️ Locatie Details:</p>
+                            <p className="text-xs text-purple-700">{investor.locatieDetails}</p>
+                          </div>
+                        )}
+
+                        {investor.investmentMotivatie && (
+                          <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                            <p className="text-sm text-blue-800 font-medium mb-1">🎯 Investment Motivatie:</p>
+                            <p className="text-xs text-blue-700">{investor.investmentMotivatie}</p>
+                          </div>
+                        )}
+
                         <div className="mt-4">
                           <p className="text-sm text-gray-600 mb-2">Geografische Voorkeuren:</p>
                           <div className="space-y-2">
-                            {investor.geografischeBereik && (
-                              <div className="flex items-center space-x-2">
-                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                                  {investor.geografischeBereik.charAt(0).toUpperCase() + investor.geografischeBereik.slice(1)} bereik
-                                </span>
-                              </div>
-                            )}
                             {(investor.voorkeursRegio || []).length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 <span className="text-xs text-gray-500">Regio's:</span>
@@ -2939,7 +2713,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
                           </button>
                           
-                          {/* ✅ EDIT/DELETE BUTTONS */}
                           {(user.role === 'beheerder' || investor.owner_id === user.id) && (
                             <div className="flex space-x-2">
                               <button
@@ -3043,7 +2816,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                           </div>
                         </div>
 
-                        {/* NEW: Commission Structure Display */}
                         {deal.commissionStructure && (
                           <div className="mb-4 p-3 bg-gray-50 rounded border">
                             <div className="flex items-center justify-between mb-2">
@@ -3060,6 +2832,14 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
                         <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
 
+                        {/* 🔥 ENHANCED: Show semantic fields */}
+                        {deal.bijzonderheden && (
+                          <div className="mb-4 p-3 bg-purple-50 rounded border border-purple-200">
+                            <p className="text-sm text-purple-800 font-medium mb-1">🔥 Bijzonderheden:</p>
+                            <p className="text-xs text-purple-700">{deal.bijzonderheden}</p>
+                          </div>
+                        )}
+
                         <div className="space-y-2">
                           <button
                             onClick={() => {
@@ -3069,7 +2849,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                           >
                             <StarIcon size={16} />
-                            <span>Vind Matches</span>
+                            <span>🔥 Enhanced Matches</span>
                           </button>
                           
                           <div className="flex space-x-2">
@@ -3082,7 +2862,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                               <span>{isLoadingAI ? 'AI...' : 'AI Analyse'}</span>
                             </button>
                             
-                            {/* NEW: Commission Structure Button */}
                             <button
                               onClick={() => openCommissionEditor(deal)}
                               className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
@@ -3092,7 +2871,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             </button>
                           </div>
 
-                          {/* ✅ EDIT/DELETE BUTTONS */}
                           {(user.role === 'beheerder' || deal.owner_id === user.id) && (
                             <div className="flex space-x-2">
                               <button
@@ -3121,34 +2899,34 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               {activeTab === 'matching' && (
                 <div>
                   <div className="mb-6">
-                    <h2 className="text-2xl font-bold mb-4">AI-Powered Matching</h2>
+                    <h2 className="text-2xl font-bold mb-4">🔥 Enhanced AI-Powered Matching</h2>
                     
                     {matches.length === 0 ? (
                       <div className="text-center py-12">
                         <AlertCircleIcon size={48} className="text-gray-400 mx-auto mb-4" />
                         <div className="space-y-2">
-                          <p className="text-gray-600 text-lg">Selecteer een deal om AI-powered matches te vinden</p>
+                          <p className="text-gray-600 text-lg">Selecteer een deal om enhanced AI-powered matches te vinden</p>
                           <p className="text-sm text-gray-500">
-                            💡 Tips: Ga naar "Deals" tab → klik "Vind Matches" bij een deal voor geavanceerde AI analyse
+                            🔥 Enhanced Features: Semantic matching van beschrijvingen, vrije tekst analyse, conflict detectie
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div>
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
-                          <h4 className="font-semibold text-blue-800 mb-3">🤖 AI-Enhanced Matching Features:</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
+                          <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced AI Matching Features:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-purple-700">
                             <div className="space-y-2">
-                              <p>• Smart Scoring: Regio & locatie matching</p>
-                              <p>• Project Type: Turn-key, renovatie, transformatie</p>
-                              <p>• Gedrag Analyse: Investeerder profiel matching</p>
-                              <p>• Timing Optimalisatie: Beschikbaarheid & ervaring</p>
+                              <p>• 🗺️ Vereenvoudigde locatie matching</p>
+                              <p>• 🤖 Semantic text analyse van beschrijvingen</p>
+                              <p>• 💬 Vrije tekst input matching</p>
+                              <p>• ⚠️ Conflict detectie tussen wensen en aanbod</p>
                             </div>
                             <div className="space-y-2">
-                              <p>• Success Probability: AI voorspelling van deal succes</p>
-                              <p>• Pitch Suggesties: Gepersonaliseerde aanbevelingen</p>
-                              <p>• Onderhandeling Tips: Strategie per investeerder</p>
-                              <p>• Flexibele Commissies: Per deal aanpasbaar</p>
+                              <p>• 🎯 Intelligente keyword matching</p>
+                              <p>• 📝 Investment motivatie vs deal beschrijving</p>
+                              <p>• 🚀 Enhanced compatibility scoring</p>
+                              <p>• 💰 Flexibele commissie structuren</p>
                             </div>
                           </div>
                         </div>
@@ -3158,6 +2936,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             <div className="mb-4 lg:mb-0">
                               <h3 className="font-semibold text-lg mb-2">🎯 Deal: {matches[0].deal.titel}</h3>
                               <p className="text-sm text-gray-600 mb-2">{matches[0].deal.beschrijving}</p>
+                              {matches[0].deal.bijzonderheden && (
+                                <p className="text-sm text-purple-600 mb-2">🔥 {matches[0].deal.bijzonderheden}</p>
+                              )}
                               <div className="flex flex-wrap items-center gap-4 text-sm">
                                 <span className="text-blue-600 font-medium">Deal eigenaar: {getUserById(matches[0].deal.owner_id).name}</span>
                                 {matches[0].deal.bedrijfFonds && (
@@ -3169,7 +2950,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             </div>
                             <div className="text-center lg:text-right">
                               <div className="text-3xl font-bold text-blue-600">{matches.length}</div>
-                              <div className="text-sm text-gray-600">Matches gevonden</div>
+                              <div className="text-sm text-gray-600">Enhanced Matches</div>
                             </div>
                           </div>
                         </div>
@@ -3197,6 +2978,11 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                   <span className={`px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}`}>
                                     {match.matchScore}% match
                                   </span>
+                                  {match.semanticScore > 0 && (
+                                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                                      🔥 +{match.semanticScore} semantic
+                                    </span>
+                                  )}
                                   <button
                                     onClick={() => createTransaction(match.deal.id, match.investor.id)}
                                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
@@ -3209,13 +2995,23 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div>
-                                  <h4 className="font-semibold mb-3">Match Analyse:</h4>
+                                  <h4 className="font-semibold mb-3">🔥 Enhanced Match Analyse:</h4>
                                   <div className="space-y-2">
-                                    {match.reasoning.slice(0, 5).map((reason, idx) => (
+                                    {match.reasoning.map((reason, idx) => (
                                       <div key={idx} className="text-sm p-2 bg-gray-50 rounded">
                                         {reason}
                                       </div>
                                     ))}
+                                    {match.semanticReasons && match.semanticReasons.length > 0 && (
+                                      <div className="mt-3">
+                                        <p className="text-sm font-medium text-purple-700 mb-2">🤖 Semantic Matches:</p>
+                                        {match.semanticReasons.map((reason, idx) => (
+                                          <div key={idx} className="text-sm p-2 bg-purple-50 rounded border border-purple-200">
+                                            {reason}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 <div>
@@ -3227,6 +3023,18 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                     <p>Risicoprofiel: {match.investor.risicoprofiel}</p>
                                     <p>Ervaring: {match.investor.ervaringLevel}</p>
                                     <p>Beschikbaarheid: {match.investor.beschikbaarheid}</p>
+                                    {match.investor.locatieDetails && (
+                                      <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                        <p className="font-medium text-blue-800">Locatie Details:</p>
+                                        <p className="text-blue-700">{match.investor.locatieDetails}</p>
+                                      </div>
+                                    )}
+                                    {match.investor.investmentMotivatie && (
+                                      <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                                        <p className="font-medium text-green-800">Investment Motivatie:</p>
+                                        <p className="text-green-700">{match.investor.investmentMotivatie}</p>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -3238,7 +3046,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                                 >
                                   <BrainIcon size={16} />
-                                  <span>{isLoadingAI ? 'AI Analyseert...' : 'Geavanceerde AI Analyse'}</span>
+                                  <span>{isLoadingAI ? 'AI Analyseert...' : '🔥 Enhanced AI Analyse'}</span>
                                 </button>
                                 <button
                                   onClick={() => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`)}
@@ -3355,7 +3163,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                 })}
                               </div>
                               
-                              {/* Show external participants contact info */}
                               {participantCommissions.some(p => p.is_external) && (
                                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
                                   <h5 className="font-medium text-green-800 mb-2">Externe Partners:</h5>
@@ -3392,7 +3199,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
                       <h4 className="text-xl font-bold flex items-center space-x-2">
                         <BrainIcon size={20} />
-                        <span>AI Professionele Analyse</span>
+                        <span>🔥 Enhanced AI Analyse</span>
                       </h4>
                       <button
                         onClick={() => setAiInsights({})}
@@ -3404,19 +3211,74 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     <div className="p-6">
                       {Object.entries(aiInsights).slice(-1).map(([key, insight]) => (
                         <div key={key} className="space-y-6">
-                          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-                            <h3 className="font-bold text-lg mb-2 text-blue-900">
-                              {key.includes('investor') ? '👤 Investeerder Analyse' :
+                          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                            <h3 className="font-bold text-lg mb-2 text-purple-900">
+                              {key.includes('enhanced_match') ? '🔥 Enhanced Smart Match Analyse' :
+                              key.includes('investor') ? '👤 Investeerder Analyse' :
                               key.includes('deal') ? '🏢 Deal Analyse' :
-                              key.includes('smart_match') ? '🎯 Smart Match Analyse' :
                               '📊 Markt Inzichten'}
                             </h3>
-                            <p className="text-sm text-blue-700">
-                              Gegenereerd op {new Date().toLocaleString('nl-NL')}
+                            <p className="text-sm text-purple-700">
+                              Gegenereerd op {new Date().toLocaleString('nl-NL')} | Enhanced met semantic analysis
                             </p>
                           </div>
                           
-                          {typeof insight === 'object' && insight.fullAnalysis ? (
+                          {typeof insight === 'object' && insight.semanticScore !== undefined ? (
+                            <div className="space-y-4">
+                              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced Semantic Analysis:</h4>
+                                {insight.semanticReasons && insight.semanticReasons.map((reason, idx) => (
+                                  <div key={idx} className="bg-white p-3 rounded border border-purple-200 mb-2">
+                                    <p className="text-purple-700">{reason}</p>
+                                  </div>
+                                ))}
+                                <div className="mt-3 p-3 bg-white rounded border border-purple-300">
+                                  <p className="font-medium text-purple-900">
+                                    Semantic Score: <span className="text-2xl">{insight.semanticScore || 0}</span> punten
+                                  </p>
+                                  <p className="text-purple-700 text-sm">
+                                    Based on AI analysis of investment motivatie vs deal beschrijving
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {insight.pitchRecommendations && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                  <h4 className="font-semibold text-green-800 mb-3">💡 Pitch Aanbevelingen:</h4>
+                                  <ul className="space-y-2">
+                                    {insight.pitchRecommendations.map((rec, idx) => (
+                                      <li key={idx} className="flex items-start space-x-2">
+                                        <span className="text-green-600 font-bold">•</span>
+                                        <span className="text-green-700">{rec}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              
+                              {insight.overallCompatibility && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                  <h4 className="font-semibold text-blue-800 mb-3">📈 Overall Compatibility:</h4>
+                                  <div className="flex items-center space-x-4">
+                                    <div className="text-3xl font-bold text-blue-600">
+                                      {insight.overallCompatibility}%
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="w-full bg-gray-200 rounded-full h-3">
+                                        <div 
+                                          className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                                          style={{ width: `${insight.overallCompatibility}%` }}
+                                        ></div>
+                                      </div>
+                                      <p className="text-blue-700 text-sm mt-1">
+                                        Enhanced score including semantic matching
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : typeof insight === 'object' && insight.fullAnalysis ? (
                             <div className="space-y-4">
                               <div className="bg-white border rounded-lg p-4">
                                 <h4 className="font-semibold text-gray-800 mb-3">🤖 AI Analyse:</h4>
@@ -3442,53 +3304,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                   </ul>
                                 </div>
                               )}
-                              
-                              {insight.riskFactors && (
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-red-800 mb-3">⚠️ Risicofactoren:</h4>
-                                  <ul className="space-y-2">
-                                    {insight.riskFactors.map((risk, idx) => (
-                                      <li key={idx} className="flex items-start space-x-2">
-                                        <span className="text-red-600 font-bold">•</span>
-                                        <span className="text-red-700">{risk}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {insight.opportunities && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-blue-800 mb-3">🚀 Kansen:</h4>
-                                  <ul className="space-y-2">
-                                    {insight.opportunities.map((opp, idx) => (
-                                      <li key={idx} className="flex items-start space-x-2">
-                                        <span className="text-blue-600 font-bold">•</span>
-                                        <span className="text-blue-700">{opp}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {insight.matchScore && (
-                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-purple-800 mb-3">📈 Match Score:</h4>
-                                  <div className="flex items-center space-x-4">
-                                    <div className="text-3xl font-bold text-purple-600">
-                                      {insight.matchScore}%
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="w-full bg-gray-200 rounded-full h-3">
-                                        <div 
-                                          className="bg-purple-600 h-3 rounded-full transition-all duration-500"
-                                          style={{ width: `${insight.matchScore}%` }}
-                                        ></div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           ) : (
                             <div className="bg-gray-50 border rounded-lg p-4">
@@ -3502,7 +3317,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                     </div>
                     <div className="sticky bottom-0 bg-white border-t p-4 flex justify-between items-center">
                       <div className="text-sm text-gray-500">
-                        💡 Tip: Deze analyse is gegenereerd door AI en dient als advies
+                        🔥 Enhanced: Analyse includes semantic matching van teksten en beschrijvingen
                       </div>
                       <button
                         onClick={() => setAiInsights({})}
@@ -3515,7 +3330,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 </div>
               )}
 
-              {/* ✅ ENHANCED FORM MODALS WITH EDIT SUPPORT */}
               {showAddInvestor && (
                 <InvestorForm
                   onSubmit={handleAddInvestor}
@@ -3552,7 +3366,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 />
               )}
 
-              {/* NEW: Commission Editor */}
               <CommissionEditor />
             </div>
           );
@@ -3562,31 +3375,51 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(React.createElement(VastgoedInvesteerderMatcher));
 
-        console.log('🚀 Vastgoed Matcher Pro AI - Flexibele Commissie Versie geladen!');
+        console.log('🚀 Vastgoed Matcher Pro AI - Enhanced Semantic Versie geladen!');
         console.log('🔥 Firebase Authentication & Database geïntegreerd');
-        console.log('💰 Nieuwe Features:');
-        console.log('   • ✅ Commissie structuur per deal configureerbaar');
-        console.log('   • ✅ Teamleden en externe partners toevoegen');
-        console.log('   • ✅ Percentage en vast bedrag commissies');
-        console.log('   • ✅ Externe partner contactgegevens opslaan');
-        console.log('   • ✅ Real-time commissie berekeningen');
-        console.log('   • ✅ Flexibele rollen toewijzing');
-        console.log('🎯 Commissie Management:');
-        console.log('   • 💼 Per deal aanpasbare commissie rate');
-        console.log('   • 👥 Meerdere deelnemers per deal');
-        console.log('   • 📧 Externe partners met contactinfo');
-        console.log('   • 🔄 Percentage en vast bedrag combinaties');
-        console.log('   • 💾 Firebase opslag van commissie structuren');
+        console.log('🔥 NIEUWE ENHANCED FEATURES:');
+        console.log('   • 🗺️ VEREENVOUDIGDE LOCATIE INVOER');
+        console.log('     - Minder dropdowns, meer vrije tekst input');
+        console.log('     - Hoofdlanden selectie in plaats van 150+ steden');
+        console.log('     - Vrije tekst veld voor specifieke locatie eisen');
+        console.log('   • 🤖 AI SEMANTIC MATCHING');
+        console.log('     - AI matcht investment motivatie vs deal beschrijving');
+        console.log('     - Keyword matching: "stabiele huurinkomsten" ↔ "gegarandeerde huurder"');
+        console.log('     - Conflict detectie: "geen renovatie" vs "renovatie project"');
+        console.log('     - Enhanced compatibility scoring met semantic analyse');
+        console.log('   • 💬 VRIJE TEKST INPUT FIELDS:');
+        console.log('     - Investeerder: locatieDetails, investmentMotivatie, bijzonderheden');
+        console.log('     - Deal: bijzonderheden veld voor extra deal details');
+        console.log('     - AI gebruikt deze teksten voor slimme matching');
+        console.log('   • 🎯 ENHANCED MATCHING ALGORITHM:');
+        console.log('     - Traditional scoring (budget, locatie, type) = 70%');
+        console.log('     - NEW: Semantic matching van teksten = 30%');
+        console.log('     - Conflict detectie tussen wensen en aanbod');
+        console.log('     - Intelligente keyword matching');
+        console.log('💰 Commissie Management behouden:');
+        console.log('   • ✅ Per deal aanpasbare commissie rate');
+        console.log('   • ✅ Meerdere deelnemers per deal');
+        console.log('   • ✅ Externe partners met contactinfo');
+        console.log('   • ✅ Percentage en vast bedrag combinaties');
         console.log('✏️ Edit Features behouden:');
         console.log('   • ✅ Investeerders bewerken en verwijderen');
         console.log('   • ✅ Deals bewerken en verwijderen');
         console.log('   • ✅ Real-time updates tussen teamleden');
-        console.log('   • ✅ Permissie controle');
         console.log('🌍 Alle andere features behouden:');
-        console.log('   • ✅ AI-powered matching');
-        console.log('   • ✅ Internationale locatie matching');
-        console.log('   • ✅ Project type filtering');
+        console.log('   • ✅ AI-powered matching (enhanced!)');
         console.log('   • ✅ Team collaboration via Firebase');
+        console.log('   • ✅ Transactie management');
+        console.log('   • ✅ Commission tracking');
+        console.log('📊 VERBETERDE USER EXPERIENCE:');
+        console.log('   • Snellere data invoer door minder dropdowns');
+        console.log('   • Genuanceerdere voorkeuren door vrije tekst');
+        console.log('   • Betere matches door AI semantic analysis');
+        console.log('   • Duidelijke feedback over waarom deals matchen');
+        console.log('🔥 DEMO DATA ENHANCED:');
+        console.log('   • Demo investeerder heeft uitgebreide motivatie tekst');
+        console.log('   • Demo deal heeft gedetailleerde beschrijving');
+        console.log('   • Toont semantic matching in actie');
+        console.log('   • AI detecteert "stabiele huurinkomsten" ↔ "gegarandeerde huurder"');
     </script>
 </body>
 </html>
