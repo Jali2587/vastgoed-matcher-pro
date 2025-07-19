@@ -174,6 +174,13 @@
           const [showEditInvestor, setShowEditInvestor] = useState(false);
           const [showEditDeal, setShowEditDeal] = useState(false);
 
+          // 🔥 NEW: Broker Management State
+          const [brokers, setBrokers] = useState([]);
+          const [showAddBroker, setShowAddBroker] = useState(false);
+          const [editingBroker, setEditingBroker] = useState(null);
+          const [showEditBroker, setShowEditBroker] = useState(false);
+          const [contactFilter, setContactFilter] = useState('all'); // all, investors, brokers
+
           // 🔥 ENHANCED AI MATCHING WITH SEMANTIC ANALYSIS
           const callOpenAI = async (prompt, type = 'analysis', data = null) => {
             setIsLoadingAI(true);
@@ -280,6 +287,14 @@
                 ...doc.data()
               }));
               setInvestors(investorsData);
+
+              // 🔥 NEW: Load brokers
+              const brokersSnapshot = await db.collection('brokers').get();
+              const brokersData = brokersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setBrokers(brokersData);
               
               const dealsSnapshot = await db.collection('deals').get();
               const dealsData = dealsSnapshot.docs.map(doc => ({
@@ -298,6 +313,7 @@
               console.log('✅ Data loaded from Firebase:', {
                 users: usersData.length,
                 investors: investorsData.length,
+                brokers: brokersData.length,
                 deals: dealsData.length,
                 transactions: transactionsData.length
               });
@@ -342,6 +358,29 @@
                 // 🔥 ENHANCED WITH SEMANTIC CONTENT
                 investmentMotivatie: 'Zoek stabiele huurinkomsten voor pensioenopbouw. Geen renovatie projecten, liever turn-key appartementen. Ervaring met studentenhuisvesting. Duurzaamheid steeds belangrijker.',
                 bijzonderheden: 'Heeft voorkeur voor energiezuinige panden. Geen ground floor retail. Ervaring met vastgoedbeheer.',
+                owner_id: user.id,
+                created_at: new Date().toISOString()
+              }
+            ];
+
+            // 🔥 NEW: Demo Brokers
+            const demoBrokers = [
+              {
+                id: 'broker1',
+                naam: 'Sarah de Vries',
+                email: 'sarah@vastgoedpro.nl',
+                telefoon: '020-7654321',
+                bedrijf: 'VastgoedPro Makelaars',
+                locatie: 'Amsterdam',
+                specialisaties: ['Commercieel', 'Kantoren', 'Retail'],
+                werkgebied: ['Amsterdam', 'Haarlem', 'Almere'],
+                ervaringJaren: 8,
+                trackRecord: 'Gespecialiseerd in commercieel vastgoed €500K-€5M. 120+ deals afgelopen 5 jaar. Focus op kantoorpanden en retail.',
+                commissieStructuur: '2.5% koper, 2.5% verkoper. Exclusieve deals 3%.',
+                locatieDetails: 'Actief in Randstad, specialiteit Amsterdam Noord en Zuidas.',
+                werkwijze: 'Proactieve deal sourcing, uitgebreid netwerk van investeerders. Snelle besluitvorming, transparante communicatie.',
+                bijzonderheden: 'Spreekt vloeiend Engels en Duits. Ervaring met internationale investeerders. RICS gecertificeerd.',
+                import_source: 'manual',
                 owner_id: user.id,
                 created_at: new Date().toISOString()
               }
@@ -391,21 +430,30 @@
             ];
             
             setInvestors(demoInvestors);
+            setBrokers(demoBrokers); // 🔥 NEW
             setDeals(demoDeals);
             setTransactions([]);
             
             try {
-              await saveDemoDataToFirebase(demoInvestors, demoDeals);
+              await saveDemoDataToFirebase(demoInvestors, demoBrokers, demoDeals);
             } catch (error) {
               console.log('Could not save demo data to Firebase:', error);
             }
           };
           
-          const saveDemoDataToFirebase = async (investors, deals) => {
+          const saveDemoDataToFirebase = async (investors, brokers, deals) => {
             try {
               for (const investor of investors) {
                 await db.collection('investors').doc(investor.id).set({
                   ...investor,
+                  created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+
+              // 🔥 NEW: Save brokers
+              for (const broker of brokers) {
+                await db.collection('brokers').doc(broker.id).set({
+                  ...broker,
                   created_at: firebase.firestore.FieldValue.serverTimestamp()
                 });
               }
@@ -716,6 +764,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               setUser(null);
               setShowAuth(true);
               setInvestors([]);
+              setBrokers([]); // 🔥 NEW
               setDeals([]);
               setTransactions([]);
               setUsers([]);
@@ -1039,6 +1088,87 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
           const handleEditDeal = (deal) => {
             setEditingDeal(deal);
             setShowEditDeal(true);
+          };
+
+          // 🔥 NEW: Broker CRUD Functions
+          const handleEditBroker = (broker) => {
+            setEditingBroker(broker);
+            setShowEditBroker(true);
+          };
+
+          const handleAddBroker = async (brokerData) => {
+            try {
+              console.log('💾 Adding broker to Firebase...');
+              
+              const newBroker = {
+                ...brokerData,
+                ervaringJaren: parseInt(brokerData.ervaringJaren) || 0,
+                owner_id: user.id,
+                import_source: 'manual',
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              const docRef = await db.collection('brokers').add(newBroker);
+              
+              const brokerWithId = {
+                id: docRef.id,
+                ...newBroker,
+                created_at: new Date().toISOString()
+              };
+              
+              setBrokers(prev => [...prev, brokerWithId]);
+              setShowAddBroker(false);
+              
+              console.log('✅ Broker added to Firebase:', docRef.id);
+              alert('✅ Broker succesvol toegevoegd!');
+            } catch (error) {
+              console.error('❌ Error adding broker:', error);
+              alert('Fout bij toevoegen broker: ' + error.message);
+            }
+          };
+
+          const handleUpdateBroker = async (brokerData) => {
+            try {
+              console.log('💾 Updating broker in Firebase...', editingBroker.id);
+              
+              const updatedBroker = {
+                ...brokerData,
+                ervaringJaren: parseInt(brokerData.ervaringJaren) || 0,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              await db.collection('brokers').doc(editingBroker.id).update(updatedBroker);
+              
+              setBrokers(prev => prev.map(broker => 
+                broker.id === editingBroker.id ? { ...broker, ...updatedBroker } : broker
+              ));
+              
+              setShowEditBroker(false);
+              setEditingBroker(null);
+              
+              console.log('✅ Broker updated in Firebase:', editingBroker.id);
+              alert('✅ Broker succesvol bijgewerkt!');
+            } catch (error) {
+              console.error('❌ Error updating broker:', error);
+              alert('Fout bij bijwerken broker: ' + error.message);
+            }
+          };
+
+          const handleDeleteBroker = async (brokerId) => {
+            if (confirm('Weet je zeker dat je deze broker wilt verwijderen?')) {
+              try {
+                console.log('🗑️ Deleting broker from Firebase...');
+                
+                await db.collection('brokers').doc(brokerId).delete();
+                setBrokers(prev => prev.filter(b => b.id !== brokerId));
+                
+                console.log('✅ Broker deleted from Firebase:', brokerId);
+                alert('✅ Broker succesvol verwijderd!');
+              } catch (error) {
+                console.error('❌ Error deleting broker:', error);
+                alert('Fout bij verwijderen broker: ' + error.message);
+              }
+            }
           };
 
           const handleUpdateInvestor = async (investorData) => {
@@ -1947,7 +2077,264 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          // 🔥 SIMPLIFIED DEAL FORM
+          // 🔥 NEW: BROKER FORM
+          const BrokerForm = ({ onSubmit, onCancel, editData = null }) => {
+            const [formData, setFormData] = useState(editData || {
+              naam: '',
+              email: '',
+              telefoon: '',
+              bedrijf: '',
+              locatie: '',
+              specialisaties: [],
+              werkgebied: [],
+              ervaringJaren: '',
+              trackRecord: '',
+              commissieStructuur: '',
+              locatieDetails: '',
+              werkwijze: '',
+              bijzonderheden: ''
+            });
+
+            const specialisatieOpties = [
+              'Commercieel', 'Residentieel', 'Industrie', 'Retail', 
+              'Kantoren', 'Logistiek', 'Hotels', 'Zorgvastgoed'
+            ];
+
+            const werkgebiedOpties = [
+              'Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven',
+              'Tilburg', 'Haarlem', 'Almere', 'Breda', 'Nijmegen',
+              'Berlijn', 'München', 'Hamburg', 'Frankfurt', 'Parijs',
+              'Madrid', 'Barcelona', 'Zürich', 'Genève'
+            ];
+
+            const handleSpecialisatieChange = (specialisatie) => {
+              setFormData(prev => ({
+                ...prev,
+                specialisaties: (prev.specialisaties || []).includes(specialisatie)
+                  ? (prev.specialisaties || []).filter(s => s !== specialisatie)
+                  : [...(prev.specialisaties || []), specialisatie]
+              }));
+            };
+
+            const handleWerkgebiedChange = (gebied) => {
+              setFormData(prev => ({
+                ...prev,
+                werkgebied: (prev.werkgebied || []).includes(gebied)
+                  ? (prev.werkgebied || []).filter(g => g !== gebied)
+                  : [...(prev.werkgebied || []), gebied]
+              }));
+            };
+
+            const handleSubmit = (e) => {
+              e.preventDefault();
+              onSubmit(formData);
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold">
+                        {editData ? '✏️ Broker Bewerken' : '➕ Nieuwe Broker Toevoegen'}
+                      </h3>
+                      <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">✕</button>
+                    </div>
+                    <p className="text-sm text-blue-600 mt-2">
+                      🏢 Broker specialiseert in vastgoed deal sourcing en matching
+                    </p>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6">
+                    <form onSubmit={handleSubmit} id="broker-form">
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Basis Informatie</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Naam *</label>
+                            <input
+                              type="text"
+                              value={formData.naam}
+                              onChange={(e) => setFormData({...formData, naam: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Email *</label>
+                            <input
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({...formData, email: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Telefoon</label>
+                            <input
+                              type="tel"
+                              value={formData.telefoon}
+                              onChange={(e) => setFormData({...formData, telefoon: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Bedrijf/Kantoor</label>
+                            <input
+                              type="text"
+                              value={formData.bedrijf}
+                              onChange={(e) => setFormData({...formData, bedrijf: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Naam van makelaarskantoor"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium mb-1">Huidige Locatie/Hoofdkantoor</label>
+                            <input
+                              type="text"
+                              value={formData.locatie}
+                              onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Bijvoorbeeld: Amsterdam, Berlijn, etc."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Professionele Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Ervaring (jaren)</label>
+                            <input
+                              type="number"
+                              value={formData.ervaringJaren}
+                              onChange={(e) => setFormData({...formData, ervaringJaren: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              min="0"
+                              max="50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Commissie Structuur</label>
+                            <input
+                              type="text"
+                              value={formData.commissieStructuur}
+                              onChange={(e) => setFormData({...formData, commissieStructuur: e.target.value})}
+                              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Bijvoorbeeld: 2.5% koper, 2.5% verkoper"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Specialisaties</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {specialisatieOpties.map(specialisatie => (
+                            <label key={specialisatie} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                              <input
+                                type="checkbox"
+                                checked={(formData.specialisaties || []).includes(specialisatie)}
+                                onChange={() => handleSpecialisatieChange(specialisatie)}
+                                className="text-blue-600"
+                              />
+                              <span className="text-sm">{specialisatie}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">Werkgebied</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded p-3">
+                          {werkgebiedOpties.map(gebied => (
+                            <label key={gebied} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                              <input
+                                type="checkbox"
+                                checked={(formData.werkgebied || []).includes(gebied)}
+                                onChange={() => handleWerkgebiedChange(gebied)}
+                                className="text-blue-600"
+                              />
+                              <span className="text-sm">{gebied}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">🤖 Professioneel Profiel (Voor AI Matching)</h4>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Track Record & Ervaring</label>
+                          <textarea
+                            value={formData.trackRecord}
+                            onChange={(e) => setFormData({...formData, trackRecord: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                            placeholder="Bijvoorbeeld: Gespecialiseerd in kantoorpanden €1M+, 120+ deals afgelopen 5 jaar. Focus op Amsterdam Zuidas en Noord. Ervaring met internationale investeerders..."
+                          />
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Werkwijze & Aanpak</label>
+                          <textarea
+                            value={formData.werkwijze}
+                            onChange={(e) => setFormData({...formData, werkwijze: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Bijvoorbeeld: Proactieve deal sourcing, uitgebreid netwerk investeerders. Snelle besluitvorming, transparante communicatie. Spreekt vloeiend Engels en Duits..."
+                          />
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Locatie Details & Specialiteiten</label>
+                          <textarea
+                            value={formData.locatieDetails}
+                            onChange={(e) => setFormData({...formData, locatieDetails: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Bijvoorbeeld: Actief in Randstad, specialiteit Amsterdam Noord en Zuidas. Goede connecties in Berlijn Mitte. Focus op off-market deals..."
+                          />
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Bijzonderheden</label>
+                          <textarea
+                            value={formData.bijzonderheden}
+                            onChange={(e) => setFormData({...formData, bijzonderheden: e.target.value})}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Bijvoorbeeld: RICS gecertificeerd. Ervaring met internationale investeerders. Netwerk van family offices. Specialiteit duurzame vastgoed projecten..."
+                          />
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                  
+                  <div className="p-6 border-t bg-gray-50">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-6 py-2 text-gray-600 border rounded-md hover:bg-gray-100"
+                      >
+                        Annuleren
+                      </button>
+                      <button
+                        type="submit"
+                        form="broker-form"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        {editData ? '💾 Opslaan' : '➕ Toevoegen'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
           const DealForm = ({ onSubmit, onCancel, editData = null }) => {
             const [formData, setFormData] = useState(editData || {
               titel: '',
@@ -2534,7 +2921,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                   }`}
                 >
                   <UsersIcon size={20} />
-                  <span>Investeerders ({investors.length})</span>
+                  <span>🔥 Contacten ({investors.length + brokers.length})</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('deals')}
@@ -2570,171 +2957,327 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               {activeTab === 'investors' && (
                 <div>
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-                    <h2 className="text-2xl font-bold">Investeerders</h2>
-                    <button
-                      onClick={() => setShowAddInvestor(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
-                    >
-                      <PlusIcon size={20} />
-                      <span>Nieuwe Investeerder</span>
-                    </button>
+                    <div>
+                      <h2 className="text-2xl font-bold">🔥 Contacten Beheer</h2>
+                      <p className="text-gray-600 text-sm">Beheer investeerders en brokers in één overzicht</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setShowAddInvestor(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                      >
+                        <PlusIcon size={20} />
+                        <span>🏦 Investeerder</span>
+                      </button>
+                      <button
+                        onClick={() => setShowAddBroker(true)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700 transition-colors"
+                      >
+                        <PlusIcon size={20} />
+                        <span>🏢 Broker</span>
+                      </button>
+                    </div>
                   </div>
 
+                  {/* 🔥 NEW: Contact Filters */}
+                  <div className="mb-6 bg-white p-4 rounded-lg shadow border">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setContactFilter('all')}
+                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                            contactFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          <UsersIcon size={16} />
+                          <span>Alle Contacten ({investors.length + brokers.length})</span>
+                        </button>
+                        <button
+                          onClick={() => setContactFilter('investors')}
+                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                            contactFilter === 'investors' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          <span>🏦</span>
+                          <span>Investeerders ({investors.length})</span>
+                        </button>
+                        <button
+                          onClick={() => setContactFilter('brokers')}
+                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                            contactFilter === 'brokers' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          <span>🏢</span>
+                          <span>Brokers ({brokers.length})</span>
+                        </button>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600">
+                        {contactFilter === 'all' && `${investors.length} investeerders • ${brokers.length} brokers`}
+                        {contactFilter === 'investors' && `${investors.filter(i => i.owner_id === user.id).length} mijn investeerders • ${investors.length} totaal`}
+                        {contactFilter === 'brokers' && `${brokers.filter(b => b.owner_id === user.id).length} mijn brokers • ${brokers.length} totaal`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 🔥 UNIFIED CONTACTS GRID */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {investors.map(investor => (
-                      <div key={investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
-                            investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {investor.risicoprofiel}
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 text-sm mb-4">
-                          <div className="flex items-center space-x-2">
-                            <UserCheckIcon size={16} className="text-gray-500" />
-                            <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
-                          </div>
-                          {investor.bedrijf && (
+                    {/* Show Investors */}
+                    {(contactFilter === 'all' || contactFilter === 'investors') && 
+                      investors.map(investor => (
+                        <div key={`investor-${investor.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                          <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-2">
-                              <BuildingIcon size={16} className="text-gray-500" />
-                              <span className="font-medium">{investor.bedrijf}</span>
+                              <span className="text-blue-600 text-lg">🏦</span>
+                              <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
                             </div>
-                          )}
-                          {investor.locatie && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
+                              investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {investor.risicoprofiel}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 text-sm mb-4">
                             <div className="flex items-center space-x-2">
-                              <MapPinIcon size={16} className="text-gray-500" />
-                              <span>Gevestigd in: {investor.locatie}</span>
+                              <UserCheckIcon size={16} className="text-gray-500" />
+                              <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
                             </div>
-                          )}
-                          <div className="flex items-center space-x-2">
-                            <MailIcon size={16} className="text-gray-500" />
-                            <span>{investor.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <PhoneIcon size={16} className="text-gray-500" />
-                            <span>{investor.telefoon}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <EuroIcon size={16} className="text-gray-500" />
-                            <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
-                          </div>
-                        </div>
-
-                        {/* 🔥 ENHANCED: Show semantic fields */}
-                        {investor.locatieDetails && (
-                          <div className="mt-4 p-3 bg-purple-50 rounded border border-purple-200">
-                            <p className="text-sm text-purple-800 font-medium mb-1">🗺️ Locatie Details:</p>
-                            <p className="text-xs text-purple-700">{investor.locatieDetails}</p>
-                          </div>
-                        )}
-
-                        {investor.investmentMotivatie && (
-                          <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-                            <p className="text-sm text-blue-800 font-medium mb-1">🎯 Investment Motivatie:</p>
-                            <p className="text-xs text-blue-700">{investor.investmentMotivatie}</p>
-                          </div>
-                        )}
-
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-600 mb-2">Geografische Voorkeuren:</p>
-                          <div className="space-y-2">
-                            {(investor.voorkeursRegio || []).length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                <span className="text-xs text-gray-500">Regio's:</span>
-                                {(investor.voorkeursRegio || []).map(regio => (
-                                  <span key={regio} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                    {regio}
-                                  </span>
-                                ))}
+                            {investor.bedrijf && (
+                              <div className="flex items-center space-x-2">
+                                <BuildingIcon size={16} className="text-gray-500" />
+                                <span className="font-medium">{investor.bedrijf}</span>
                               </div>
                             )}
-                            {(investor.voorkeursLanden || []).length > 0 && (
+                            {investor.locatie && (
+                              <div className="flex items-center space-x-2">
+                                <MapPinIcon size={16} className="text-gray-500" />
+                                <span>Gevestigd in: {investor.locatie}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-2">
+                              <MailIcon size={16} className="text-gray-500" />
+                              <span>{investor.email}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <EuroIcon size={16} className="text-gray-500" />
+                              <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          {investor.locatieDetails && (
+                            <div className="mt-4 p-3 bg-purple-50 rounded border border-purple-200">
+                              <p className="text-sm text-purple-800 font-medium mb-1">🗺️ Locatie Details:</p>
+                              <p className="text-xs text-purple-700">{investor.locatieDetails}</p>
+                            </div>
+                          )}
+
+                          {investor.investmentMotivatie && (
+                            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                              <p className="text-sm text-blue-800 font-medium mb-1">🎯 Investment Motivatie:</p>
+                              <p className="text-xs text-blue-700">{investor.investmentMotivatie}</p>
+                            </div>
+                          )}
+
+                          <div className="mt-4">
+                            <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
+                                <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                  {type}
+                                </span>
+                              ))}
+                              {(investor.vastgoedTypes || []).length > 3 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                  +{(investor.vastgoedTypes || []).length - 3} meer
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t space-y-2">
+                            <button
+                              onClick={() => getInvestorInsights(investor.id)}
+                              disabled={isLoadingAI}
+                              className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                            >
+                              <BrainIcon size={16} />
+                              <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                            </button>
+                            
+                            {(user.role === 'beheerder' || investor.owner_id === user.id) && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditInvestor(investor)}
+                                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <EditIcon size={16} />
+                                  <span>Bewerken</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteInvestor(investor.id)}
+                                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <TrashIcon size={16} />
+                                  <span>Verwijderen</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    }
+
+                    {/* 🔥 NEW: Show Brokers */}
+                    {(contactFilter === 'all' || contactFilter === 'brokers') && 
+                      brokers.map(broker => (
+                        <div key={`broker-${broker.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-green-600 text-lg">🏢</span>
+                              <h3 className="text-xl font-semibold text-gray-900">{broker.naam}</h3>
+                            </div>
+                            {broker.ervaringJaren && (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                {broker.ervaringJaren} jaar ervaring
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 text-sm mb-4">
+                            <div className="flex items-center space-x-2">
+                              <UserCheckIcon size={16} className="text-gray-500" />
+                              <span>Eigenaar: {getUserById(broker.owner_id).name}</span>
+                            </div>
+                            {broker.bedrijf && (
+                              <div className="flex items-center space-x-2">
+                                <BuildingIcon size={16} className="text-gray-500" />
+                                <span className="font-medium">{broker.bedrijf}</span>
+                              </div>
+                            )}
+                            {broker.locatie && (
+                              <div className="flex items-center space-x-2">
+                                <MapPinIcon size={16} className="text-gray-500" />
+                                <span>Kantoor: {broker.locatie}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-2">
+                              <MailIcon size={16} className="text-gray-500" />
+                              <span>{broker.email}</span>
+                            </div>
+                            {broker.commissieStructuur && (
+                              <div className="flex items-center space-x-2">
+                                <PercentIcon size={16} className="text-gray-500" />
+                                <span>{broker.commissieStructuur}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {broker.specialisaties && broker.specialisaties.length > 0 && (
+                            <div className="mt-4">
+                              <p className="text-sm text-gray-600 mb-2">Specialisaties:</p>
                               <div className="flex flex-wrap gap-1">
-                                <span className="text-xs text-gray-500">Landen:</span>
-                                {(investor.voorkeursLanden || []).slice(0, 3).map(land => (
-                                  <span key={land} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                    {land}
+                                {broker.specialisaties.slice(0, 3).map(spec => (
+                                  <span key={spec} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    {spec}
                                   </span>
                                 ))}
-                                {(investor.voorkeursLanden || []).length > 3 && (
+                                {broker.specialisaties.length > 3 && (
                                   <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                    +{(investor.voorkeursLanden || []).length - 3} meer
+                                    +{broker.specialisaties.length - 3} meer
                                   </span>
                                 )}
                               </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
-                              <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                {type}
-                              </span>
-                            ))}
-                            {(investor.vastgoedTypes || []).length > 3 && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                +{(investor.vastgoedTypes || []).length - 3} meer
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="mt-3">
-                          <p className="text-sm text-gray-600 mb-2">Project Types:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {(investor.projectTypes || []).slice(0, 2).map(type => (
-                              <span key={type} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                {type}
-                              </span>
-                            ))}
-                            {(investor.projectTypes || []).length > 2 && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                +{(investor.projectTypes || []).length - 2} meer
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t space-y-2">
-                          <button
-                            onClick={() => getInvestorInsights(investor.id)}
-                            disabled={isLoadingAI}
-                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
-                          >
-                            <BrainIcon size={16} />
-                            <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
-                          </button>
-                          
-                          {(user.role === 'beheerder' || investor.owner_id === user.id) && (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEditInvestor(investor)}
-                                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
-                              >
-                                <EditIcon size={16} />
-                                <span>Bewerken</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteInvestor(investor.id)}
-                                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                              >
-                                <TrashIcon size={16} />
-                                <span>Verwijderen</span>
-                              </button>
                             </div>
                           )}
+
+                          {broker.werkgebied && broker.werkgebied.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-600 mb-2">Werkgebied:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {broker.werkgebied.slice(0, 3).map(gebied => (
+                                  <span key={gebied} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                    {gebied}
+                                  </span>
+                                ))}
+                                {broker.werkgebied.length > 3 && (
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                    +{broker.werkgebied.length - 3} meer
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {broker.trackRecord && (
+                            <div className="mt-4 p-3 bg-green-50 rounded border border-green-200">
+                              <p className="text-sm text-green-800 font-medium mb-1">📈 Track Record:</p>
+                              <p className="text-xs text-green-700">{broker.trackRecord}</p>
+                            </div>
+                          )}
+
+                          {broker.werkwijze && (
+                            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                              <p className="text-sm text-blue-800 font-medium mb-1">🎯 Werkwijze:</p>
+                              <p className="text-xs text-blue-700">{broker.werkwijze}</p>
+                            </div>
+                          )}
+
+                          <div className="mt-4 pt-4 border-t space-y-2">
+                            <button
+                              onClick={() => alert(`Contacteer ${broker.naam} via email: ${broker.email}`)}
+                              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <MailIcon size={16} />
+                              <span>Contact Opnemen</span>
+                            </button>
+                            
+                            {(user.role === 'beheerder' || broker.owner_id === user.id) && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditBroker(broker)}
+                                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <EditIcon size={16} />
+                                  <span>Bewerken</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteBroker(broker.id)}
+                                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <TrashIcon size={16} />
+                                  <span>Verwijderen</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    }
                   </div>
+
+                  {/* Empty state */}
+                  {((contactFilter === 'all' && investors.length === 0 && brokers.length === 0) ||
+                    (contactFilter === 'investors' && investors.length === 0) ||
+                    (contactFilter === 'brokers' && brokers.length === 0)) && (
+                    <div className="text-center py-12">
+                      <UsersIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                      <div className="space-y-2">
+                        <p className="text-gray-600 text-lg">
+                          {contactFilter === 'brokers' ? 'Nog geen brokers toegevoegd' : 
+                           contactFilter === 'investors' ? 'Nog geen investeerders toegevoegd' :
+                           'Nog geen contacten toegevoegd'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {contactFilter === 'brokers' ? 'Voeg brokers toe om je deal sourcing te verbeteren' :
+                           contactFilter === 'investors' ? 'Voeg investeerders toe om matches te kunnen maken' :
+                           'Voeg investeerders en brokers toe om te beginnen'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -3366,6 +3909,24 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 />
               )}
 
+              {showAddBroker && (
+                <BrokerForm
+                  onSubmit={handleAddBroker}
+                  onCancel={() => setShowAddBroker(false)}
+                />
+              )}
+
+              {showEditBroker && editingBroker && (
+                <BrokerForm
+                  editData={editingBroker}
+                  onSubmit={handleUpdateBroker}
+                  onCancel={() => {
+                    setShowEditBroker(false);
+                    setEditingBroker(null);
+                  }}
+                />
+              )}
+
               <CommissionEditor />
             </div>
           );
@@ -3375,9 +3936,15 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(React.createElement(VastgoedInvesteerderMatcher));
 
-        console.log('🚀 Vastgoed Matcher Pro AI - Enhanced Semantic Versie geladen!');
+        console.log('🚀 Vastgoed Matcher Pro AI - Enhanced Semantic + Broker Versie geladen!');
         console.log('🔥 Firebase Authentication & Database geïntegreerd');
         console.log('🔥 NIEUWE ENHANCED FEATURES:');
+        console.log('   • 🏢 BROKER MANAGEMENT IN CONTACTEN TAB');
+        console.log('     - Unified contacten interface voor investeerders én brokers');
+        console.log('     - Broker-specifieke velden: specialisaties, werkgebied, track record');
+        console.log('     - Enhanced AI classificatie voor broker detection');
+        console.log('     - Aparte database collection voor brokers');
+        console.log('     - Filter functionaliteit: Alle / Investeerders / Brokers');
         console.log('   • 🗺️ VEREENVOUDIGDE LOCATIE INVOER');
         console.log('     - Minder dropdowns, meer vrije tekst input');
         console.log('     - Hoofdlanden selectie in plaats van 150+ steden');
@@ -3389,6 +3956,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('     - Enhanced compatibility scoring met semantic analyse');
         console.log('   • 💬 VRIJE TEKST INPUT FIELDS:');
         console.log('     - Investeerder: locatieDetails, investmentMotivatie, bijzonderheden');
+        console.log('     - Broker: trackRecord, werkwijze, locatieDetails, bijzonderheden');
         console.log('     - Deal: bijzonderheden veld voor extra deal details');
         console.log('     - AI gebruikt deze teksten voor slimme matching');
         console.log('   • 🎯 ENHANCED MATCHING ALGORITHM:');
@@ -3402,7 +3970,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • ✅ Externe partners met contactinfo');
         console.log('   • ✅ Percentage en vast bedrag combinaties');
         console.log('✏️ Edit Features behouden:');
-        console.log('   • ✅ Investeerders bewerken en verwijderen');
+        console.log('   • ✅ Investeerders én brokers bewerken en verwijderen');
         console.log('   • ✅ Deals bewerken en verwijderen');
         console.log('   • ✅ Real-time updates tussen teamleden');
         console.log('🌍 Alle andere features behouden:');
@@ -3411,15 +3979,25 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • ✅ Transactie management');
         console.log('   • ✅ Commission tracking');
         console.log('📊 VERBETERDE USER EXPERIENCE:');
+        console.log('   • Unified contact management voor investeerders en brokers');
+        console.log('   • Smart filtering en categorisatie');
         console.log('   • Snellere data invoer door minder dropdowns');
         console.log('   • Genuanceerdere voorkeuren door vrije tekst');
         console.log('   • Betere matches door AI semantic analysis');
         console.log('   • Duidelijke feedback over waarom deals matchen');
         console.log('🔥 DEMO DATA ENHANCED:');
-        console.log('   • Demo investeerder heeft uitgebreide motivatie tekst');
+        console.log('   • Demo investeerder met uitgebreide motivatie tekst');
+        console.log('   • Demo broker met professioneel profiel');
         console.log('   • Demo deal heeft gedetailleerde beschrijving');
         console.log('   • Toont semantic matching in actie');
         console.log('   • AI detecteert "stabiele huurinkomsten" ↔ "gegarandeerde huurder"');
+        console.log('🏢 BROKER FEATURES:');
+        console.log('   • Specialisaties tracking (Commercieel, Retail, etc.)');
+        console.log('   • Werkgebied definitie en filtering');
+        console.log('   • Track record en ervaring logging');
+        console.log('   • Commissie structuur documentatie');
+        console.log('   • Werkwijze en approach beschrijving');
+        console.log('   • Visual distinction: groene accent kleur voor brokers');
     </script>
 </body>
 </html>
