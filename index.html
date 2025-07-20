@@ -2849,6 +2849,319 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
+          // Commission Editor Component
+          const CommissionEditor = () => {
+            if (!showCommissionEditor || !editingDealCommission) return null;
+
+            const [commissionStructure, setCommissionStructure] = useState(
+              editingDealCommission.commissionStructure || {
+                total_rate: 0.025,
+                participants: [
+                  { 
+                    role: 'deal_owner', 
+                    user_id: editingDealCommission.owner_id, 
+                    percentage: 100, 
+                    fixed_amount: 0, 
+                    type: 'percentage',
+                    name: getUserById(editingDealCommission.owner_id).name,
+                    is_external: false
+                  }
+                ]
+              }
+            );
+
+            const totalCommission = editingDealCommission.prijs * commissionStructure.total_rate;
+
+            const updateParticipant = (index, field, value) => {
+              const newParticipants = [...commissionStructure.participants];
+              newParticipants[index] = { ...newParticipants[index], [field]: value };
+              
+              if (field === 'user_id' && !newParticipants[index].is_external) {
+                const user = getUserById(value);
+                newParticipants[index].name = user.name;
+              }
+              
+              setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+            };
+
+            const addParticipant = (isExternal = false) => {
+              setCommissionStructure({
+                ...commissionStructure,
+                participants: [
+                  ...commissionStructure.participants,
+                  { 
+                    role: 'referral', 
+                    user_id: null, 
+                    percentage: 0, 
+                    fixed_amount: 0, 
+                    type: 'percentage',
+                    name: '',
+                    email: '',
+                    company: '',
+                    is_external: isExternal
+                  }
+                ]
+              });
+            };
+
+            const removeParticipant = (index) => {
+              if (commissionStructure.participants.length > 1) {
+                const newParticipants = commissionStructure.participants.filter((_, i) => i !== index);
+                setCommissionStructure({ ...commissionStructure, participants: newParticipants });
+              }
+            };
+
+            const handleSave = async () => {
+              const totalPercentage = commissionStructure.participants
+                .filter(p => p.type === 'percentage')
+                .reduce((sum, p) => sum + (p.percentage || 0), 0);
+              
+              if (totalPercentage > 100) {
+                alert('Totaal percentage kan niet meer dan 100% zijn!');
+                return;
+              }
+
+              await saveCommissionStructure(editingDealCommission.id, commissionStructure);
+              setShowCommissionEditor(false);
+              setEditingDealCommission(null);
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b">
+                    <h3 className="text-xl font-bold flex items-center space-x-2">
+                      <PercentIcon size={20} />
+                      <span>Commissie Structuur Beheren</span>
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Deal: {editingDealCommission.titel} - €{editingDealCommission.prijs.toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={commissionStructure.total_rate * 100}
+                          onChange={(e) => setCommissionStructure({
+                            ...commissionStructure,
+                            total_rate: parseFloat(e.target.value) / 100
+                          })}
+                          className="w-32 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-lg font-semibold text-blue-600">
+                          = €{totalCommission.toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          van €{editingDealCommission.prijs.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">Commissie Verdeling:</h4>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => addParticipant(false)}
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                          >
+                            <PlusIcon size={14} />
+                            <span>Teamlid</span>
+                          </button>
+                          <button
+                            onClick={() => addParticipant(true)}
+                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                          >
+                            <ExternalLinkIcon size={14} />
+                            <span>Extern</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {commissionStructure.participants.map((participant, index) => (
+                        <div key={index} className="border rounded p-4 bg-gray-50">
+                          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Rol</label>
+                              <select
+                                value={participant.role}
+                                onChange={(e) => updateParticipant(index, 'role', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              >
+                                <option value="deal_owner">Deal Eigenaar</option>
+                                <option value="investor_referral">Investeerder Referral</option>
+                                <option value="referral">Verwijzer</option>
+                                <option value="manager">Manager</option>
+                                <option value="assistant">Assistent</option>
+                                <option value="broker">Makelaar</option>
+                                <option value="consultant">Consultant</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                {participant.is_external ? 'Naam' : 'Teamlid'}
+                              </label>
+                              {participant.is_external ? (
+                                <input
+                                  type="text"
+                                  value={participant.name}
+                                  onChange={(e) => updateParticipant(index, 'name', e.target.value)}
+                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  placeholder="Volledige naam"
+                                />
+                              ) : (
+                                <select
+                                  value={participant.user_id || ''}
+                                  onChange={(e) => updateParticipant(index, 'user_id', e.target.value)}
+                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                  <option value="">Selecteer...</option>
+                                  {users.map(user => (
+                                    <option key={user.id} value={user.id}>{user.name}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+
+                            {participant.is_external && (
+                              <>
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Email</label>
+                                  <input
+                                    type="email"
+                                    value={participant.email || ''}
+                                    onChange={(e) => updateParticipant(index, 'email', e.target.value)}
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="email@example.com"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Bedrijf</label>
+                                  <input
+                                    type="text"
+                                    value={participant.company || ''}
+                                    onChange={(e) => updateParticipant(index, 'company', e.target.value)}
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Bedrijfsnaam"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            <div className={participant.is_external ? '' : 'md:col-start-4'}>
+                              <label className="block text-sm font-medium mb-1">Type</label>
+                              <select
+                                value={participant.type}
+                                onChange={(e) => updateParticipant(index, 'type', e.target.value)}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              >
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Vast Bedrag</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
+                              </label>
+                              <input
+                                type="number"
+                                step={participant.type === 'percentage' ? '0.1' : '1'}
+                                value={participant.type === 'percentage' ? participant.percentage : participant.fixed_amount}
+                                onChange={(e) => updateParticipant(
+                                  index, 
+                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
+                                  parseFloat(e.target.value)
+                                )}
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              />
+                            </div>
+
+                            <div className="flex items-end">
+                              {commissionStructure.participants.length > 1 && (
+                                <button
+                                  onClick={() => removeParticipant(index)}
+                                  className="text-red-600 hover:text-red-800 text-sm p-2"
+                                >
+                                  <TrashIcon size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-2 text-sm text-gray-600">
+                            Commissie: €{participant.type === 'percentage' 
+                              ? (totalCommission * (participant.percentage / 100)).toLocaleString()
+                              : (participant.fixed_amount || 0).toLocaleString()
+                            }
+                            {participant.is_external && (
+                              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                                Extern
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
+                      <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
+                      <div className="space-y-1 text-sm">
+                        {commissionStructure.participants.map((participant, index) => {
+                          const commission = participant.type === 'percentage' 
+                            ? totalCommission * (participant.percentage / 100)
+                            : participant.fixed_amount;
+                          
+                          const displayName = participant.is_external 
+                            ? participant.name 
+                            : getUserById(participant.user_id).name;
+                          
+                          return (
+                            <div key={index} className="flex justify-between">
+                              <span>
+                                {displayName} ({participant.role})
+                                {participant.is_external && <span className="text-green-600 ml-1">📧</span>}
+                              </span>
+                              <span>€{commission.toLocaleString()}</span>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t pt-1 font-semibold flex justify-between">
+                          <span>Totaal:</span>
+                          <span>€{totalCommission.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4">
+                    <button
+                      onClick={() => {
+                        setShowCommissionEditor(false);
+                        setEditingDealCommission(null);
+                      }}
+                      className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      💾 Opslaan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
           // Authentication Component
           const AuthComponent = () => {
             const [isRegistering, setIsRegistering] = useState(false);
