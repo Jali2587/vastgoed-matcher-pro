@@ -305,6 +305,16 @@
               }
             };
 
+            setIsLoadingAI(false);
+            
+            if (type === 'enhanced_matching') return mockResponses.enhanced_matching;
+            if (type === 'investor_analysis') return mockResponses.investor_analysis;
+            if (type === 'deal_analysis') return mockResponses.deal_analysis;
+            if (type === 'contact_classification') return mockResponses.contact_classification;
+            
+            return mockResponses.enhanced_matching;
+          };
+
           // 🔥 SIMPLIFIED INVESTOR FORM
           const InvestorForm = ({ onSubmit, onCancel, editData = null }) => {
             const [formData, setFormData] = useState(editData || {
@@ -1202,16 +1212,6 @@
                 </div>
               </div>
             );
-          };
-
-            setIsLoadingAI(false);
-            
-            if (type === 'enhanced_matching') return mockResponses.enhanced_matching;
-            if (type === 'investor_analysis') return mockResponses.investor_analysis;
-            if (type === 'deal_analysis') return mockResponses.deal_analysis;
-            if (type === 'contact_classification') return mockResponses.contact_classification;
-            
-            return mockResponses.enhanced_matching;
           };
 
           // 🔥 NEW: CSV Upload and Contact Management Functions
@@ -2688,1052 +2688,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                                         LinkedIn
                                       </a>
                                     )}
-
-              {activeTab === 'investors' && (
-                <div>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-                    <div>
-                      <h2 className="text-2xl font-bold">🔥 Investeerders & Brokers</h2>
-                      <p className="text-gray-600 text-sm">Beheer investeerders en brokers in één overzicht</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => setShowAddInvestor(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
-                      >
-                        <PlusIcon size={20} />
-                        <span>🏦 Investeerder</span>
-                      </button>
-                      <button
-                        onClick={() => setShowAddBroker(true)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700 transition-colors"
-                      >
-                        <PlusIcon size={20} />
-                        <span>🏢 Broker</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Contact Filters */}
-                  <div className="mb-6 bg-white p-4 rounded-lg shadow border">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setContactFilter('all')}
-                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                            contactFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          <UsersIcon size={16} />
-                          <span>Alle Contacten ({investors.length + brokers.length})</span>
-                        </button>
-                        <button
-                          onClick={() => setContactFilter('investors')}
-                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                            contactFilter === 'investors' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          <span>🏦</span>
-                          <span>Investeerders ({investors.length})</span>
-                        </button>
-                        <button
-                          onClick={() => setContactFilter('brokers')}
-                          className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                            contactFilter === 'brokers' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          <span>🏢</span>
-                          <span>Brokers ({brokers.length})</span>
-                        </button>
-                      </div>
-                      
-                      <div className="text-sm text-gray-600">
-                        {contactFilter === 'all' && `${investors.length} investeerders • ${brokers.length} brokers`}
-                        {contactFilter === 'investors' && `${investors.filter(i => i.owner_id === user.id).length} mijn investeerders • ${investors.length} totaal`}
-                        {contactFilter === 'brokers' && `${brokers.filter(b => b.owner_id === user.id).length} mijn brokers • ${brokers.length} totaal`}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* UNIFIED CONTACTS GRID */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Show Investors */}
-                    {(contactFilter === 'all' || contactFilter === 'investors') && 
-                      investors.map(investor => (
-                        <div key={`investor-${investor.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-blue-600 text-lg">🏦</span>
-                              <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
-                            </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
-                              investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {investor.risicoprofiel}
-                            </span>
-                          </div>
-
-                          <div className="space-y-2 text-sm mb-4">
-                            <div className="flex items-center space-x-2">
-                              <UserCheckIcon size={16} className="text-gray-500" />
-                              <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
-                            </div>
-                            {investor.bedrijf && (
-                              <div className="flex items-center space-x-2">
-                                <BuildingIcon size={16} className="text-gray-500" />
-                                <span className="font-medium">{investor.bedrijf}</span>
-                              </div>
-                            )}
-                            {investor.locatie && (
-                              <div className="flex items-center space-x-2">
-                                <MapPinIcon size={16} className="text-gray-500" />
-                                <span>Gevestigd in: {investor.locatie}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center space-x-2">
-                              <MailIcon size={16} className="text-gray-500" />
-                              <span>{investor.email}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <EuroIcon size={16} className="text-gray-500" />
-                              <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
-                            </div>
-                          </div>
-
-                          {investor.locatieDetails && (
-                            <div className="mt-4 p-3 bg-purple-50 rounded border border-purple-200">
-                              <p className="text-sm text-purple-800 font-medium mb-1">🗺️ Locatie Details:</p>
-                              <p className="text-xs text-purple-700">{investor.locatieDetails}</p>
-                            </div>
-                          )}
-
-                          {investor.investmentMotivatie && (
-                            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-                              <p className="text-sm text-blue-800 font-medium mb-1">🎯 Investment Motivatie:</p>
-                              <p className="text-xs text-blue-700">{investor.investmentMotivatie}</p>
-                            </div>
-                          )}
-
-                          <div className="mt-4">
-                            <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
-                                <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                  {type}
-                                </span>
-                              ))}
-                              {(investor.vastgoedTypes || []).length > 3 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                  +{(investor.vastgoedTypes || []).length - 3} meer
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="mt-4 pt-4 border-t space-y-2">
-                            <button
-                              onClick={() => getInvestorInsights(investor.id)}
-                              disabled={isLoadingAI}
-                              className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
-                            >
-                              <BrainIcon size={16} />
-                              <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
-                            </button>
-                            
-                            {(user.role === 'beheerder' || investor.owner_id === user.id) && (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditInvestor(investor)}
-                                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <EditIcon size={16} />
-                                  <span>Bewerken</span>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteInvestor(investor.id)}
-                                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <TrashIcon size={16} />
-                                  <span>Verwijderen</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    }
-
-                    {/* Show Brokers */}
-                    {(contactFilter === 'all' || contactFilter === 'brokers') && 
-                      brokers.map(broker => (
-                        <div key={`broker-${broker.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-green-600 text-lg">🏢</span>
-                              <h3 className="text-xl font-semibold text-gray-900">{broker.naam}</h3>
-                            </div>
-                            {broker.ervaringJaren && (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                                {broker.ervaringJaren} jaar ervaring
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="space-y-2 text-sm mb-4">
-                            <div className="flex items-center space-x-2">
-                              <UserCheckIcon size={16} className="text-gray-500" />
-                              <span>Eigenaar: {getUserById(broker.owner_id).name}</span>
-                            </div>
-                            {broker.bedrijf && (
-                              <div className="flex items-center space-x-2">
-                                <BuildingIcon size={16} className="text-gray-500" />
-                                <span className="font-medium">{broker.bedrijf}</span>
-                              </div>
-                            )}
-                            {broker.locatie && (
-                              <div className="flex items-center space-x-2">
-                                <MapPinIcon size={16} className="text-gray-500" />
-                                <span>Kantoor: {broker.locatie}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center space-x-2">
-                              <MailIcon size={16} className="text-gray-500" />
-                              <span>{broker.email}</span>
-                            </div>
-                            {broker.commissieStructuur && (
-                              <div className="flex items-center space-x-2">
-                                <PercentIcon size={16} className="text-gray-500" />
-                                <span>{broker.commissieStructuur}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {broker.specialisaties && broker.specialisaties.length > 0 && (
-                            <div className="mt-4">
-                              <p className="text-sm text-gray-600 mb-2">Specialisaties:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {broker.specialisaties.slice(0, 3).map(spec => (
-                                  <span key={spec} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                    {spec}
-                                  </span>
-                                ))}
-                                {broker.specialisaties.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                    +{broker.specialisaties.length - 3} meer
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {broker.werkgebied && broker.werkgebied.length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-sm text-gray-600 mb-2">Werkgebied:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {broker.werkgebied.slice(0, 3).map(gebied => (
-                                  <span key={gebied} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                    {gebied}
-                                  </span>
-                                ))}
-                                {broker.werkgebied.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                    +{broker.werkgebied.length - 3} meer
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {broker.trackRecord && (
-                            <div className="mt-4 p-3 bg-green-50 rounded border border-green-200">
-                              <p className="text-sm text-green-800 font-medium mb-1">📈 Track Record:</p>
-                              <p className="text-xs text-green-700">{broker.trackRecord}</p>
-                            </div>
-                          )}
-
-                          {broker.werkwijze && (
-                            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-                              <p className="text-sm text-blue-800 font-medium mb-1">🎯 Werkwijze:</p>
-                              <p className="text-xs text-blue-700">{broker.werkwijze}</p>
-                            </div>
-                          )}
-
-                          <div className="mt-4 pt-4 border-t space-y-2">
-                            <button
-                              onClick={() => alert(`Contacteer ${broker.naam} via email: ${broker.email}`)}
-                              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                            >
-                              <MailIcon size={16} />
-                              <span>Contact Opnemen</span>
-                            </button>
-                            
-                            {(user.role === 'beheerder' || broker.owner_id === user.id) && (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditBroker(broker)}
-                                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <EditIcon size={16} />
-                                  <span>Bewerken</span>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteBroker(broker.id)}
-                                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <TrashIcon size={16} />
-                                  <span>Verwijderen</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-
-                  {/* Empty state */}
-                  {((contactFilter === 'all' && investors.length === 0 && brokers.length === 0) ||
-                    (contactFilter === 'investors' && investors.length === 0) ||
-                    (contactFilter === 'brokers' && brokers.length === 0)) && (
-                    <div className="text-center py-12">
-                      <UsersIcon size={48} className="text-gray-400 mx-auto mb-4" />
-                      <div className="space-y-2">
-                        <p className="text-gray-600 text-lg">
-                          {contactFilter === 'brokers' ? 'Nog geen brokers toegevoegd' : 
-                           contactFilter === 'investors' ? 'Nog geen investeerders toegevoegd' :
-                           'Nog geen contacten toegevoegd'}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {contactFilter === 'brokers' ? 'Voeg brokers toe om je deal sourcing te verbeteren' :
-                           contactFilter === 'investors' ? 'Voeg investeerders toe om matches te kunnen maken' :
-                           'Voeg investeerders en brokers toe om te beginnen'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'deals' && (
-                <div>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-                    <h2 className="text-2xl font-bold">Deals</h2>
-                    <button
-                      onClick={() => setShowAddDeal(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
-                    >
-                      <PlusIcon size={20} />
-                      <span>Nieuwe Deal</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {deals.map(deal => (
-                      <div key={deal.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
-                            deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {deal.risico} risico
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 text-sm mb-4">
-                          <div className="flex items-center space-x-2">
-                            <UserCheckIcon size={16} className="text-gray-500" />
-                            <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
-                          </div>
-                          {deal.bedrijfFonds && (
-                            <div className="flex items-center space-x-2">
-                              <BuildingIcon size={16} className="text-gray-500" />
-                              <span className="font-medium">{deal.bedrijfFonds}</span>
-                            </div>
-                          )}
-                          {deal.contactpersoon && (
-                            <div className="flex items-center space-x-2">
-                              <UserIcon size={16} className="text-gray-500" />
-                              <span>{deal.contactpersoon}</span>
-                            </div>
-                          )}
-                          {deal.telefoon && (
-                            <div className="flex items-center space-x-2">
-                              <PhoneIcon size={16} className="text-gray-500" />
-                              <span>{deal.telefoon}</span>
-                            </div>
-                          )}
-                          {deal.email && (
-                            <div className="flex items-center space-x-2">
-                              <MailIcon size={16} className="text-gray-500" />
-                              <span>{deal.email}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center space-x-2">
-                            <MapPinIcon size={16} className="text-gray-500" />
-                            <span>{deal.locatie}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <BuildingIcon size={16} className="text-gray-500" />
-                            <span>{deal.type}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <TargetIcon size={16} className="text-gray-500" />
-                            <span>{deal.projectType}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <EuroIcon size={16} className="text-gray-500" />
-                            <span className="font-semibold">€{deal.prijs.toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <TrendingUpIcon size={16} className="text-gray-500" />
-                            <span className="font-semibold text-green-600">{deal.verwachtRendement}% rendement</span>
-                          </div>
-                        </div>
-
-                        {deal.commissionStructure && (
-                          <div className="mb-4 p-3 bg-gray-50 rounded border">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Commissie Structuur</span>
-                              <span className="text-sm text-gray-600">
-                                {(deal.commissionStructure.total_rate * 100).toFixed(2)}%
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              {deal.commissionStructure.participants?.length || 0} deelnemers geconfigureerd
-                            </div>
-                          </div>
-                        )}
-
-                        <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
-
-                        {/* Enhanced: Show semantic fields */}
-                        {deal.bijzonderheden && (
-                          <div className="mb-4 p-3 bg-purple-50 rounded border border-purple-200">
-                            <p className="text-sm text-purple-800 font-medium mb-1">🔥 Bijzonderheden:</p>
-                            <p className="text-xs text-purple-700">{deal.bijzonderheden}</p>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <button
-                            onClick={() => {
-                              setMatches(findMatches(deal.id));
-                              setActiveTab('matching');
-                            }}
-                            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                          >
-                            <StarIcon size={16} />
-                            <span>🔥 Enhanced Matches</span>
-                          </button>
-                          
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => getDealInsights(deal.id)}
-                              disabled={isLoadingAI}
-                              className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
-                            >
-                              <BrainIcon size={16} />
-                              <span>{isLoadingAI ? 'AI...' : 'AI Analyse'}</span>
-                            </button>
-                            
-                            <button
-                              onClick={() => openCommissionEditor(deal)}
-                              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                            >
-                              <PercentIcon size={16} />
-                              <span>Commissie</span>
-                            </button>
-                          </div>
-
-                          {(user.role === 'beheerder' || deal.owner_id === user.id) && (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEditDeal(deal)}
-                                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
-                              >
-                                <EditIcon size={16} />
-                                <span>Bewerken</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteDeal(deal.id)}
-                                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                              >
-                                <TrashIcon size={16} />
-                                <span>Verwijderen</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'matching' && (
-                <div>
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold mb-4">🔥 Enhanced AI-Powered Matching</h2>
-                    
-                    {matches.length === 0 ? (
-                      <div className="text-center py-12">
-                        <AlertCircleIcon size={48} className="text-gray-400 mx-auto mb-4" />
-                        <div className="space-y-2">
-                          <p className="text-gray-600 text-lg">Selecteer een deal om enhanced AI-powered matches te vinden</p>
-                          <p className="text-sm text-gray-500">
-                            🔥 Enhanced Features: Semantic matching van beschrijvingen, vrije tekst analyse, conflict detectie
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
-                          <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced AI Matching Features:</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-purple-700">
-                            <div className="space-y-2">
-                              <p>• 🗺️ Vereenvoudigde locatie matching</p>
-                              <p>• 🤖 Semantic text analyse van beschrijvingen</p>
-                              <p>• 💬 Vrije tekst input matching</p>
-                              <p>• ⚠️ Conflict detectie tussen wensen en aanbod</p>
-                            </div>
-                            <div className="space-y-2">
-                              <p>• 🎯 Intelligente keyword matching</p>
-                              <p>• 📝 Investment motivatie vs deal beschrijving</p>
-                              <p>• 🚀 Enhanced compatibility scoring</p>
-                              <p>• 💰 Flexibele commissie structuren</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-blue-50 p-6 rounded-lg mb-6">
-                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-                            <div className="mb-4 lg:mb-0">
-                              <h3 className="font-semibold text-lg mb-2">🎯 Deal: {matches[0].deal.titel}</h3>
-                              <p className="text-sm text-gray-600 mb-2">{matches[0].deal.beschrijving}</p>
-                              {matches[0].deal.bijzonderheden && (
-                                <p className="text-sm text-purple-600 mb-2">🔥 {matches[0].deal.bijzonderheden}</p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-4 text-sm">
-                                <span className="text-blue-600 font-medium">Deal eigenaar: {getUserById(matches[0].deal.owner_id).name}</span>
-                                {matches[0].deal.bedrijfFonds && (
-                                  <span className="text-gray-600">Bedrijf/Fonds: {matches[0].deal.bedrijfFonds}</span>
-                                )}
-                                <span className="text-gray-600">Type: {matches[0].deal.type}</span>
-                                <span className="text-gray-600">Project: {matches[0].deal.projectType}</span>
-                              </div>
-                            </div>
-                            <div className="text-center lg:text-right">
-                              <div className="text-3xl font-bold text-blue-600">{matches.length}</div>
-                              <div className="text-sm text-gray-600">Enhanced Matches</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          {matches.map((match, index) => (
-                            <div key={match.investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
-                              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4">
-                                <div className="flex items-center space-x-4 mb-4 lg:mb-0">
-                                  <div className="flex items-center space-x-2">
-                                    <span className={`text-2xl font-bold ${
-                                      index === 0 ? 'text-yellow-500' : 
-                                      index === 1 ? 'text-gray-400' : 
-                                      index === 2 ? 'text-orange-400' : 'text-gray-600'
-                                    }`}>
-                                      #{index + 1}
-                                    </span>
-                                    <div>
-                                      <h3 className="text-xl font-semibold">{match.investor.naam}</h3>
-                                      <p className="text-sm text-gray-600">{match.investor.bedrijf}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-4">
-                                  <span className={`px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}`}>
-                                    {match.matchScore}% match
-                                  </span>
-                                  {match.semanticScore > 0 && (
-                                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                                      🔥 +{match.semanticScore} semantic
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={() => createTransaction(match.deal.id, match.investor.id)}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                                  >
-                                    <DollarSignIcon size={16} />
-                                    <span>Start Deal</span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div>
-                                  <h4 className="font-semibold mb-3">🔥 Enhanced Match Analyse:</h4>
-                                  <div className="space-y-2">
-                                    {match.reasoning.map((reason, idx) => (
-                                      <div key={idx} className="text-sm p-2 bg-gray-50 rounded">
-                                        {reason}
-                                      </div>
-                                    ))}
-                                    {match.semanticReasons && match.semanticReasons.length > 0 && (
-                                      <div className="mt-3">
-                                        <p className="text-sm font-medium text-purple-700 mb-2">🤖 Semantic Matches:</p>
-                                        {match.semanticReasons.map((reason, idx) => (
-                                          <div key={idx} className="text-sm p-2 bg-purple-50 rounded border border-purple-200">
-                                            {reason}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold mb-3">Investeerder Details:</h4>
-                                  <div className="space-y-2 text-sm">
-                                    {match.investor.bedrijf && <p>Bedrijf: {match.investor.bedrijf}</p>}
-                                    <p>Budget: €{match.investor.minBudget.toLocaleString()} - €{match.investor.maxBudget.toLocaleString()}</p>
-                                    <p>Gewenst rendement: {match.investor.gewenstRendement}%</p>
-                                    <p>Risicoprofiel: {match.investor.risicoprofiel}</p>
-                                    <p>Ervaring: {match.investor.ervaringLevel}</p>
-                                    <p>Beschikbaarheid: {match.investor.beschikbaarheid}</p>
-                                    {match.investor.locatieDetails && (
-                                      <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                                        <p className="font-medium text-blue-800">Locatie Details:</p>
-                                        <p className="text-blue-700">{match.investor.locatieDetails}</p>
-                                      </div>
-                                    )}
-                                    {match.investor.investmentMotivatie && (
-                                      <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                                        <p className="font-medium text-green-800">Investment Motivatie:</p>
-                                        <p className="text-green-700">{match.investor.investmentMotivatie}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="mt-6 flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => getSmartMatchingInsights(match.deal.id, match.investor.id)}
-                                  disabled={isLoadingAI}
-                                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                                >
-                                  <BrainIcon size={16} />
-                                  <span>{isLoadingAI ? 'AI Analyseert...' : '🔥 Enhanced AI Analyse'}</span>
-                                </button>
-                                <button
-                                  onClick={() => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`)}
-                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                                >
-                                  <MailIcon size={16} />
-                                  <span>Contact</span>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'transactions' && (
-                <div>
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold mb-4">Transacties & Commissies</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="bg-white p-4 rounded-lg shadow border">
-                        <h3 className="font-semibold text-gray-700">Totale Commissie</h3>
-                        <p className="text-2xl font-bold text-green-600">
-                          €{calculateCommissionSummary().totalCommission.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg shadow border">
-                        <h3 className="font-semibold text-gray-700">Afgeronde Deals</h3>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {calculateCommissionSummary().completedTransactions}
-                        </p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg shadow border">
-                        <h3 className="font-semibold text-gray-700">Pending Deals</h3>
-                        <p className="text-2xl font-bold text-yellow-600">
-                          {calculateCommissionSummary().pendingTransactions}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    {transactions.map(transaction => {
-                      const deal = deals.find(d => d.id === transaction.deal_id);
-                      const investor = investors.find(i => i.id === transaction.investor_id);
-                      
-                      let participantCommissions = [];
-                      try {
-                        participantCommissions = transaction.participant_commissions ? 
-                          JSON.parse(transaction.participant_commissions) : [];
-                      } catch (e) {
-                        console.error('Error parsing participant commissions:', e);
-                      }
-
-                      return (
-                        <div key={transaction.id} className="bg-white rounded-lg shadow-md p-6 border">
-                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4">
-                            <div>
-                              <h3 className="text-xl font-semibold mb-2">
-                                {deal?.titel || 'Onbekende Deal'}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                <span>Investeerder: {investor?.naam || 'Onbekend'}</span>
-                                <span>Waarde: €{transaction.transaction_amount.toLocaleString()}</span>
-                                <span>Commissie: €{transaction.total_commission.toLocaleString()}</span>
-                              </div>
-                            </div>
-                            <div className="mt-4 lg:mt-0">
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold mb-3">Deal Details:</h4>
-                              <div className="space-y-2 text-sm">
-                                {deal?.bedrijfFonds && <p>Bedrijf/Fonds: {deal.bedrijfFonds}</p>}
-                                <p>Locatie: {deal?.locatie || 'Onbekend'}</p>
-                                <p>Type: {deal?.type || 'Onbekend'}</p>
-                                <p>Project: {deal?.projectType || 'Onbekend'}</p>
-                                <p>Verwacht rendement: {deal?.verwachtRendement || 0}%</p>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold mb-3">Commissie Verdeling:</h4>
-                              <div className="space-y-2">
-                                {participantCommissions.map((participant, index) => {
-                                  const userName = participant.is_external 
-                                    ? participant.name 
-                                    : getUserById(participant.user_id).name;
-                                  
-                                  return (
-                                    <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                                      <span className="flex items-center space-x-2">
-                                        <span>{userName} ({participant.role})</span>
-                                        {participant.is_external && (
-                                          <span className="px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">
-                                            Extern
-                                          </span>
-                                        )}
-                                      </span>
-                                      <span className="font-semibold">
-                                        €{participant.commission_amount.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              
-                              {participantCommissions.some(p => p.is_external) && (
-                                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-                                  <h5 className="font-medium text-green-800 mb-2">Externe Partners:</h5>
-                                  <div className="space-y-2 text-sm">
-                                    {participantCommissions
-                                      .filter(p => p.is_external)
-                                      .map((participant, index) => (
-                                        <div key={index} className="flex flex-col space-y-1">
-                                          <span className="font-medium">{participant.name}</span>
-                                          {participant.email && (
-                                            <span className="text-gray-600">📧 {participant.email}</span>
-                                          )}
-                                          {participant.company && (
-                                            <span className="text-gray-600">🏢 {participant.company}</span>
-                                          )}
-                                        </div>
-                                      ))
-                                    }
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {Object.keys(aiInsights).length > 0 && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                  <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
-                      <h4 className="text-xl font-bold flex items-center space-x-2">
-                        <BrainIcon size={20} />
-                        <span>🔥 Enhanced AI Analyse</span>
-                      </h4>
-                      <button
-                        onClick={() => setAiInsights({})}
-                        className="text-gray-400 hover:text-gray-600 text-xl"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="p-6">
-                      {Object.entries(aiInsights).slice(-1).map(([key, insight]) => (
-                        <div key={key} className="space-y-6">
-                          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
-                            <h3 className="font-bold text-lg mb-2 text-purple-900">
-                              {key.includes('enhanced_match') ? '🔥 Enhanced Smart Match Analyse' :
-                              key.includes('investor') ? '👤 Investeerder Analyse' :
-                              key.includes('deal') ? '🏢 Deal Analyse' :
-                              '📊 Markt Inzichten'}
-                            </h3>
-                            <p className="text-sm text-purple-700">
-                              Gegenereerd op {new Date().toLocaleString('nl-NL')} | Enhanced met semantic analysis
-                            </p>
-                          </div>
-                          
-                          {typeof insight === 'object' && insight.semanticScore !== undefined ? (
-                            <div className="space-y-4">
-                              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                                <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced Semantic Analysis:</h4>
-                                {insight.semanticReasons && insight.semanticReasons.map((reason, idx) => (
-                                  <div key={idx} className="bg-white p-3 rounded border border-purple-200 mb-2">
-                                    <p className="text-purple-700">{reason}</p>
-                                  </div>
-                                ))}
-                                <div className="mt-3 p-3 bg-white rounded border border-purple-300">
-                                  <p className="font-medium text-purple-900">
-                                    Semantic Score: <span className="text-2xl">{insight.semanticScore || 0}</span> punten
-                                  </p>
-                                  <p className="text-purple-700 text-sm">
-                                    Based on AI analysis of investment motivatie vs deal beschrijving
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              {insight.pitchRecommendations && (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-green-800 mb-3">💡 Pitch Aanbevelingen:</h4>
-                                  <ul className="space-y-2">
-                                    {insight.pitchRecommendations.map((rec, idx) => (
-                                      <li key={idx} className="flex items-start space-x-2">
-                                        <span className="text-green-600 font-bold">•</span>
-                                        <span className="text-green-700">{rec}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {insight.overallCompatibility && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-blue-800 mb-3">📈 Overall Compatibility:</h4>
-                                  <div className="flex items-center space-x-4">
-                                    <div className="text-3xl font-bold text-blue-600">
-                                      {insight.overallCompatibility}%
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="w-full bg-gray-200 rounded-full h-3">
-                                        <div 
-                                          className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                                          style={{ width: `${insight.overallCompatibility}%` }}
-                                        ></div>
-                                      </div>
-                                      <p className="text-blue-700 text-sm mt-1">
-                                        Enhanced score including semantic matching
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ) : typeof insight === 'object' && insight.fullAnalysis ? (
-                            <div className="space-y-4">
-                              <div className="bg-white border rounded-lg p-4">
-                                <h4 className="font-semibold text-gray-800 mb-3">🤖 AI Analyse:</h4>
-                                <div className="prose prose-sm max-w-none">
-                                  {insight.fullAnalysis.split('\n').map((line, idx) => (
-                                    <p key={idx} className="mb-2 text-gray-700 leading-relaxed">
-                                      {line}
-                                    </p>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              {insight.aiRecommendations && (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                  <h4 className="font-semibold text-green-800 mb-3">💡 Aanbevelingen:</h4>
-                                  <ul className="space-y-2">
-                                    {insight.aiRecommendations.map((rec, idx) => (
-                                      <li key={idx} className="flex items-start space-x-2">
-                                        <span className="text-green-600 font-bold">•</span>
-                                        <span className="text-green-700">{rec}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="bg-gray-50 border rounded-lg p-4">
-                              <p className="text-gray-700">
-                                {typeof insight === 'string' ? insight : JSON.stringify(insight, null, 2)}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="sticky bottom-0 bg-white border-t p-4 flex justify-between items-center">
-                      <div className="text-sm text-gray-500">
-                        🔥 Enhanced: Analyse includes semantic matching van teksten en beschrijvingen
-                      </div>
-                      <button
-                        onClick={() => setAiInsights({})}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                      >
-                        Sluiten
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Modals */}
-              <CsvUploadModal />
-              <ContactConversionModal />
-
-              {showAddInvestor && (
-                <InvestorForm
-                  onSubmit={handleAddInvestor}
-                  onCancel={() => setShowAddInvestor(false)}
-                />
-              )}
-
-              {showEditInvestor && editingInvestor && (
-                <InvestorForm
-                  editData={editingInvestor}
-                  onSubmit={handleUpdateInvestor}
-                  onCancel={() => {
-                    setShowEditInvestor(false);
-                    setEditingInvestor(null);
-                  }}
-                />
-              )}
-
-              {showAddDeal && (
-                <DealForm
-                  onSubmit={handleAddDeal}
-                  onCancel={() => setShowAddDeal(false)}
-                />
-              )}
-
-              {showEditDeal && editingDeal && (
-                <DealForm
-                  editData={editingDeal}
-                  onSubmit={handleUpdateDeal}
-                  onCancel={() => {
-                    setShowEditDeal(false);
-                    setEditingDeal(null);
-                  }}
-                />
-              )}
-
-              {showAddBroker && (
-                <BrokerForm
-                  onSubmit={handleAddBroker}
-                  onCancel={() => setShowAddBroker(false)}
-                />
-              )}
-
-              {showEditBroker && editingBroker && (
-                <BrokerForm
-                  editData={editingBroker}
-                  onSubmit={handleUpdateBroker}
-                  onCancel={() => {
-                    setShowEditBroker(false);
-                    setEditingBroker(null);
-                  }}
-                />
-              )}
-
-              <CommissionEditor />
-            </div>
-          );
-        };
-
-        // Initialize the app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(VastgoedInvesteerderMatcher));
-
-        console.log('🚀 Vastgoed Matcher Pro AI - Enhanced + CSV Upload geladen!');
-        console.log('🔥 Firebase Authentication & Database geïntegreerd');
-        console.log('🔥 NIEUWE CSV UPLOAD FEATURES:');
-        console.log('   • 📄 CSV CONTACTEN UPLOAD');
-        console.log('     - Upload LinkedIn exports of andere CSV contactenlijsten');
-        console.log('     - Preview van contacten voor upload naar Firebase');
-        console.log('     - Ondersteuning voor verschillende CSV formaten en kolom namen');
-        console.log('     - Automatische detectie van First Name, Last Name, Email, Company, Position, etc.');
-        console.log('   • 🔄 CONTACT CONVERSIE SYSTEEM');
-        console.log('     - Handmatige conversie van contacten naar investeerders of brokers');
-        console.log('     - AI classificatie suggesties gebaseerd op functietitel en bedrijf');
-        console.log('     - Tracking van conversie status per contact');
-        console.log('     - Overzicht van geconverteerde vs nieuwe contacten');
-        console.log('   • 🤖 AI CONTACT ANALYSE');
-        console.log('     - AI analyseert functietitels en bedrijfsnamen');
-        console.log('     - Suggesteert of contact investeerder of broker is');
-        console.log('     - Confidence scoring voor AI suggesties');
-        console.log('     - Hulp bij besluitvorming voor conversie');
-        console.log('   • 📊 CONTACTEN MANAGEMENT TAB');
-        console.log('     - Dedicated tab voor alle geüploade contacten');
-        console.log('     - Filter opties: Alle / Nieuw / Geconverteerd');
-        console.log('     - Contact details en conversie status');
-        console.log('     - Bulk import en individual conversion workflows');
-        console.log('   • 🔗 INTEGRATIE MET BESTAANDE SYSTEEM');
-        console.log('     - Contacten collectie in Firebase naast investors en brokers');
-        console.log('     - Geconverteerde contacten gekoppeld aan originele contact record');
-        console.log('     - Audit trail van conversies en owner tracking');
-        console.log('     - Dashboard stats met contact activiteit');
-        console.log('💾 DATABASE STRUCTUUR UITGEBREID:');
-        console.log('   • contacts collection met alle CSV upload data');
-        console.log('   • convertedFrom veld in investors/brokers voor traceability');
-        console.log('   • isConverted en convertedTo status tracking');
-        console.log('   • owner_id voor team collaboration op contacten');
-        console.log('🌟 ALLE BESTAANDE FEATURES BEHOUDEN:');
-        console.log('   • ✅ Enhanced AI semantic matching');
-        console.log('   • ✅ Vereenvoudigde locatie invoer');
-        console.log('   • ✅ Broker management');
-        console.log('   • ✅ Commissie structuren');
-        console.log('   • ✅ Edit functionaliteit');
-        console.log('   • ✅ Firebase integratie');
-        console.log('   • ✅ Team collaboration');
-        console.log('   • ✅ Transactie tracking');
-        console.log('🎯 WORKFLOW VERBETERING:');
-        console.log('   1. Upload CSV bestand via Contacten tab');
-        console.log('   2. Preview en bevestig contacten data');
-        console.log('   3. Upload naar Firebase contacten database');
-        console.log('   4. Filter en bekijk nieuwe contacten');
-        console.log('   5. Gebruik AI suggesties voor classificatie');
-        console.log('   6. Converteer handmatig naar investeerder of broker');
-        console.log('   7. Gebruik in normale matching workflows');
-        console.log('📋 CSV FORMAAT ONDERSTEUNING:');
-        console.log('   • First Name, Last Name, Email Address, Company, Position');
-        console.log('   • URL (LinkedIn), Phone, Location, Notes');
-        console.log('   • Alternative namen: first_name, naam, achternaam, email, bedrijf, etc.');
-        console.log('   • Flexible parsing met Papa Parse library');
-        console.log('   • Skip empty lines en header detection');
-    </script>
-</body>
-</html>
                                   </td>
                                   <td className="border border-gray-300 p-2">
                                     <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -3895,315 +2849,1618 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             );
           };
 
-          // Commission Editor Component (unchanged)
-          const CommissionEditor = () => {
-            if (!showCommissionEditor || !editingDealCommission) return null;
+          // Authentication Component
+          const AuthComponent = () => {
+            const [isRegistering, setIsRegistering] = useState(false);
+            const [credentials, setCredentials] = useState({
+              email: '',
+              password: '',
+              name: '',
+              company: ''
+            });
 
-            const [commissionStructure, setCommissionStructure] = useState(
-              editingDealCommission.commissionStructure || {
-                total_rate: 0.025,
-                participants: [
-                  { 
-                    role: 'deal_owner', 
-                    user_id: editingDealCommission.owner_id, 
-                    percentage: 100, 
-                    fixed_amount: 0, 
-                    type: 'percentage',
-                    name: getUserById(editingDealCommission.owner_id).name,
-                    is_external: false
-                  }
-                ]
+            const handleSubmit = async (e) => {
+              e.preventDefault();
+              if (isRegistering) {
+                await handleRegister(credentials);
+              } else {
+                await handleLogin(credentials);
               }
-            );
-
-            const totalCommission = editingDealCommission.prijs * commissionStructure.total_rate;
-
-            const updateParticipant = (index, field, value) => {
-              const newParticipants = [...commissionStructure.participants];
-              newParticipants[index] = { ...newParticipants[index], [field]: value };
-              
-              if (field === 'user_id' && !newParticipants[index].is_external) {
-                const user = getUserById(value);
-                newParticipants[index].name = user.name;
-              }
-              
-              setCommissionStructure({ ...commissionStructure, participants: newParticipants });
-            };
-
-            const addParticipant = (isExternal = false) => {
-              setCommissionStructure({
-                ...commissionStructure,
-                participants: [
-                  ...commissionStructure.participants,
-                  { 
-                    role: 'referral', 
-                    user_id: null, 
-                    percentage: 0, 
-                    fixed_amount: 0, 
-                    type: 'percentage',
-                    name: '',
-                    email: '',
-                    company: '',
-                    is_external: isExternal
-                  }
-                ]
-              });
-            };
-
-            const removeParticipant = (index) => {
-              if (commissionStructure.participants.length > 1) {
-                const newParticipants = commissionStructure.participants.filter((_, i) => i !== index);
-                setCommissionStructure({ ...commissionStructure, participants: newParticipants });
-              }
-            };
-
-            const handleSave = async () => {
-              const totalPercentage = commissionStructure.participants
-                .filter(p => p.type === 'percentage')
-                .reduce((sum, p) => sum + (p.percentage || 0), 0);
-              
-              if (totalPercentage > 100) {
-                alert('Totaal percentage kan niet meer dan 100% zijn!');
-                return;
-              }
-
-              await saveCommissionStructure(editingDealCommission.id, commissionStructure);
-              setShowCommissionEditor(false);
-              setEditingDealCommission(null);
             };
 
             return (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-                  <div className="p-6 border-b">
-                    <h3 className="text-xl font-bold flex items-center space-x-2">
-                      <PercentIcon size={20} />
-                      <span>Commissie Structuur Beheren</span>
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Deal: {editingDealCommission.titel} - €{editingDealCommission.prijs.toLocaleString()}
+              <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
+                  <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                      🔥 Vastgoed Matcher Pro AI
+                    </h1>
+                    <p className="text-gray-600 text-sm">
+                      Enhanced + CSV Upload • Firebase Backend
                     </p>
                   </div>
-                  
-                  <div className="p-6">
-                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <label className="block text-sm font-medium mb-2">Totale Commissie Rate (%)</label>
-                      <div className="flex items-center space-x-4">
-                        <input
-                          type="number"
-                          step="0.001"
-                          value={commissionStructure.total_rate * 100}
-                          onChange={(e) => setCommissionStructure({
-                            ...commissionStructure,
-                            total_rate: parseFloat(e.target.value) / 100
-                          })}
-                          className="w-32 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <span className="text-lg font-semibold text-blue-600">
-                          = €{totalCommission.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          van €{editingDealCommission.prijs.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-4 mb-6">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">Commissie Verdeling:</h4>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => addParticipant(false)}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                          >
-                            <PlusIcon size={14} />
-                            <span>Teamlid</span>
-                          </button>
-                          <button
-                            onClick={() => addParticipant(true)}
-                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
-                          >
-                            <ExternalLinkIcon size={14} />
-                            <span>Extern</span>
-                          </button>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {isRegistering && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Naam
+                          </label>
+                          <input
+                            type="text"
+                            value={credentials.name}
+                            onChange={(e) => setCredentials({...credentials, name: e.target.value})}
+                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
                         </div>
-                      </div>
-
-                      {commissionStructure.participants.map((participant, index) => (
-                        <div key={index} className="border rounded p-4 bg-gray-50">
-                          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Rol</label>
-                              <select
-                                value={participant.role}
-                                onChange={(e) => updateParticipant(index, 'role', e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                              >
-                                <option value="deal_owner">Deal Eigenaar</option>
-                                <option value="investor_referral">Investeerder Referral</option>
-                                <option value="referral">Verwijzer</option>
-                                <option value="manager">Manager</option>
-                                <option value="assistant">Assistent</option>
-                                <option value="broker">Makelaar</option>
-                                <option value="consultant">Consultant</option>
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                {participant.is_external ? 'Naam' : 'Teamlid'}
-                              </label>
-                              {participant.is_external ? (
-                                <input
-                                  type="text"
-                                  value={participant.name}
-                                  onChange={(e) => updateParticipant(index, 'name', e.target.value)}
-                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                  placeholder="Volledige naam"
-                                />
-                              ) : (
-                                <select
-                                  value={participant.user_id || ''}
-                                  onChange={(e) => updateParticipant(index, 'user_id', e.target.value)}
-                                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                >
-                                  <option value="">Selecteer...</option>
-                                  {users.map(user => (
-                                    <option key={user.id} value={user.id}>{user.name}</option>
-                                  ))}
-                                </select>
-                              )}
-                            </div>
-
-                            {participant.is_external && (
-                              <>
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Email</label>
-                                  <input
-                                    type="email"
-                                    value={participant.email || ''}
-                                    onChange={(e) => updateParticipant(index, 'email', e.target.value)}
-                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="email@example.com"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Bedrijf</label>
-                                  <input
-                                    type="text"
-                                    value={participant.company || ''}
-                                    onChange={(e) => updateParticipant(index, 'company', e.target.value)}
-                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="Bedrijfsnaam"
-                                  />
-                                </div>
-                              </>
-                            )}
-
-                            <div className={participant.is_external ? '' : 'md:col-start-4'}>
-                              <label className="block text-sm font-medium mb-1">Type</label>
-                              <select
-                                value={participant.type}
-                                onChange={(e) => updateParticipant(index, 'type', e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                              >
-                                <option value="percentage">Percentage</option>
-                                <option value="fixed">Vast Bedrag</option>
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                {participant.type === 'percentage' ? 'Percentage (%)' : 'Bedrag (€)'}
-                              </label>
-                              <input
-                                type="number"
-                                step={participant.type === 'percentage' ? '0.1' : '1'}
-                                value={participant.type === 'percentage' ? participant.percentage : participant.fixed_amount}
-                                onChange={(e) => updateParticipant(
-                                  index, 
-                                  participant.type === 'percentage' ? 'percentage' : 'fixed_amount', 
-                                  parseFloat(e.target.value)
-                                )}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                              />
-                            </div>
-
-                            <div className="flex items-end">
-                              {commissionStructure.participants.length > 1 && (
-                                <button
-                                  onClick={() => removeParticipant(index)}
-                                  className="text-red-600 hover:text-red-800 text-sm p-2"
-                                >
-                                  <TrashIcon size={16} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="mt-2 text-sm text-gray-600">
-                            Commissie: €{participant.type === 'percentage' 
-                              ? (totalCommission * (participant.percentage / 100)).toLocaleString()
-                              : (participant.fixed_amount || 0).toLocaleString()
-                            }
-                            {participant.is_external && (
-                              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                Extern
-                              </span>
-                            )}
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Bedrijf
+                          </label>
+                          <input
+                            type="text"
+                            value={credentials.company}
+                            onChange={(e) => setCredentials({...credentials, company: e.target.value})}
+                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
                         </div>
-                      ))}
+                      </>
+                    )}
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={credentials.email}
+                        onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
                     </div>
-
-                    <div className="bg-blue-50 p-4 rounded mb-6 border border-blue-200">
-                      <h5 className="font-semibold mb-2">Commissie Overzicht:</h5>
-                      <div className="space-y-1 text-sm">
-                        {commissionStructure.participants.map((participant, index) => {
-                          const commission = participant.type === 'percentage' 
-                            ? totalCommission * (participant.percentage / 100)
-                            : participant.fixed_amount;
-                          
-                          const displayName = participant.is_external 
-                            ? participant.name 
-                            : getUserById(participant.user_id).name;
-                          
-                          return (
-                            <div key={index} className="flex justify-between">
-                              <span>
-                                {displayName} ({participant.role})
-                                {participant.is_external && <span className="text-green-600 ml-1">📧</span>}
-                              </span>
-                              <span>€{commission.toLocaleString()}</span>
-                            </div>
-                          );
-                        })}
-                        <div className="border-t pt-1 font-semibold flex justify-between">
-                          <span>Totaal:</span>
-                          <span>€{totalCommission.toLocaleString()}</span>
-                        </div>
-                      </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Wachtwoord
+                      </label>
+                      <input
+                        type="password"
+                        value={credentials.password}
+                        onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
                     </div>
-                  </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {isRegistering ? '📝 Account Aanmaken' : '🔐 Inloggen'}
+                    </button>
+                  </form>
 
-                  <div className="p-6 border-t bg-gray-50 flex justify-end space-x-4">
+                  <div className="mt-6 text-center">
                     <button
                       onClick={() => {
-                        setShowCommissionEditor(false);
-                        setEditingDealCommission(null);
+                        setIsRegistering(!isRegistering);
+                        setCredentials({ email: '', password: '', name: '', company: '' });
                       }}
-                      className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                      className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      Annuleren
+                      {isRegistering ? 'Al een account? Inloggen' : 'Nog geen account? Registreren'}
                     </button>
+                  </div>
+
+                  <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-2">🔥 Enhanced Features:</h3>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• 📄 CSV contacten upload</li>
+                      <li>• 🤖 AI semantic matching</li>
+                      <li>• 🏢 Broker management</li>
+                      <li>• 💰 Flexibele commissies</li>
+                      <li>• 🔄 Contact conversie systeem</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-6 text-center">
                     <button
-                      onClick={handleSave}
-                      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      onClick={testAIConnection}
+                      disabled={isLoadingAI}
+                      className="text-purple-600 hover:text-purple-800 text-sm disabled:opacity-50 flex items-center justify-center mx-auto space-x-1"
                     >
-                      💾 Opslaan
+                      <BrainIcon size={14} />
+                      <span>{isLoadingAI ? 'Testing...' : 'Test AI Connectie'}</span>
                     </button>
                   </div>
                 </div>
               </div>
             );
           };
+
+          // Main App Return
+          if (showAuth) {
+            return React.createElement(AuthComponent);
+          }
+
+          return (
+            <div className="min-h-screen bg-gray-100">
+              <nav className="bg-white shadow-sm border-b">
+                <div className="px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        🔥 Vastgoed Matcher Pro AI
+                      </h1>
+                      <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
+                        Enhanced + CSV Upload
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm text-gray-600">
+                        👋 {user.name} ({user.company})
+                      </span>
+                      <button
+                        onClick={handleLogout}
+                        className="text-red-600 hover:text-red-800 flex items-center space-x-1"
+                      >
+                        <LogOutIcon size={16} />
+                        <span>Uitloggen</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </nav>
+
+              <div className="flex">
+                <aside className="w-64 bg-white h-screen shadow-sm">
+                  <nav className="p-4">
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setActiveTab('dashboard')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('investors')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'investors' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <UsersIcon size={16} />
+                        <span>Investeerders & Brokers</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('deals')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'deals' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <BuildingIcon size={16} />
+                        <span>Deals</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('matching')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'matching' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <StarIcon size={16} />
+                        <span>🔥 Enhanced Matching</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveTab('transactions')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'transactions' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <DollarSignIcon size={16} />
+                        <span>Transacties</span>
+                      </button>
+
+                      {/* 🔥 NEW: CONTACTS TAB */}
+                      <button
+                        onClick={() => setActiveTab('contacts')}
+                        className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                          activeTab === 'contacts' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <DatabaseIcon size={16} />
+                        <span>📄 Contacten</span>
+                      </button>
+                    </div>
+
+                    <div className="mt-8 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <h3 className="font-semibold text-purple-800 mb-2">🔥 Enhanced Features</h3>
+                      <ul className="text-xs text-purple-700 space-y-1">
+                        <li>• CSV Upload System</li>
+                        <li>• AI Semantic Matching</li>
+                        <li>• Contact Classification</li>
+                        <li>• Broker Management</li>
+                        <li>• Smart Deal Sourcing</li>
+                      </ul>
+                    </div>
+                  </nav>
+                </aside>
+
+                <main className="flex-1 p-6">
+                  {activeTab === 'dashboard' && (
+                    <div>
+                      <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Investeerders</p>
+                              <p className="text-2xl font-bold text-blue-600">{investors.length}</p>
+                            </div>
+                            <span className="text-blue-600 text-2xl">🏦</span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Brokers</p>
+                              <p className="text-2xl font-bold text-green-600">{brokers.length}</p>
+                            </div>
+                            <span className="text-green-600 text-2xl">🏢</span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Deals</p>
+                              <p className="text-2xl font-bold text-purple-600">{deals.length}</p>
+                            </div>
+                            <BuildingIcon size={32} className="text-purple-600" />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">🔥 Contacten</p>
+                              <p className="text-2xl font-bold text-orange-600">{contacts.length}</p>
+                            </div>
+                            <DatabaseIcon size={32} className="text-orange-600" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <h3 className="text-lg font-semibold mb-4">🔥 Enhanced Features Overview</h3>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-purple-50 rounded border border-purple-200">
+                              <div className="flex items-center space-x-3">
+                                <UploadIcon size={20} className="text-purple-600" />
+                                <span className="font-medium">CSV Upload Systeem</span>
+                              </div>
+                              <span className="text-purple-600 font-semibold">{contacts.length} contacten</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded border border-blue-200">
+                              <div className="flex items-center space-x-3">
+                                <BrainIcon size={20} className="text-blue-600" />
+                                <span className="font-medium">AI Semantic Matching</span>
+                              </div>
+                              <span className="text-blue-600 font-semibold">Actief</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 bg-green-50 rounded border border-green-200">
+                              <div className="flex items-center space-x-3">
+                                <RefreshIcon size={20} className="text-green-600" />
+                                <span className="font-medium">Contact Conversie</span>
+                              </div>
+                              <span className="text-green-600 font-semibold">
+                                {contacts.filter(c => c.isConverted).length} geconverteerd
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-lg shadow border">
+                          <h3 className="text-lg font-semibold mb-4">Commissie Overzicht</h3>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600">Totale Commissie</span>
+                              <span className="font-semibold text-green-600">
+                                €{calculateCommissionSummary().totalCommission.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600">Afgeronde Deals</span>
+                              <span className="font-semibold text-blue-600">
+                                {calculateCommissionSummary().completedTransactions}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600">Pending Deals</span>
+                              <span className="font-semibold text-yellow-600">
+                                {calculateCommissionSummary().pendingTransactions}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 🔥 NEW: CONTACTS TAB */}
+                  {activeTab === 'contacts' && (
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                        <div>
+                          <h2 className="text-2xl font-bold">📄 Contacten Management</h2>
+                          <p className="text-gray-600 text-sm">Upload CSV bestanden en converteer naar investeerders/brokers</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <label className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-purple-700 transition-colors cursor-pointer">
+                            <UploadIcon size={20} />
+                            <span>📄 Upload CSV</span>
+                            <input
+                              type="file"
+                              accept=".csv"
+                              onChange={handleCsvUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* CSV Filter */}
+                      <div className="mb-6 bg-white p-4 rounded-lg shadow border">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setCsvFilter('all')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                csvFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <DatabaseIcon size={16} />
+                              <span>Alle Contacten ({contacts.length})</span>
+                            </button>
+                            <button
+                              onClick={() => setCsvFilter('unconverted')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                csvFilter === 'unconverted' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <span>⚡</span>
+                              <span>Nieuw ({contacts.filter(c => !c.isConverted).length})</span>
+                            </button>
+                            <button
+                              onClick={() => setCsvFilter('converted')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                csvFilter === 'converted' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <span>✅</span>
+                              <span>Geconverteerd ({contacts.filter(c => c.isConverted).length})</span>
+                            </button>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600">
+                            {csvFilter === 'all' && `${contacts.length} totaal contacten`}
+                            {csvFilter === 'unconverted' && `${contacts.filter(c => !c.isConverted).length} nieuwe contacten`}
+                            {csvFilter === 'converted' && `${contacts.filter(c => c.isConverted).length} geconverteerde contacten`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CONTACTS GRID */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {contacts
+                          .filter(contact => {
+                            if (csvFilter === 'converted') return contact.isConverted;
+                            if (csvFilter === 'unconverted') return !contact.isConverted;
+                            return true;
+                          })
+                          .map(contact => (
+                            <div key={contact.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-orange-600 text-lg">📇</span>
+                                  <h3 className="text-xl font-semibold text-gray-900">{contact.fullName}</h3>
+                                </div>
+                                {contact.isConverted ? (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                    ✅ {contact.convertedTo}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
+                                    ⚡ Nieuw
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="space-y-2 text-sm mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <MailIcon size={16} className="text-gray-500" />
+                                  <span>{contact.email}</span>
+                                </div>
+                                {contact.company && (
+                                  <div className="flex items-center space-x-2">
+                                    <BuildingIcon size={16} className="text-gray-500" />
+                                    <span className="font-medium">{contact.company}</span>
+                                  </div>
+                                )}
+                                {contact.position && (
+                                  <div className="flex items-center space-x-2">
+                                    <UserIcon size={16} className="text-gray-500" />
+                                    <span>{contact.position}</span>
+                                  </div>
+                                )}
+                                {contact.phone && (
+                                  <div className="flex items-center space-x-2">
+                                    <PhoneIcon size={16} className="text-gray-500" />
+                                    <span>{contact.phone}</span>
+                                  </div>
+                                )}
+                                {contact.location && (
+                                  <div className="flex items-center space-x-2">
+                                    <MapPinIcon size={16} className="text-gray-500" />
+                                    <span>{contact.location}</span>
+                                  </div>
+                                )}
+                                {contact.linkedin && (
+                                  <div className="flex items-center space-x-2">
+                                    <ExternalLinkIcon size={16} className="text-gray-500" />
+                                    <a
+                                      href={contact.linkedin}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      LinkedIn
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+
+                              {contact.notes && (
+                                <div className="mt-4 p-3 bg-gray-50 rounded border">
+                                  <p className="text-sm text-gray-700 font-medium mb-1">Notities:</p>
+                                  <p className="text-xs text-gray-600">{contact.notes}</p>
+                                </div>
+                              )}
+
+                              <div className="mt-4 pt-4 border-t space-y-2">
+                                {!contact.isConverted ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setConvertingContact(contact);
+                                        setShowConvertModal(true);
+                                      }}
+                                      className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                                    >
+                                      <RefreshIcon size={16} />
+                                      <span>🔄 Converteer</span>
+                                    </button>
+                                    
+                                    <div className="flex space-x-2">
+                                      <button
+                                        onClick={async () => {
+                                          const insights = await getContactClassification(contact);
+                                          alert(`AI Suggestie:\n\nType: ${insights.suggestedType}\nConfidence: ${(insights.confidence * 100).toFixed(0)}%\n\nRedenering:\n${insights.reasoning.join('\n')}`);
+                                        }}
+                                        disabled={isLoadingAI}
+                                        className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                                      >
+                                        <BrainIcon size={16} />
+                                        <span>{isLoadingAI ? 'AI...' : '🤖 AI Classificatie'}</span>
+                                      </button>
+                                      <button
+                                        onClick={() => deleteContact(contact.id)}
+                                        className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                      >
+                                        <TrashIcon size={16} />
+                                        <span>Verwijderen</span>
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-center p-3 bg-green-50 rounded border border-green-200">
+                                    <p className="text-green-800 font-medium">
+                                      ✅ Geconverteerd naar {contact.convertedTo}
+                                    </p>
+                                    <p className="text-green-600 text-sm mt-1">
+                                      Check de {contact.convertedTo}s tab om te bewerken
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
+
+                      {/* Empty state */}
+                      {contacts.filter(contact => {
+                        if (csvFilter === 'converted') return contact.isConverted;
+                        if (csvFilter === 'unconverted') return !contact.isConverted;
+                        return true;
+                      }).length === 0 && (
+                        <div className="text-center py-12">
+                          <DatabaseIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                          <div className="space-y-2">
+                            <p className="text-gray-600 text-lg">
+                              {csvFilter === 'converted' ? 'Nog geen contacten geconverteerd' : 
+                               csvFilter === 'unconverted' ? 'Alle contacten zijn geconverteerd' :
+                               'Nog geen contacten geüpload'}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {csvFilter === 'converted' ? 'Converteer contacten om ze hier te zien' :
+                               csvFilter === 'unconverted' ? 'Upload meer CSV bestanden voor nieuwe contacten' :
+                               'Upload een CSV bestand om contacten te importeren'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'investors' && (
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                        <div>
+                          <h2 className="text-2xl font-bold">🔥 Investeerders & Brokers</h2>
+                          <p className="text-gray-600 text-sm">Beheer investeerders en brokers in één overzicht</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setShowAddInvestor(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                          >
+                            <PlusIcon size={20} />
+                            <span>🏦 Investeerder</span>
+                          </button>
+                          <button
+                            onClick={() => setShowAddBroker(true)}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700 transition-colors"
+                          >
+                            <PlusIcon size={20} />
+                            <span>🏢 Broker</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Contact Filters */}
+                      <div className="mb-6 bg-white p-4 rounded-lg shadow border">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setContactFilter('all')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                contactFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <UsersIcon size={16} />
+                              <span>Alle Contacten ({investors.length + brokers.length})</span>
+                            </button>
+                            <button
+                              onClick={() => setContactFilter('investors')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                contactFilter === 'investors' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <span>🏦</span>
+                              <span>Investeerders ({investors.length})</span>
+                            </button>
+                            <button
+                              onClick={() => setContactFilter('brokers')}
+                              className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                contactFilter === 'brokers' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              <span>🏢</span>
+                              <span>Brokers ({brokers.length})</span>
+                            </button>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600">
+                            {contactFilter === 'all' && `${investors.length} investeerders • ${brokers.length} brokers`}
+                            {contactFilter === 'investors' && `${investors.filter(i => i.owner_id === user.id).length} mijn investeerders • ${investors.length} totaal`}
+                            {contactFilter === 'brokers' && `${brokers.filter(b => b.owner_id === user.id).length} mijn brokers • ${brokers.length} totaal`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* UNIFIED CONTACTS GRID */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Show Investors */}
+                        {(contactFilter === 'all' || contactFilter === 'investors') && 
+                          investors.map(investor => (
+                            <div key={`investor-${investor.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-blue-600 text-lg">🏦</span>
+                                  <h3 className="text-xl font-semibold text-gray-900">{investor.naam}</h3>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  investor.risicoprofiel === 'Conservatief' ? 'bg-green-100 text-green-800' :
+                                  investor.risicoprofiel === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {investor.risicoprofiel}
+                                </span>
+                              </div>
+
+                              <div className="space-y-2 text-sm mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <UserCheckIcon size={16} className="text-gray-500" />
+                                  <span>Eigenaar: {getUserById(investor.owner_id).name}</span>
+                                </div>
+                                {investor.bedrijf && (
+                                  <div className="flex items-center space-x-2">
+                                    <BuildingIcon size={16} className="text-gray-500" />
+                                    <span className="font-medium">{investor.bedrijf}</span>
+                                  </div>
+                                )}
+                                {investor.locatie && (
+                                  <div className="flex items-center space-x-2">
+                                    <MapPinIcon size={16} className="text-gray-500" />
+                                    <span>Gevestigd in: {investor.locatie}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center space-x-2">
+                                  <MailIcon size={16} className="text-gray-500" />
+                                  <span>{investor.email}</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <EuroIcon size={16} className="text-gray-500" />
+                                  <span>€{investor.minBudget.toLocaleString()} - €{investor.maxBudget.toLocaleString()}</span>
+                                </div>
+                              </div>
+
+                              {investor.locatieDetails && (
+                                <div className="mt-4 p-3 bg-purple-50 rounded border border-purple-200">
+                                  <p className="text-sm text-purple-800 font-medium mb-1">🗺️ Locatie Details:</p>
+                                  <p className="text-xs text-purple-700">{investor.locatieDetails}</p>
+                                </div>
+                              )}
+
+                              {investor.investmentMotivatie && (
+                                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                                  <p className="text-sm text-blue-800 font-medium mb-1">🎯 Investment Motivatie:</p>
+                                  <p className="text-xs text-blue-700">{investor.investmentMotivatie}</p>
+                                </div>
+                              )}
+
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-600 mb-2">Interessegebieden:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {(investor.vastgoedTypes || []).slice(0, 3).map(type => (
+                                    <span key={type} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                      {type}
+                                    </span>
+                                  ))}
+                                  {(investor.vastgoedTypes || []).length > 3 && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                      +{(investor.vastgoedTypes || []).length - 3} meer
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="mt-4 pt-4 border-t space-y-2">
+                                <button
+                                  onClick={() => getInvestorInsights(investor.id)}
+                                  disabled={isLoadingAI}
+                                  className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                                >
+                                  <BrainIcon size={16} />
+                                  <span>{isLoadingAI ? 'AI Analyseert...' : 'AI Analyse'}</span>
+                                </button>
+                                
+                                {(user.role === 'beheerder' || investor.owner_id === user.id) && (
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => handleEditInvestor(investor)}
+                                      className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                    >
+                                      <EditIcon size={16} />
+                                      <span>Bewerken</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteInvestor(investor.id)}
+                                      className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                    >
+                                      <TrashIcon size={16} />
+                                      <span>Verwijderen</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        }
+
+                        {/* Show Brokers */}
+                        {(contactFilter === 'all' || contactFilter === 'brokers') && 
+                          brokers.map(broker => (
+                            <div key={`broker-${broker.id}`} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-green-600 text-lg">🏢</span>
+                                  <h3 className="text-xl font-semibold text-gray-900">{broker.naam}</h3>
+                                </div>
+                                {broker.ervaringJaren && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                    {broker.ervaringJaren} jaar ervaring
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="space-y-2 text-sm mb-4">
+                                <div className="flex items-center space-x-2">
+                                  <UserCheckIcon size={16} className="text-gray-500" />
+                                  <span>Eigenaar: {getUserById(broker.owner_id).name}</span>
+                                </div>
+                                {broker.bedrijf && (
+                                  <div className="flex items-center space-x-2">
+                                    <BuildingIcon size={16} className="text-gray-500" />
+                                    <span className="font-medium">{broker.bedrijf}</span>
+                                  </div>
+                                )}
+                                {broker.locatie && (
+                                  <div className="flex items-center space-x-2">
+                                    <MapPinIcon size={16} className="text-gray-500" />
+                                    <span>Kantoor: {broker.locatie}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center space-x-2">
+                                  <MailIcon size={16} className="text-gray-500" />
+                                  <span>{broker.email}</span>
+                                </div>
+                                {broker.commissieStructuur && (
+                                  <div className="flex items-center space-x-2">
+                                    <PercentIcon size={16} className="text-gray-500" />
+                                    <span>{broker.commissieStructuur}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {broker.specialisaties && broker.specialisaties.length > 0 && (
+                                <div className="mt-4">
+                                  <p className="text-sm text-gray-600 mb-2">Specialisaties:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {broker.specialisaties.slice(0, 3).map(spec => (
+                                      <span key={spec} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                        {spec}
+                                      </span>
+                                    ))}
+                                    {broker.specialisaties.length > 3 && (
+                                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                        +{broker.specialisaties.length - 3} meer
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {broker.werkgebied && broker.werkgebied.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-sm text-gray-600 mb-2">Werkgebied:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {broker.werkgebied.slice(0, 3).map(gebied => (
+                                      <span key={gebied} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                        {gebied}
+                                      </span>
+                                    ))}
+                                    {broker.werkgebied.length > 3 && (
+                                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                        +{broker.werkgebied.length - 3} meer
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {broker.trackRecord && (
+                                <div className="mt-4 p-3 bg-green-50 rounded border border-green-200">
+                                  <p className="text-sm text-green-800 font-medium mb-1">📈 Track Record:</p>
+                                  <p className="text-xs text-green-700">{broker.trackRecord}</p>
+                                </div>
+                              )}
+
+                              {broker.werkwijze && (
+                                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                                  <p className="text-sm text-blue-800 font-medium mb-1">🎯 Werkwijze:</p>
+                                  <p className="text-xs text-blue-700">{broker.werkwijze}</p>
+                                </div>
+                              )}
+
+                              <div className="mt-4 pt-4 border-t space-y-2">
+                                <button
+                                  onClick={() => alert(`Contacteer ${broker.naam} via email: ${broker.email}`)}
+                                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <MailIcon size={16} />
+                                  <span>Contact Opnemen</span>
+                                </button>
+                                
+                                {(user.role === 'beheerder' || broker.owner_id === user.id) && (
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => handleEditBroker(broker)}
+                                      className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                    >
+                                      <EditIcon size={16} />
+                                      <span>Bewerken</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteBroker(broker.id)}
+                                      className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                    >
+                                      <TrashIcon size={16} />
+                                      <span>Verwijderen</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
+
+                      {/* Empty state */}
+                      {((contactFilter === 'all' && investors.length === 0 && brokers.length === 0) ||
+                        (contactFilter === 'investors' && investors.length === 0) ||
+                        (contactFilter === 'brokers' && brokers.length === 0)) && (
+                        <div className="text-center py-12">
+                          <UsersIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                          <div className="space-y-2">
+                            <p className="text-gray-600 text-lg">
+                              {contactFilter === 'brokers' ? 'Nog geen brokers toegevoegd' : 
+                               contactFilter === 'investors' ? 'Nog geen investeerders toegevoegd' :
+                               'Nog geen contacten toegevoegd'}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {contactFilter === 'brokers' ? 'Voeg brokers toe om je deal sourcing te verbeteren' :
+                               contactFilter === 'investors' ? 'Voeg investeerders toe om matches te kunnen maken' :
+                               'Voeg investeerders en brokers toe om te beginnen'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'deals' && (
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                        <h2 className="text-2xl font-bold">Deals</h2>
+                        <button
+                          onClick={() => setShowAddDeal(true)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                        >
+                          <PlusIcon size={20} />
+                          <span>Nieuwe Deal</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {deals.map(deal => (
+                          <div key={deal.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
+                                deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {deal.risico} risico
+                              </span>
+                            </div>
+
+                            <div className="space-y-2 text-sm mb-4">
+                              <div className="flex items-center space-x-2">
+                                <UserCheckIcon size={16} className="text-gray-500" />
+                                <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
+                              </div>
+                              {deal.bedrijfFonds && (
+                                <div className="flex items-center space-x-2">
+                                  <BuildingIcon size={16} className="text-gray-500" />
+                                  <span className="font-medium">{deal.bedrijfFonds}</span>
+                                </div>
+                              )}
+                              {deal.contactpersoon && (
+                                <div className="flex items-center space-x-2">
+                                  <UserIcon size={16} className="text-gray-500" />
+                                  <span>{deal.contactpersoon}</span>
+                                </div>
+                              )}
+                              {deal.telefoon && (
+                                <div className="flex items-center space-x-2">
+                                  <PhoneIcon size={16} className="text-gray-500" />
+                                  <span>{deal.telefoon}</span>
+                                </div>
+                              )}
+                              {deal.email && (
+                                <div className="flex items-center space-x-2">
+                                  <MailIcon size={16} className="text-gray-500" />
+                                  <span>{deal.email}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2">
+                                <MapPinIcon size={16} className="text-gray-500" />
+                                <span>{deal.locatie}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <BuildingIcon size={16} className="text-gray-500" />
+                                <span>{deal.type}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <TargetIcon size={16} className="text-gray-500" />
+                                <span>{deal.projectType}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <EuroIcon size={16} className="text-gray-500" />
+                                <span className="font-semibold">€{deal.prijs.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <TrendingUpIcon size={16} className="text-gray-500" />
+                                <span className="font-semibold text-green-600">{deal.verwachtRendement}% rendement</span>
+                              </div>
+                            </div>
+
+                            {deal.commissionStructure && (
+                              <div className="mb-4 p-3 bg-gray-50 rounded border">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-gray-700">Commissie Structuur</span>
+                                  <span className="text-sm text-gray-600">
+                                    {(deal.commissionStructure.total_rate * 100).toFixed(2)}%
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  {deal.commissionStructure.participants?.length || 0} deelnemers geconfigureerd
+                                </div>
+                              </div>
+                            )}
+
+                            <p className="text-sm text-gray-600 mb-4">{deal.beschrijving}</p>
+
+                            {/* Enhanced: Show semantic fields */}
+                            {deal.bijzonderheden && (
+                              <div className="mb-4 p-3 bg-purple-50 rounded border border-purple-200">
+                                <p className="text-sm text-purple-800 font-medium mb-1">🔥 Bijzonderheden:</p>
+                                <p className="text-xs text-purple-700">{deal.bijzonderheden}</p>
+                              </div>
+                            )}
+
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => {
+                                  setMatches(findMatches(deal.id));
+                                  setActiveTab('matching');
+                                }}
+                                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <StarIcon size={16} />
+                                <span>🔥 Enhanced Matches</span>
+                              </button>
+                              
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => getDealInsights(deal.id)}
+                                  disabled={isLoadingAI}
+                                  className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                                >
+                                  <BrainIcon size={16} />
+                                  <span>{isLoadingAI ? 'AI...' : 'AI Analyse'}</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => openCommissionEditor(deal)}
+                                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                  <PercentIcon size={16} />
+                                  <span>Commissie</span>
+                                </button>
+                              </div>
+
+                              {(user.role === 'beheerder' || deal.owner_id === user.id) && (
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleEditDeal(deal)}
+                                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                  >
+                                    <EditIcon size={16} />
+                                    <span>Bewerken</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteDeal(deal.id)}
+                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                  >
+                                    <TrashIcon size={16} />
+                                    <span>Verwijderen</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'matching' && (
+                    <div>
+                      <div className="mb-6">
+                        <h2 className="text-2xl font-bold mb-4">🔥 Enhanced AI-Powered Matching</h2>
+                        
+                        {matches.length === 0 ? (
+                          <div className="text-center py-12">
+                            <AlertCircleIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                            <div className="space-y-2">
+                              <p className="text-gray-600 text-lg">Selecteer een deal om enhanced AI-powered matches te vinden</p>
+                              <p className="text-sm text-gray-500">
+                                🔥 Enhanced Features: Semantic matching van beschrijvingen, vrije tekst analyse, conflict detectie
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
+                              <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced AI Matching Features:</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-purple-700">
+                                <div className="space-y-2">
+                                  <p>• 🗺️ Vereenvoudigde locatie matching</p>
+                                  <p>• 🤖 Semantic text analyse van beschrijvingen</p>
+                                  <p>• 💬 Vrije tekst input matching</p>
+                                  <p>• ⚠️ Conflict detectie tussen wensen en aanbod</p>
+                                </div>
+                                <div className="space-y-2">
+                                  <p>• 🎯 Intelligente keyword matching</p>
+                                  <p>• 📝 Investment motivatie vs deal beschrijving</p>
+                                  <p>• 🚀 Enhanced compatibility scoring</p>
+                                  <p>• 💰 Flexibele commissie structuren</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-blue-50 p-6 rounded-lg mb-6">
+                              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                                <div className="mb-4 lg:mb-0">
+                                  <h3 className="font-semibold text-lg mb-2">🎯 Deal: {matches[0].deal.titel}</h3>
+                                  <p className="text-sm text-gray-600 mb-2">{matches[0].deal.beschrijving}</p>
+                                  {matches[0].deal.bijzonderheden && (
+                                    <p className="text-sm text-purple-600 mb-2">🔥 {matches[0].deal.bijzonderheden}</p>
+                                  )}
+                                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                                    <span className="text-blue-600 font-medium">Deal eigenaar: {getUserById(matches[0].deal.owner_id).name}</span>
+                                    {matches[0].deal.bedrijfFonds && (
+                                      <span className="text-gray-600">Bedrijf/Fonds: {matches[0].deal.bedrijfFonds}</span>
+                                    )}
+                                    <span className="text-gray-600">Type: {matches[0].deal.type}</span>
+                                    <span className="text-gray-600">Project: {matches[0].deal.projectType}</span>
+                                  </div>
+                                </div>
+                                <div className="text-center lg:text-right">
+                                  <div className="text-3xl font-bold text-blue-600">{matches.length}</div>
+                                  <div className="text-sm text-gray-600">Enhanced Matches</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-6">
+                              {matches.map((match, index) => (
+                                <div key={match.investor.id} className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4">
+                                    <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+                                      <div className="flex items-center space-x-2">
+                                        <span className={`text-2xl font-bold ${
+                                          index === 0 ? 'text-yellow-500' : 
+                                          index === 1 ? 'text-gray-400' : 
+                                          index === 2 ? 'text-orange-400' : 'text-gray-600'
+                                        }`}>
+                                          #{index + 1}
+                                        </span>
+                                        <div>
+                                          <h3 className="text-xl font-semibold">{match.investor.naam}</h3>
+                                          <p className="text-sm text-gray-600">{match.investor.bedrijf}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                      <span className={`px-4 py-2 rounded-full text-lg font-bold ${getMatchColor(match.matchScore)}`}>
+                                        {match.matchScore}% match
+                                      </span>
+                                      {match.semanticScore > 0 && (
+                                        <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                                          🔥 +{match.semanticScore} semantic
+                                        </span>
+                                      )}
+                                      <button
+                                        onClick={() => createTransaction(match.deal.id, match.investor.id)}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                                      >
+                                        <DollarSignIcon size={16} />
+                                        <span>Start Deal</span>
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div>
+                                      <h4 className="font-semibold mb-3">🔥 Enhanced Match Analyse:</h4>
+                                      <div className="space-y-2">
+                                        {match.reasoning.map((reason, idx) => (
+                                          <div key={idx} className="text-sm p-2 bg-gray-50 rounded">
+                                            {reason}
+                                          </div>
+                                        ))}
+                                        {match.semanticReasons && match.semanticReasons.length > 0 && (
+                                          <div className="mt-3">
+                                            <p className="text-sm font-medium text-purple-700 mb-2">🤖 Semantic Matches:</p>
+                                            {match.semanticReasons.map((reason, idx) => (
+                                              <div key={idx} className="text-sm p-2 bg-purple-50 rounded border border-purple-200">
+                                                {reason}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold mb-3">Investeerder Details:</h4>
+                                      <div className="space-y-2 text-sm">
+                                        {match.investor.bedrijf && <p>Bedrijf: {match.investor.bedrijf}</p>}
+                                        <p>Budget: €{match.investor.minBudget.toLocaleString()} - €{match.investor.maxBudget.toLocaleString()}</p>
+                                        <p>Gewenst rendement: {match.investor.gewenstRendement}%</p>
+                                        <p>Risicoprofiel: {match.investor.risicoprofiel}</p>
+                                        <p>Ervaring: {match.investor.ervaringLevel}</p>
+                                        <p>Beschikbaarheid: {match.investor.beschikbaarheid}</p>
+                                        {match.investor.locatieDetails && (
+                                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                            <p className="font-medium text-blue-800">Locatie Details:</p>
+                                            <p className="text-blue-700">{match.investor.locatieDetails}</p>
+                                          </div>
+                                        )}
+                                        {match.investor.investmentMotivatie && (
+                                          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                                            <p className="font-medium text-green-800">Investment Motivatie:</p>
+                                            <p className="text-green-700">{match.investor.investmentMotivatie}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-6 flex flex-wrap gap-2">
+                                    <button
+                                      onClick={() => getSmartMatchingInsights(match.deal.id, match.investor.id)}
+                                      disabled={isLoadingAI}
+                                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                                    >
+                                      <BrainIcon size={16} />
+                                      <span>{isLoadingAI ? 'AI Analyseert...' : '🔥 Enhanced AI Analyse'}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => alert(`Contacteer ${match.investor.naam} via ${match.investor.communicatieVoorkeur.toLowerCase()}: ${match.investor.email}`)}
+                                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                                    >
+                                      <MailIcon size={16} />
+                                      <span>Contact</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'transactions' && (
+                    <div>
+                      <div className="mb-6">
+                        <h2 className="text-2xl font-bold mb-4">Transacties & Commissies</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="bg-white p-4 rounded-lg shadow border">
+                            <h3 className="font-semibold text-gray-700">Totale Commissie</h3>
+                            <p className="text-2xl font-bold text-green-600">
+                              €{calculateCommissionSummary().totalCommission.toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg shadow border">
+                            <h3 className="font-semibold text-gray-700">Afgeronde Deals</h3>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {calculateCommissionSummary().completedTransactions}
+                            </p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg shadow border">
+                            <h3 className="font-semibold text-gray-700">Pending Deals</h3>
+                            <p className="text-2xl font-bold text-yellow-600">
+                              {calculateCommissionSummary().pendingTransactions}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        {transactions.map(transaction => {
+                          const deal = deals.find(d => d.id === transaction.deal_id);
+                          const investor = investors.find(i => i.id === transaction.investor_id);
+                          
+                          let participantCommissions = [];
+                          try {
+                            participantCommissions = transaction.participant_commissions ? 
+                              JSON.parse(transaction.participant_commissions) : [];
+                          } catch (e) {
+                            console.error('Error parsing participant commissions:', e);
+                          }
+
+                          return (
+                            <div key={transaction.id} className="bg-white rounded-lg shadow-md p-6 border">
+                              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4">
+                                <div>
+                                  <h3 className="text-xl font-semibold mb-2">
+                                    {deal?.titel || 'Onbekende Deal'}
+                                  </h3>
+                                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                    <span>Investeerder: {investor?.naam || 'Onbekend'}</span>
+                                    <span>Waarde: €{transaction.transaction_amount.toLocaleString()}</span>
+                                    <span>Commissie: €{transaction.total_commission.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                <div className="mt-4 lg:mt-0">
+                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {transaction.status === 'completed' ? 'Afgerond' : 'Pending'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div>
+                                  <h4 className="font-semibold mb-3">Deal Details:</h4>
+                                  <div className="space-y-2 text-sm">
+                                    {deal?.bedrijfFonds && <p>Bedrijf/Fonds: {deal.bedrijfFonds}</p>}
+                                    <p>Locatie: {deal?.locatie || 'Onbekend'}</p>
+                                    <p>Type: {deal?.type || 'Onbekend'}</p>
+                                    <p>Project: {deal?.projectType || 'Onbekend'}</p>
+                                    <p>Verwacht rendement: {deal?.verwachtRendement || 0}%</p>
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold mb-3">Commissie Verdeling:</h4>
+                                  <div className="space-y-2">
+                                    {participantCommissions.map((participant, index) => {
+                                      const userName = participant.is_external 
+                                        ? participant.name 
+                                        : getUserById(participant.user_id).name;
+                                      
+                                      return (
+                                        <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                                          <span className="flex items-center space-x-2">
+                                            <span>{userName} ({participant.role})</span>
+                                            {participant.is_external && (
+                                              <span className="px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                                                Extern
+                                              </span>
+                                            )}
+                                          </span>
+                                          <span className="font-semibold">
+                                            €{participant.commission_amount.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  
+                                  {participantCommissions.some(p => p.is_external) && (
+                                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                                      <h5 className="font-medium text-green-800 mb-2">Externe Partners:</h5>
+                                      <div className="space-y-2 text-sm">
+                                        {participantCommissions
+                                          .filter(p => p.is_external)
+                                          .map((participant, index) => (
+                                            <div key={index} className="flex flex-col space-y-1">
+                                              <span className="font-medium">{participant.name}</span>
+                                              {participant.email && (
+                                                <span className="text-gray-600">📧 {participant.email}</span>
+                                              )}
+                                              {participant.company && (
+                                                <span className="text-gray-600">🏢 {participant.company}</span>
+                                              )}
+                                            </div>
+                                          ))
+                                        }
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {Object.keys(aiInsights).length > 0 && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
+                          <h4 className="text-xl font-bold flex items-center space-x-2">
+                            <BrainIcon size={20} />
+                            <span>🔥 Enhanced AI Analyse</span>
+                          </h4>
+                          <button
+                            onClick={() => setAiInsights({})}
+                            className="text-gray-400 hover:text-gray-600 text-xl"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="p-6">
+                          {Object.entries(aiInsights).slice(-1).map(([key, insight]) => (
+                            <div key={key} className="space-y-6">
+                              <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                                <h3 className="font-bold text-lg mb-2 text-purple-900">
+                                  {key.includes('enhanced_match') ? '🔥 Enhanced Smart Match Analyse' :
+                                  key.includes('investor') ? '👤 Investeerder Analyse' :
+                                  key.includes('deal') ? '🏢 Deal Analyse' :
+                                  '📊 Markt Inzichten'}
+                                </h3>
+                                <p className="text-sm text-purple-700">
+                                  Gegenereerd op {new Date().toLocaleString('nl-NL')} | Enhanced met semantic analysis
+                                </p>
+                              </div>
+                              
+                              {typeof insight === 'object' && insight.semanticScore !== undefined ? (
+                                <div className="space-y-4">
+                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                    <h4 className="font-semibold text-purple-800 mb-3">🔥 Enhanced Semantic Analysis:</h4>
+                                    {insight.semanticReasons && insight.semanticReasons.map((reason, idx) => (
+                                      <div key={idx} className="bg-white p-3 rounded border border-purple-200 mb-2">
+                                        <p className="text-purple-700">{reason}</p>
+                                      </div>
+                                    ))}
+                                    <div className="mt-3 p-3 bg-white rounded border border-purple-300">
+                                      <p className="font-medium text-purple-900">
+                                        Semantic Score: <span className="text-2xl">{insight.semanticScore || 0}</span> punten
+                                      </p>
+                                      <p className="text-purple-700 text-sm">
+                                        Based on AI analysis of investment motivatie vs deal beschrijving
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  {insight.pitchRecommendations && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                      <h4 className="font-semibold text-green-800 mb-3">💡 Pitch Aanbevelingen:</h4>
+                                      <ul className="space-y-2">
+                                        {insight.pitchRecommendations.map((rec, idx) => (
+                                          <li key={idx} className="flex items-start space-x-2">
+                                            <span className="text-green-600 font-bold">•</span>
+                                            <span className="text-green-700">{rec}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  
+                                  {insight.overallCompatibility && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                      <h4 className="font-semibold text-blue-800 mb-3">📈 Overall Compatibility:</h4>
+                                      <div className="flex items-center space-x-4">
+                                        <div className="text-3xl font-bold text-blue-600">
+                                          {insight.overallCompatibility}%
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="w-full bg-gray-200 rounded-full h-3">
+                                            <div 
+                                              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                                              style={{ width: `${insight.overallCompatibility}%` }}
+                                            ></div>
+                                          </div>
+                                          <p className="text-blue-700 text-sm mt-1">
+                                            Enhanced score including semantic matching
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : typeof insight === 'object' && insight.fullAnalysis ? (
+                                <div className="space-y-4">
+                                  <div className="bg-white border rounded-lg p-4">
+                                    <h4 className="font-semibold text-gray-800 mb-3">🤖 AI Analyse:</h4>
+                                    <div className="prose prose-sm max-w-none">
+                                      {insight.fullAnalysis.split('\n').map((line, idx) => (
+                                        <p key={idx} className="mb-2 text-gray-700 leading-relaxed">
+                                          {line}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  
+                                  {insight.aiRecommendations && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                      <h4 className="font-semibold text-green-800 mb-3">💡 Aanbevelingen:</h4>
+                                      <ul className="space-y-2">
+                                        {insight.aiRecommendations.map((rec, idx) => (
+                                          <li key={idx} className="flex items-start space-x-2">
+                                            <span className="text-green-600 font-bold">•</span>
+                                            <span className="text-green-700">{rec}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="bg-gray-50 border rounded-lg p-4">
+                                  <p className="text-gray-700">
+                                    {typeof insight === 'string' ? insight : JSON.stringify(insight, null, 2)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="sticky bottom-0 bg-white border-t p-4 flex justify-between items-center">
+                          <div className="text-sm text-gray-500">
+                            🔥 Enhanced: Analyse includes semantic matching van teksten en beschrijvingen
+                          </div>
+                          <button
+                            onClick={() => setAiInsights({})}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                          >
+                            Sluiten
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modals */}
+                  <CsvUploadModal />
+                  <ContactConversionModal />
+
+                  {showAddInvestor && (
+                    <InvestorForm
+                      onSubmit={handleAddInvestor}
+                      onCancel={() => setShowAddInvestor(false)}
+                    />
+                  )}
+
+                  {showEditInvestor && editingInvestor && (
+                    <InvestorForm
+                      editData={editingInvestor}
+                      onSubmit={handleUpdateInvestor}
+                      onCancel={() => {
+                        setShowEditInvestor(false);
+                        setEditingInvestor(null);
+                      }}
+                    />
+                  )}
+
+                  {showAddDeal && (
+                    <DealForm
+                      onSubmit={handleAddDeal}
+                      onCancel={() => setShowAddDeal(false)}
+                    />
+                  )}
+
+                  {showEditDeal && editingDeal && (
+                    <DealForm
+                      editData={editingDeal}
+                      onSubmit={handleUpdateDeal}
+                      onCancel={() => {
+                        setShowEditDeal(false);
+                        setEditingDeal(null);
+                      }}
+                    />
+                  )}
+
+                  {showAddBroker && (
+                    <BrokerForm
+                      onSubmit={handleAddBroker}
+                      onCancel={() => setShowAddBroker(false)}
+                    />
+                  )}
+
+                  {showEditBroker && editingBroker && (
+                    <BrokerForm
+                      editData={editingBroker}
+                      onSubmit={handleUpdateBroker}
+                      onCancel={() => {
+                        setShowEditBroker(false);
+                        setEditingBroker(null);
+                      }}
+                    />
+                  )}
+
+                  <CommissionEditor />
+                </main>
+              </div>
+            </div>
+          );
+        };
+
+        // Initialize the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(VastgoedInvesteerderMatcher));
+
+        console.log('🚀 Vastgoed Matcher Pro AI - Enhanced + CSV Upload geladen!');
+        console.log('🔥 Firebase Authentication & Database geïntegreerd');
+        console.log('🔥 NIEUWE CSV UPLOAD FEATURES:');
+        console.log('   • 📄 CSV CONTACTEN UPLOAD');
+        console.log('     - Upload LinkedIn exports of andere CSV contactenlijsten');
+        console.log('     - Preview van contacten voor upload naar Firebase');
+        console.log('     - Ondersteuning voor verschillende CSV formaten en kolom namen');
+        console.log('     - Automatische detectie van First Name, Last Name, Email, Company, Position, etc.');
+        console.log('   • 🔄 CONTACT CONVERSIE SYSTEEM');
+        console.log('     - Handmatige conversie van contacten naar investeerders of brokers');
+        console.log('     - AI classificatie suggesties gebaseerd op functietitel en bedrijf');
+        console.log('     - Tracking van conversie status per contact');
+        console.log('     - Overzicht van geconverteerde vs nieuwe contacten');
+        console.log('   • 🤖 AI CONTACT ANALYSE');
+        console.log('     - AI analyseert functietitels en bedrijfsnamen');
+        console.log('     - Suggesteert of contact investeerder of broker is');
+        console.log('     - Confidence scoring voor AI suggesties');
+        console.log('     - Hulp bij besluitvorming voor conversie');
+        console.log('   • 📊 CONTACTEN MANAGEMENT TAB');
+        console.log('     - Dedicated tab voor alle geüploade contacten');
+        console.log('     - Filter opties: Alle / Nieuw / Geconverteerd');
+        console.log('     - Contact details en conversie status');
+        console.log('     - Bulk import en individual conversion workflows');
+        console.log('   • 🔗 INTEGRATIE MET BESTAANDE SYSTEEM');
+        console.log('     - Contacten collectie in Firebase naast investors en brokers');
+        console.log('     - Geconverteerde contacten gekoppeld aan originele contact record');
+        console.log('     - Audit trail van conversies en owner tracking');
+        console.log('     - Dashboard stats met contact activiteit');
+        console.log('💾 DATABASE STRUCTUUR UITGEBREID:');
+        console.log('   • contacts collection met alle CSV upload data');
+        console.log('   • convertedFrom veld in investors/brokers voor traceability');
+        console.log('   • isConverted en convertedTo status tracking');
+        console.log('   • owner_id voor team collaboration op contacten');
+        console.log('🌟 ALLE BESTAANDE FEATURES BEHOUDEN:');
+        console.log('   • ✅ Enhanced AI semantic matching');
+        console.log('   • ✅ Vereenvoudigde locatie invoer');
+        console.log('   • ✅ Broker management');
+        console.log('   • ✅ Commissie structuren');
+        console.log('   • ✅ Edit functionaliteit');
+        console.log('   • ✅ Firebase integratie');
+        console.log('   • ✅ Team collaboration');
+        console.log('   • ✅ Transactie tracking');
+        console.log('🎯 WORKFLOW VERBETERING:');
+        console.log('   1. Upload CSV bestand via Contacten tab');
+        console.log('   2. Preview en bevestig contacten data');
+        console.log('   3. Upload naar Firebase contacten database');
+        console.log('   4. Filter en bekijk nieuwe contacten');
+        console.log('   5. Gebruik AI suggesties voor classificatie');
+        console.log('   6. Converteer handmatig naar investeerder of broker');
+        console.log('   7. Gebruik in normale matching workflows');
+        console.log('📋 CSV FORMAAT ONDERSTEUNING:');
+        console.log('   • First Name, Last Name, Email Address, Company, Position');
+        console.log('   • URL (LinkedIn), Phone, Location, Notes');
+        console.log('   • Alternative namen: first_name, naam, achternaam, email, bedrijf, etc.');
+        console.log('   • Flexible parsing met Papa Parse library');
+        console.log('   • Skip empty lines en header detection');
+    </script>
+</body>
+</html>
