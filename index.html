@@ -4165,5 +4165,30 @@ async function uploadToFirestore() {
   </button>
 </div>
 
+
+<script>
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) return;
+
+  const contactsRef = firebase.firestore().collection("contacts");
+  contactsRef.where("owner_id", "==", user.uid).orderBy("created_at").get().then(snapshot => {
+    const container = document.getElementById("contactList");
+    container.innerHTML = "";
+    if (snapshot.empty) {
+      container.innerHTML = "<p>📭 Geen contacten gevonden.</p>";
+    }
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      const div = document.createElement("div");
+      div.className = "border rounded p-2 mb-2 bg-white shadow";
+      div.innerHTML = `<b>${c.firstName || ''} ${c.lastName || ''}</b> <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">${c.contactType || 'unclassified'}</span><br>
+        <small>${c.position || ''} @ ${c.company || ''}</small><br>
+        <a href="${c.linkedin || '#'}" target="_blank" class="text-blue-600">🔗 LinkedIn</a>`;
+      container.appendChild(div);
+    });
+  });
+});
+</script>
+
 </body>
 </html>
