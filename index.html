@@ -4090,70 +4090,80 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 </script>
 
 
-<script type="text/javascript">
-  function classifyContact(position, company) {
-    const text = (position + " " + company).toLowerCase();
+<script>
+let csvData = [];
 
-    const isInvestor = text.includes("investor") || text.includes("venture") || text.includes("capital") || text.includes("fund") || text.includes("family office");
-    const isBroker = text.includes("broker") || text.includes("intermediair") || text.includes("makelaar") || text.includes("agent");
+document.getElementById("csvFile").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    if (isInvestor && isBroker) return "both";
-    if (isInvestor) return "investor";
-    if (isBroker) return "broker";
-    return "unclassified";
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const text = e.target.result;
+    const lines = text.split('\n');
+    const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
+    csvData = lines.slice(1).map(line => {
+      const cols = line.split(';');
+      return {
+        firstName: cols[headers.indexOf("first name")]?.trim(),
+        lastName: cols[headers.indexOf("last name")]?.trim(),
+        linkedin: cols[headers.indexOf("url linkedinprofiel")]?.trim(),
+        email: cols[headers.indexOf("email address")]?.trim(),
+        company: cols[headers.indexOf("company")]?.trim(),
+        position: cols[headers.indexOf("position")]?.trim()
+      };
+    }).filter(row => row.firstName && row.lastName);
+    alert("✅ CSV ingelezen. Klik op 'Upload naar Firestore' om verder te gaan.");
+  };
+  reader.readAsText(file, "UTF-8");
+});
+
+function classifyContact(position, company) {
+  const text = (position + " " + company).toLowerCase();
+  const isInvestor = text.includes("investor") || text.includes("capital") || text.includes("fund") || text.includes("venture") || text.includes("family office");
+  const isBroker = text.includes("broker") || text.includes("makelaar") || text.includes("intermediair") || text.includes("agent");
+  if (isInvestor && isBroker) return "both";
+  if (isInvestor) return "investor";
+  if (isBroker) return "broker";
+  return "unclassified";
+}
+
+async function uploadToFirestore() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("⚠️ Geen gebruiker ingelogd.");
+    return;
   }
-</script>
+  if (!csvData.length) {
+    alert("⚠️ Geen data beschikbaar.");
+    return;
+  }
 
-<script type="text/javascript">
-  async function loadUserContacts() {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      console.warn("❌ Niet ingelogd");
-      return;
-    }
+  const db = firebase.firestore();
+  const batch = db.batch();
 
-    const contactsRef = firebase.firestore().collection("contacts");
-    const snapshot = await contactsRef
-      .where("owner_id", "==", user.uid)
-      .orderBy("created_at")
-      .get();
-
-    const contacts = [];
-    const seen = new Set();
-    const duplicates = [];
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const nameKey = `${(data.firstName || "").toLowerCase().trim()} ${(data.lastName || "").toLowerCase().trim()}`;
-      const linkedinKey = (data.linkedin || "").toLowerCase().trim();
-      const key = nameKey + "|" + linkedinKey;
-
-      if (seen.has(key)) {
-        duplicates.push(doc.ref); // nieuwere duplicaat, verwijderen
-      } else {
-        seen.add(key);
-        contacts.push(data); // oudste bewaren
-      }
+  csvData.forEach((contact) => {
+    const docRef = db.collection("contacts").doc();
+    const contactType = classifyContact(contact.position || "", contact.company || "");
+    batch.set(docRef, {
+      ...contact,
+      contactType,
+      owner_id: user.uid,
+      created_at: new Date()
     });
-
-    console.log("📇 Contacten:", contacts);
-
-    // Duplicaten verwijderen
-    for (let ref of duplicates) {
-      await ref.delete();
-    }
-
-    if (duplicates.length > 0) {
-      console.log(`🧹 ${duplicates.length} duplicaten verwijderd.`);
-    }
-  }
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      loadUserContacts();
-    }
   });
+
+  await batch.commit();
+  alert("✅ Contacten succesvol geüpload naar Firestore.");
+}
 </script>
+
+<div class="mt-6">
+  <input type="file" id="csvFile" accept=".csv" />
+  <button onclick="uploadToFirestore()" class="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+    Upload naar Firestore
+  </button>
+</div>
 
 </body>
 </html>
