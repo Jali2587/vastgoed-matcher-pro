@@ -4190,5 +4190,101 @@ firebase.auth().onAuthStateChanged(user => {
 });
 </script>
 
+
+<script>
+async function uploadToFirestore() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("⚠️ Geen gebruiker ingelogd.");
+    return;
+  }
+  if (!csvData.length) {
+    alert("⚠️ Geen data beschikbaar.");
+    return;
+  }
+
+  const db = firebase.firestore();
+  const batch = db.batch();
+
+  csvData.forEach((contact) => {
+    const docRef = db.collection("contacts").doc();
+    const contactType = classifyContact(contact.position || "", contact.company || "");
+    const newContact = {
+      ...contact,
+      contactType,
+      owner_id: user.uid,
+      created_at: new Date()
+    };
+
+    batch.set(docRef, newContact);
+
+    if (contactType === "investor" || contactType === "both") {
+      const invRef = db.collection("investors").doc();
+      batch.set(invRef, { ...newContact, contact_id: docRef.id });
+    }
+    if (contactType === "broker" || contactType === "both") {
+      const broRef = db.collection("brokers").doc();
+      batch.set(broRef, { ...newContact, contact_id: docRef.id });
+    }
+  });
+
+  await batch.commit();
+  alert("✅ Contacten geüpload én toegevoegd aan juiste collecties.");
+  location.reload();
+}
+</script>
+
+<script>
+function updateContactType(contactId, newType) {
+  const db = firebase.firestore();
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const ref = db.collection("contacts").doc(contactId);
+  ref.update({ contactType: newType }).then(() => {
+    // Sync met juiste collecties
+    if (newType === "investor" || newType === "both") {
+      db.collection("investors").add({ contact_id: contactId, owner_id: user.uid });
+    }
+    if (newType === "broker" || newType === "both") {
+      db.collection("brokers").add({ contact_id: contactId, owner_id: user.uid });
+    }
+    alert("✅ Rol bijgewerkt naar: " + newType);
+  });
+}
+</script>
+
+<script>
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) return;
+
+  const contactsRef = firebase.firestore().collection("contacts");
+  contactsRef.where("owner_id", "==", user.uid).orderBy("created_at").get().then(snapshot => {
+    const container = document.getElementById("contactList");
+    container.innerHTML = "";
+    if (snapshot.empty) {
+      container.innerHTML = "<p>📭 Geen contacten gevonden.</p>";
+    }
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      const div = document.createElement("div");
+      div.className = "border rounded p-2 mb-2 bg-white shadow";
+      div.innerHTML = `<b>${c.firstName || ''} ${c.lastName || ''}</b>
+        <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">${c.contactType || 'unclassified'}</span><br>
+        <small>${c.position || ''} @ ${c.company || ''}</small><br>
+        <a href="${c.linkedin || '#'}" target="_blank" class="text-blue-600">🔗 LinkedIn</a><br>
+        <label class="text-sm text-gray-600">Wijzig rol:</label>
+        <select onchange="updateContactType('${doc.id}', this.value)" class="ml-2 border p-1 text-sm">
+          <option value="investor" ${c.contactType === 'investor' ? 'selected' : ''}>Investor</option>
+          <option value="broker" ${c.contactType === 'broker' ? 'selected' : ''}>Broker</option>
+          <option value="both" ${c.contactType === 'both' ? 'selected' : ''}>Beide</option>
+          <option value="unclassified" ${c.contactType === 'unclassified' ? 'selected' : ''}>Onbekend</option>
+        </select>`;
+      container.appendChild(div);
+    });
+  });
+});
+</script>
+
 </body>
 </html>
