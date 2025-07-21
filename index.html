@@ -4091,6 +4091,20 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
 
 <script type="text/javascript">
+  function classifyContact(position, company) {
+    const text = (position + " " + company).toLowerCase();
+
+    const isInvestor = text.includes("investor") || text.includes("venture") || text.includes("capital") || text.includes("fund") || text.includes("family office");
+    const isBroker = text.includes("broker") || text.includes("intermediair") || text.includes("makelaar") || text.includes("agent");
+
+    if (isInvestor && isBroker) return "both";
+    if (isInvestor) return "investor";
+    if (isBroker) return "broker";
+    return "unclassified";
+  }
+</script>
+
+<script type="text/javascript">
   async function loadUserContacts() {
     const user = firebase.auth().currentUser;
     if (!user) {
