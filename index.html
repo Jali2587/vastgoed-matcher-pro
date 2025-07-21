@@ -4091,51 +4091,55 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
 
 <script type="text/javascript">
-async function deduplicateContacts() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("Niet ingelogd.");
-    return;
+  async function loadUserContacts() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      console.warn("❌ Niet ingelogd");
+      return;
+    }
+
+    const contactsRef = firebase.firestore().collection("contacts");
+    const snapshot = await contactsRef
+      .where("owner_id", "==", user.uid)
+      .orderBy("created_at")
+      .get();
+
+    const contacts = [];
+    const seen = new Set();
+    const duplicates = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const nameKey = `${(data.firstName || "").toLowerCase().trim()} ${(data.lastName || "").toLowerCase().trim()}`;
+      const linkedinKey = (data.linkedin || "").toLowerCase().trim();
+      const key = nameKey + "|" + linkedinKey;
+
+      if (seen.has(key)) {
+        duplicates.push(doc.ref); // nieuwere duplicaat, verwijderen
+      } else {
+        seen.add(key);
+        contacts.push(data); // oudste bewaren
+      }
+    });
+
+    console.log("📇 Contacten:", contacts);
+
+    // Duplicaten verwijderen
+    for (let ref of duplicates) {
+      await ref.delete();
+    }
+
+    if (duplicates.length > 0) {
+      console.log(`🧹 ${duplicates.length} duplicaten verwijderd.`);
+    }
   }
 
-  const contactsRef = firebase.firestore().collection('contacts');
-  const snapshot = await contactsRef.where("owner_id", "==", user.uid).get();
-
-  const seen = {};
-  const duplicates = [];
-
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const nameKey = `${(data.firstName || "").toLowerCase().trim()} ${(data.lastName || "").toLowerCase().trim()}`;
-    const linkedinKey = (data.linkedin || "").toLowerCase().trim();
-    const uniqueKey = nameKey + "|" + linkedinKey;
-
-    if (seen[uniqueKey]) {
-      duplicates.push(doc.ref);
-    } else {
-      seen[uniqueKey] = true;
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      loadUserContacts();
     }
   });
-
-  if (duplicates.length === 0) {
-    alert("✅ Geen dubbele contacten gevonden.");
-    return;
-  }
-
-  for (let ref of duplicates) {
-    await ref.delete();
-  }
-
-  alert(`🧹 ${duplicates.length} dubbele contact(en) verwijderd.`);
-}
 </script>
-
-<!-- Deduplicatie-knop -->
-<div class="mt-6">
-  <button onclick="deduplicateContacts()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-    Dubbele contacten verwijderen
-  </button>
-</div>
 
 </body>
 </html>
