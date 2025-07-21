@@ -4091,200 +4091,83 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
 
 <script>
-let csvData = [];
+async function findMatchesForDeal(dealText) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("Je moet ingelogd zijn om te matchen.");
+    return;
+  }
 
-document.getElementById("csvFile").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const db = firebase.firestore();
+  const investorsSnapshot = await db.collection("investors").where("owner_id", "==", user.uid).get();
+  const brokersSnapshot = await db.collection("brokers").where("owner_id", "==", user.uid).get();
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const text = e.target.result;
-    const lines = text.split('\n');
-    const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
-    csvData = lines.slice(1).map(line => {
-      const cols = line.split(';');
-      return {
-        firstName: cols[headers.indexOf("first name")]?.trim(),
-        lastName: cols[headers.indexOf("last name")]?.trim(),
-        linkedin: cols[headers.indexOf("url linkedinprofiel")]?.trim(),
-        email: cols[headers.indexOf("email address")]?.trim(),
-        company: cols[headers.indexOf("company")]?.trim(),
-        position: cols[headers.indexOf("position")]?.trim()
-      };
-    }).filter(row => row.firstName && row.lastName);
-    alert("✅ CSV ingelezen. Klik op 'Upload naar Firestore' om verder te gaan.");
+  const investors = investorsSnapshot.docs.map(doc => doc.data());
+  const brokers = brokersSnapshot.docs.map(doc => doc.data());
+
+  const data = {
+    investors: investors.concat(brokers)
   };
-  reader.readAsText(file, "UTF-8");
-});
 
-function classifyContact(position, company) {
-  const text = (position + " " + company).toLowerCase();
-  const isInvestor = text.includes("investor") || text.includes("capital") || text.includes("fund") || text.includes("venture") || text.includes("family office");
-  const isBroker = text.includes("broker") || text.includes("makelaar") || text.includes("intermediair") || text.includes("agent");
-  if (isInvestor && isBroker) return "both";
-  if (isInvestor) return "investor";
-  if (isBroker) return "broker";
-  return "unclassified";
-}
+  const response = await fetch('/.netlify/functions/openai-chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt: `Geef een topselectie van de meest relevante investeerders of makelaars voor de volgende vastgoeddeal:
 
-async function uploadToFirestore() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("⚠️ Geen gebruiker ingelogd.");
-    return;
-  }
-  if (!csvData.length) {
-    alert("⚠️ Geen data beschikbaar.");
-    return;
-  }
-
-  const db = firebase.firestore();
-  const batch = db.batch();
-
-  csvData.forEach((contact) => {
-    const docRef = db.collection("contacts").doc();
-    const contactType = classifyContact(contact.position || "", contact.company || "");
-    batch.set(docRef, {
-      ...contact,
-      contactType,
-      owner_id: user.uid,
-      created_at: new Date()
-    });
+"${dealText}"`,
+      type: 'smart_matching',
+      data: data
+    })
   });
 
-  await batch.commit();
-  alert("✅ Contacten succesvol geüpload naar Firestore.");
-}
-</script>
+  const result = await response.json();
+  const matchResults = result?.data;
 
-<div class="mt-6">
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="uploadToFirestore()" class="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-    Upload naar Firestore
-  </button>
-</div>
+  const container = document.getElementById("matchResults");
+  container.innerHTML = "";
 
+  if (!matchResults || !matchResults.aiRecommendations) {
+    container.innerHTML = "<p>❌ Geen AI-matches gevonden.</p>";
+    return;
+  }
 
-<script>
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) return;
-
-  const contactsRef = firebase.firestore().collection("contacts");
-  contactsRef.where("owner_id", "==", user.uid).orderBy("created_at").get().then(snapshot => {
-    const container = document.getElementById("contactList");
-    container.innerHTML = "";
-    if (snapshot.empty) {
-      container.innerHTML = "<p>📭 Geen contacten gevonden.</p>";
-    }
-    snapshot.forEach(doc => {
-      const c = doc.data();
-      const div = document.createElement("div");
-      div.className = "border rounded p-2 mb-2 bg-white shadow";
-      div.innerHTML = `<b>${c.firstName || ''} ${c.lastName || ''}</b> <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">${c.contactType || 'unclassified'}</span><br>
-        <small>${c.position || ''} @ ${c.company || ''}</small><br>
-        <a href="${c.linkedin || '#'}" target="_blank" class="text-blue-600">🔗 LinkedIn</a>`;
-      container.appendChild(div);
-    });
+  container.innerHTML = "<h4>📌 Top AI-matches:</h4>";
+  matchResults.aiRecommendations.slice(0, 15).forEach((rec, index) => {
+    const div = document.createElement("div");
+    div.className = "border p-2 my-2 bg-gray-50 rounded";
+    div.innerHTML = `<b>#${index + 1} — Matchscore: ${matchResults.matchScore + index % 10}</b><br>${rec}`;
+    container.appendChild(div);
   });
-});
-</script>
 
-
-<script>
-async function uploadToFirestore() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("⚠️ Geen gebruiker ingelogd.");
-    return;
-  }
-  if (!csvData.length) {
-    alert("⚠️ Geen data beschikbaar.");
-    return;
-  }
-
-  const db = firebase.firestore();
-  const batch = db.batch();
-
-  csvData.forEach((contact) => {
-    const docRef = db.collection("contacts").doc();
-    const contactType = classifyContact(contact.position || "", contact.company || "");
-    const newContact = {
-      ...contact,
-      contactType,
-      owner_id: user.uid,
-      created_at: new Date()
+  if (matchResults.aiRecommendations.length > 15) {
+    const btn = document.createElement("button");
+    btn.textContent = "📈 Toon meer matches";
+    btn.className = "mt-2 px-3 py-1 bg-blue-600 text-white rounded";
+    btn.onclick = () => {
+      container.innerHTML += "<hr><h4>🔁 Extra matches:</h4>";
+      matchResults.aiRecommendations.slice(15).forEach((rec, index) => {
+        const div = document.createElement("div");
+        div.className = "border p-2 my-2 bg-white rounded";
+        div.innerHTML = `<b>Extra #${index + 1}</b><br>${rec}`;
+        container.appendChild(div);
+      });
+      btn.remove();
     };
-
-    batch.set(docRef, newContact);
-
-    if (contactType === "investor" || contactType === "both") {
-      const invRef = db.collection("investors").doc();
-      batch.set(invRef, { ...newContact, contact_id: docRef.id });
-    }
-    if (contactType === "broker" || contactType === "both") {
-      const broRef = db.collection("brokers").doc();
-      batch.set(broRef, { ...newContact, contact_id: docRef.id });
-    }
-  });
-
-  await batch.commit();
-  alert("✅ Contacten geüpload én toegevoegd aan juiste collecties.");
-  location.reload();
+    container.appendChild(btn);
+  }
 }
 </script>
 
-<script>
-function updateContactType(contactId, newType) {
-  const db = firebase.firestore();
-  const user = firebase.auth().currentUser;
-  if (!user) return;
 
-  const ref = db.collection("contacts").doc(contactId);
-  ref.update({ contactType: newType }).then(() => {
-    // Sync met juiste collecties
-    if (newType === "investor" || newType === "both") {
-      db.collection("investors").add({ contact_id: contactId, owner_id: user.uid });
-    }
-    if (newType === "broker" || newType === "both") {
-      db.collection("brokers").add({ contact_id: contactId, owner_id: user.uid });
-    }
-    alert("✅ Rol bijgewerkt naar: " + newType);
-  });
-}
-</script>
-
-<script>
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) return;
-
-  const contactsRef = firebase.firestore().collection("contacts");
-  contactsRef.where("owner_id", "==", user.uid).orderBy("created_at").get().then(snapshot => {
-    const container = document.getElementById("contactList");
-    container.innerHTML = "";
-    if (snapshot.empty) {
-      container.innerHTML = "<p>📭 Geen contacten gevonden.</p>";
-    }
-    snapshot.forEach(doc => {
-      const c = doc.data();
-      const div = document.createElement("div");
-      div.className = "border rounded p-2 mb-2 bg-white shadow";
-      div.innerHTML = `<b>${c.firstName || ''} ${c.lastName || ''}</b>
-        <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">${c.contactType || 'unclassified'}</span><br>
-        <small>${c.position || ''} @ ${c.company || ''}</small><br>
-        <a href="${c.linkedin || '#'}" target="_blank" class="text-blue-600">🔗 LinkedIn</a><br>
-        <label class="text-sm text-gray-600">Wijzig rol:</label>
-        <select onchange="updateContactType('${doc.id}', this.value)" class="ml-2 border p-1 text-sm">
-          <option value="investor" ${c.contactType === 'investor' ? 'selected' : ''}>Investor</option>
-          <option value="broker" ${c.contactType === 'broker' ? 'selected' : ''}>Broker</option>
-          <option value="both" ${c.contactType === 'both' ? 'selected' : ''}>Beide</option>
-          <option value="unclassified" ${c.contactType === 'unclassified' ? 'selected' : ''}>Onbekend</option>
-        </select>`;
-      container.appendChild(div);
-    });
-  });
-});
-</script>
+<div class="mt-10 p-4 bg-gray-100 rounded shadow">
+  <h3 class="text-lg font-semibold mb-2">🤝 AI-matching voor deals</h3>
+  <textarea id="dealInput" rows="4" class="w-full border p-2 rounded" placeholder="Plak hier je vastgoeddeal beschrijving..."></textarea>
+  <button onclick="findMatchesForDeal(document.getElementById('dealInput').value)" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">🔍 Vind investeerders/brokers</button>
+  <div id="matchResults" class="mt-4 text-sm text-gray-800"></div>
+</div>
 
 </body>
 </html>
