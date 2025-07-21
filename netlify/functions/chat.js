@@ -1,4 +1,5 @@
-// netlify/functions/chat.js - Vastgoed Matcher Pro AI
+
+// netlify/functions/chat.js - Vastgoed Matcher Pro AI (verbeterde versie met deal-matching)
 exports.handler = async (event, context) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -7,156 +8,92 @@ exports.handler = async (event, context) => {
     };
 
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+        return { statusCode: 200, headers, body: '' };
     }
 
     if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
+        return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
     try {
-        const { prompt, type, data } = JSON.parse(event.body);
+        const { prompt, type, data } = JSON.parse(event.body || '{}');
 
-        if (!prompt) {
+        if (!prompt || !type || !data) {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'Prompt is required' })
+                body: JSON.stringify({ error: 'prompt, type en data zijn verplicht' })
             };
         }
 
         const openaiApiKey = process.env.OPENAI_API_KEY;
-        
         if (!openaiApiKey) {
+            console.error('❌ OPENAI_API_KEY ontbreekt');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'OpenAI API key not configured' })
+                body: JSON.stringify({ error: 'OpenAI API key niet geconfigureerd' })
             };
         }
 
-        const systemPrompt = `Je bent een expert vastgoed analist voor Vastgoed Matcher Pro AI.
-
-EXPERTISE GEBIEDEN:
-- Vastgoed investering analyse (ROI, risico, rendement)
-- Markttrends en prijsvoorspellingen
-- Investeerder profiel matching
-- Deal evaluatie en risicobeoordeling
-- Internationale vastgoedmarkten (Nederland, Duitsland, Frankrijk, Spanje, Zwitserland)
-- Project types: Turn-key, Renovatie, Transformatie, Ontwikkeling
-
-ANTWOORD STRATEGIE:
-Geef ALTIJD uitgebreide, gedetailleerde analyses met:
-1. Concrete cijfers en percentages
-2. Marktcomparaties en benchmarks
-3. Risicofactoren en kansen
-4. Praktische aanbevelingen
-5. Timeline en implementatie stappen
-
-VASTGOED TYPES:
-- Appartement, Kantoor, Retail, Industrie, Woning, Hotel, Studenten, Zorgvastgoed
-
-ANALYSE TYPES:
-- investor_analysis: Focus op investeerder profiel, risicobereidheid, voorkeuren
-- deal_analysis: Focus op vastgoed object, marktpositie, rendement, risicos
-- smart_matching: Focus op compatibiliteit tussen investeerder en deal
-- market_insights: Focus op markttrends, voorspellingen, kansen
-
-Antwoord ALTIJD in het Nederlands met praktische, implementeerbare adviezen.`;
+        const systemPrompt = `Je bent Vastgoed Matcher Pro AI.
+Focus: Slimme AI-matching van deals met investeerders of brokers.
+Gebruik alle informatie uit data (deal, contacten, voorkeuren).
+Geef een matchscore (70-100), motivatie en aanbeveling.
+Geef maximaal 15 resultaten terug. Antwoord in Nederlands.`;
 
         const messages = [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `${prompt}\n\nAnalyse type: ${type}\n\nData: ${JSON.stringify(data)}` }
+            { role: "user", content: `${prompt}\n\nType: ${type}\n\nData: ${JSON.stringify(data)}` }
         ];
 
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${openaiApiKey}`,
-                'Content-Type': 'application/json'
+                "Authorization": `Bearer ${openaiApiKey}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 model: "gpt-3.5-turbo",
                 messages: messages,
-                max_tokens: 800,
-                temperature: 0.7
+                temperature: 0.7,
+                max_tokens: 1000
             })
         });
 
-        if (!openaiResponse.ok) {
-            const errorText = await openaiResponse.text();
-            if (openaiResponse.status === 401) {
-                return {
-                    statusCode: 500,
-                    headers,
-                    body: JSON.stringify({ error: 'OpenAI API key invalid' })
-                };
-            } else if (openaiResponse.status === 429) {
-                return {
-                    statusCode: 429,
-                    headers,
-                    body: JSON.stringify({ error: 'Rate limit exceeded' })
-                };
-            } else {
-                return {
-                    statusCode: 500,
-                    headers,
-                    body: JSON.stringify({ error: 'OpenAI API error' })
-                };
-            }
+        if (!response.ok) {
+            const text = await response.text();
+            console.error("❌ Fout bij OpenAI:", response.status, text);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: "Fout bij OpenAI", details: text })
+            };
         }
 
-        const openaiData = await openaiResponse.json();
-        
-        if (openaiData.choices && openaiData.choices[0] && openaiData.choices[0].message) {
-            const analysis = openaiData.choices[0].message.content;
+        const openaiData = await response.json();
+        const content = openaiData.choices?.[0]?.message?.content || "Geen antwoord ontvangen van OpenAI.";
 
-            let structuredData;
-            switch (type) {
-                case 'investor_analysis':
-                    structuredData = {
-                        financialStrength: `AI Analyse: ${analysis.substring(0, 150)}...`,
-                        riskAppetite: `Risico profiel gebaseerd op data analyse`,
-                        marketKnowledge: `Marktkennis evaluatie`,
-                        recommendations: analysis,
-                        behaviorProfile: 'AI gegenereerd gedragsprofiel',
-                        investmentTimeline: 'Optimale timing aanbevelingen',
-                        fullAnalysis: analysis
-                    };
-                    break;
-                    
-                case 'deal_analysis':
-                    structuredData = {
-                        marketPosition: `Marktpositie: ${analysis.substring(0, 100)}...`,
-                        projectTypeAnalysis: `Project analyse`,
-                        riskFactors: analysis.split('.').slice(0, 3),
-                        opportunities: analysis.split('.').slice(3, 6),
-                        recommendation: analysis,
-                        priceAnalysis: 'AI prijsanalyse',
-                        futureOutlook: 'Toekomstvoorspelling',
-                        fullAnalysis: analysis
-                    };
-                    break;
-                    
-                case 'smart_matching':
-                    structuredData = {
-                        matchScore: Math.floor(Math.random() * 30) + 70,
-                        reasoningFactors: analysis.split('.').slice(0, 5),
-                        aiRecommendations: analysis.split('.').slice(5, 15),
-                        timingAdvice: `Timing: ${analysis.substring(0, 150)}`,
-                        successProbability: Math.random(),
-                        fullAnalysis: analysis
-                    };
-                    break;
-                    
-                case 'market_insights':
-                    structuredData = {
-                        regionalTrends: {
+        const structuredData = {
+            matchScore: Math.floor(Math.random() * 30) + 70,
+            reasoning: content.split(".").slice(0, 5),
+            aiAdvice: content.split(".").slice(5, 10),
+            successProbability: Math.random(),
+            fullAnalysis: content
+        };
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ data: structuredData, status: "success" })
+        };
+
+    } catch (error) {
+        console.error("⚠️ Interne fout:", error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: "Serverfout", details: error.message })
+        };
+    }
+};
