@@ -154,10 +154,6 @@
         const VastgoedInvesteerderMatcher = () => {
           const [user, setUser] = useState(null);
           const [activeTab, setActiveTab] = useState('dashboard');
-
-          // Contactlijst wordt ingeladen uit gebruikersspecifieke contacten
-          const [contacts, setContacts] = useState([]);
-    
           const [investors, setInvestors] = useState([]);
           const [deals, setDeals] = useState([]);
           const [transactions, setTransactions] = useState([]);
@@ -284,18 +280,8 @@
                 ...doc.data()
               }));
               setUsers(usersData);
-
-              const contactsSnapshot = await db.collection('contacts')
-                .where('owner_id', '==', user.id)
-                .get();
-              const contactsData = contactsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }));
-              setContacts(contactsData);
-    
               
-              const investorsSnapshot = await db.collection('investors').get();
+              const investorsSnapshot = await db.collection('investors').get(); // ✅ haalt ALLE investeerders op
               const investorsData = investorsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -310,7 +296,7 @@
               }));
               setBrokers(brokersData);
               
-              const dealsSnapshot = await db.collection('deals').get();
+              const dealsSnapshot = await db.collection('deals').get(); // ✅ haalt ALLE deals op
               const dealsData = dealsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -1104,32 +1090,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             setShowEditDeal(true);
           };
 
-          
-{activeTab === 'contacts' && (
-  <div className="p-4">
-    <h2 className="text-xl font-bold mb-4">Contactenlijst</h2>
-    {contacts.length === 0 ? (
-      <p>Geen contacten gevonden.</p>
-    ) : (
-      <ul className="space-y-2">
-        {contacts.map((contact, index) => (
-          <li key={index} className="p-2 border rounded shadow-sm bg-white">
-            <div className="font-semibold">{contact.naam || contact.email}</div>
-            <div>{contact.email}</div>
-            <div>{contact.telefoon}</div>
-            <div className="text-sm text-gray-500">
-              {contact.type ? `Type: ${contact.type}` : 'Nog niet geclassificeerd'}
-            </div>
-            {/* Toekomstige classificeerknoppen kunnen hier */}
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-)}
-
-
-// 🔥 NEW: Broker CRUD Functions
+          // 🔥 NEW: Broker CRUD Functions
           const handleEditBroker = (broker) => {
             setEditingBroker(broker);
             setShowEditBroker(true);
