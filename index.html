@@ -4169,5 +4169,49 @@ async function findMatchesForDeal(dealText) {
   <div id="matchResults" class="mt-4 text-sm text-gray-800"></div>
 </div>
 
+
+<!-- ✅ CSV Validatie script toegevoegd -->
+<script>
+function parseAndValidateCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+
+  const firstNameIndex = headers.indexOf('First Name');
+  const lastNameIndex = headers.indexOf('Last Name');
+
+  const validContacts = [];
+  const skippedContacts = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',');
+
+    const firstName = values[firstNameIndex]?.trim();
+    const lastName = values[lastNameIndex]?.trim();
+
+    if (!firstName || !lastName) {
+      skippedContacts.push(values);
+      continue;
+    }
+
+    const contact = {
+      firstName,
+      lastName,
+      email: values[headers.indexOf('Email Address')]?.trim() || '',
+      company: values[headers.indexOf('Company')]?.trim() || '',
+      position: values[headers.indexOf('Position')]?.trim() || '',
+      url: values[headers.indexOf('URL')]?.trim() || '',
+      connectedOn: values[headers.indexOf('Connected On')]?.trim() || '',
+      classification: 'onbekend'
+    };
+    validContacts.push(contact);
+  }
+
+  console.log(`✅ Gevalideerde contacten: ${validContacts.length}`);
+  console.log(`⚠️ Overgeslagen rijen (onvolledig): ${skippedContacts.length}`);
+
+  return validContacts;
+}
+</script>
+
 </body>
 </html>
