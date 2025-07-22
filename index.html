@@ -1068,7 +1068,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
             try {
               await db.collection('transactions').add(transactionData);
-              setTransactions(prev => [...prev, transactionData]);
+              // setTransactions verwijderd i.v.m. transactie uitschakeling
               
               console.log('✅ Transaction created:', transactionData);
               alert('✅ Transactie succesvol aangemaakt! Ga naar "Transacties" tab om de details te bekijken.');
