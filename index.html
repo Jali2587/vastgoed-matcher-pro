@@ -4030,8 +4030,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
       skipEmptyLines: true,
       complete: function(results) {
         parsedData = results.data.map(row => ({
-          firstName: row['First Name'],
-          lastName: row['Last Name'],
+          
           linkedin: row['URL'],
           email: row['Email Address'],
           company: row['Company'],
