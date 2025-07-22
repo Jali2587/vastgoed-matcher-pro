@@ -154,9 +154,13 @@
         const VastgoedInvesteerderMatcher = () => {
           const [user, setUser] = useState(null);
           const [activeTab, setActiveTab] = useState('dashboard');
+
+          // Contactlijst wordt ingeladen uit gebruikersspecifieke contacten
+          const [contacts, setContacts] = useState([]);
+    
           const [investors, setInvestors] = useState([]);
           const [deals, setDeals] = useState([]);
-          // const [transactions,...] verwijderd
+          const [transactions, setTransactions] = useState([]);
           const [users, setUsers] = useState([]);
           const [matches, setMatches] = useState([]);
           const [showAddInvestor, setShowAddInvestor] = useState(false);
@@ -280,6 +284,16 @@
                 ...doc.data()
               }));
               setUsers(usersData);
+
+              const contactsSnapshot = await db.collection('contacts')
+                .where('owner_id', '==', user.id)
+                .get();
+              const contactsData = contactsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              setContacts(contactsData);
+    
               
               const investorsSnapshot = await db.collection('investors').get();
               const investorsData = investorsSnapshot.docs.map(doc => ({
@@ -308,7 +322,7 @@
                 id: doc.id,
                 ...doc.data()
               }));
-              // setTransactions verwijderd
+              setTransactions(transactionsData);
               
               console.log('✅ Data loaded from Firebase:', {
                 users: usersData.length,
@@ -348,7 +362,7 @@
                 voorkeursRegio: ['West-Europa'],
                 locatieDetails: 'Amsterdam centrum bij de ring, nabij openbaar vervoer. Liever geen Zuidoost of Noord.',
                 vastgoedTypes: ['Appartement', 'Kantoor'],
-                projectTypes: ['Turn-key', 'Renovatie', \'Vastgoed Portefeuille\'],
+                projectTypes: ['Turn-key', 'Renovatie'],
                 risicoprofiel: 'Gemiddeld',
                 gewenstRendement: 6,
                 investeringshorizon: 'Lang termijn',
@@ -432,7 +446,7 @@
             setInvestors(demoInvestors);
             setBrokers(demoBrokers); // 🔥 NEW
             setDeals(demoDeals);
-            // setTransactions verwijderd
+            setTransactions([]);
             
             try {
               await saveDemoDataToFirebase(demoInvestors, demoBrokers, demoDeals);
@@ -766,7 +780,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               setInvestors([]);
               setBrokers([]); // 🔥 NEW
               setDeals([]);
-              // setTransactions verwijderd
+              setTransactions([]);
               setUsers([]);
               setAiInsights({});
               setActiveTab('dashboard');
@@ -1005,8 +1019,35 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             }
           };
 
-          // 🔥 Transactie functionaliteit verwijderd
+          const createTransaction = async (dealId, investorId) => {
+            const deal = deals.find(d => d.id === dealId);
+            const investor = investors.find(i => i.id === investorId);
+            
+            if (!deal || !investor) return;
 
+            const commissionStructure = deal.commissionStructure || {
+              total_rate: 0.025,
+              participants: [
+                { 
+                  role: 'deal_owner', 
+                  user_id: deal.owner_id, 
+                  percentage: 60, 
+                  fixed_amount: 0, 
+                  type: 'percentage',
+                  name: getUserById(deal.owner_id).name,
+                  is_external: false
+                },
+                { 
+                  role: 'investor_referral', 
+                  user_id: investor.owner_id, 
+                  percentage: 40, 
+                  fixed_amount: 0, 
+                  type: 'percentage',
+                  name: getUserById(investor.owner_id).name,
+                  is_external: false
+                }
+              ]
+            };
 
             const totalCommission = deal.prijs * commissionStructure.total_rate;
             
@@ -1041,7 +1082,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
 
             try {
               await db.collection('transactions').add(transactionData);
-              // setTransactions verwijderd
+              setTransactions(prev => [...prev, transactionData]);
               
               console.log('✅ Transaction created:', transactionData);
               alert('✅ Transactie succesvol aangemaakt! Ga naar "Transacties" tab om de details te bekijken.');
@@ -1063,7 +1104,32 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
             setShowEditDeal(true);
           };
 
-          // 🔥 NEW: Broker CRUD Functions
+          
+{activeTab === 'contacts' && (
+  <div className="p-4">
+    <h2 className="text-xl font-bold mb-4">Contactenlijst</h2>
+    {contacts.length === 0 ? (
+      <p>Geen contacten gevonden.</p>
+    ) : (
+      <ul className="space-y-2">
+        {contacts.map((contact, index) => (
+          <li key={index} className="p-2 border rounded shadow-sm bg-white">
+            <div className="font-semibold">{contact.naam || contact.email}</div>
+            <div>{contact.email}</div>
+            <div>{contact.telefoon}</div>
+            <div className="text-sm text-gray-500">
+              {contact.type ? `Type: ${contact.type}` : 'Nog niet geclassificeerd'}
+            </div>
+            {/* Toekomstige classificeerknoppen kunnen hier */}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
+
+
+// 🔥 NEW: Broker CRUD Functions
           const handleEditBroker = (broker) => {
             setEditingBroker(broker);
             setShowEditBroker(true);
@@ -1312,7 +1378,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                 await db.collection('deals').doc(dealId).delete();
                 
                 setDeals(prev => prev.filter(d => d.id !== dealId));
-                // setTransactions verwijderd
+                setTransactions(prev => prev.filter(t => t.deal_id !== dealId));
                 
                 console.log('✅ Deal deleted from Firebase:', dealId);
                 alert('✅ Deal succesvol verwijderd!');
