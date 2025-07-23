@@ -4025,23 +4025,30 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        parsedData = results.data.map(row => ({
-          firstName: row['First Name'],
-          lastName: row['Last Name'],
-          linkedin: row['URL'],
-          email: row['Email Address'],
-          company: row['Company'],
-          position: row['Position'],
-          contactType: 'investor'
-        }));
+    
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            const rows = results.data.filter(row =>
+              row["First Name"] && row["Last Name"] && row["Email Address"]
+            );
 
-        renderPreview(parsedData);
-      }
-    });
+            const mappedContacts = rows.map(row => ({
+              firstName: row["First Name"].trim(),
+              lastName: row["Last Name"].trim(),
+              email: row["Email Address"].trim(),
+              company: row["Company"] || "",
+              role: row["Position"] || "",
+              location: row["Location"] || "",
+              tags: [],
+              notes: ""
+            }));
+
+            setContactsToUpload(mappedContacts);
+          }
+        });
+
   });
 
   function renderPreview(data) {
