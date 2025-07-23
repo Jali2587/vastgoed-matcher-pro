@@ -4162,42 +4162,73 @@ async function findMatchesForDeal(dealText) {
 </div>
 
 <script>
-function parseAndPreviewCSV(file) {
+// Nieuwe veilige CSV-verwerking en upload
+document.getElementById("csvUpload").addEventListener("change", function (e) {
+    const file = e.target.files[0];
     if (!file) return;
 
     Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: function (results) {
-            const data = results.data;
+        complete: async function (results) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert("⛔ Je bent niet ingelogd.");
+                return;
+            }
 
-            const mapped = data
-                .map(row => {
-                    const fullName = row["First Name"] && row["Last Name"]
-                        ? row["First Name"].trim() + " " + row["Last Name"].trim()
-                        : null;
-                    const email = row["Email Address"] || row["Email"] || "";
-                    return fullName && email ? { fullName, email } : null;
-                })
-                .filter(row => row !== null);
+            const contacts = [];
+            const previewContainer = document.getElementById("csvPreview");
+            previewContainer.innerHTML = ""; // reset preview
 
-            setContactsToUpload(mapped);
-            displayPreview(mapped);
-        },
-        error: function (err) {
-            console.error("CSV Parse Error:", err);
+            results.data.forEach((row, index) => {
+                const fullName = row["First Name"] || row["Voornaam"] || "";
+                const lastName = row["Last Name"] || row["Achternaam"] || "";
+                const email = row["Email Address"] || row["Email"] || "";
+                const company = row["Company"] || row["Bedrijf"] || "";
+                const position = row["Position"] || row["Functie"] || "";
+                if (fullName.trim() === "" || email.trim() === "") return;
+
+                const contact = {
+                    firstName: fullName.trim(),
+                    lastName: lastName.trim(),
+                    email: email.trim(),
+                    company: company.trim(),
+                    position: position.trim(),
+                    uploadedBy: user.email,
+                    timestamp: new Date().toISOString()
+                };
+                contacts.push(contact);
+
+                const rowElement = document.createElement("div");
+                rowElement.innerHTML = `<strong>${contact.firstName} ${contact.lastName}</strong> – ${contact.email} | ${contact.company} – ${contact.position}`;
+                previewContainer.appendChild(rowElement);
+            });
+
+            if (contacts.length === 0) {
+                alert("Geen geldige contacten gevonden in het CSV-bestand.");
+                return;
+            }
+
+            const db = firebase.firestore();
+            const batch = db.batch();
+            const contactsRef = db.collection("contacts");
+
+            contacts.forEach((contact) => {
+                const docRef = contactsRef.doc();
+                batch.set(docRef, contact);
+            });
+
+            try {
+                await batch.commit();
+                alert("✅ Upload succesvol! " + contacts.length + " contacten toegevoegd.");
+            } catch (error) {
+                console.error("❌ Fout bij upload:", error);
+                alert("Fout bij upload: " + error.message);
+            }
         }
     });
-}
-
-function displayPreview(data) {
-    const previewEl = document.getElementById("csvPreview");
-    if (!previewEl) return;
-
-    previewEl.innerHTML = data.map(contact => {
-        return `<div class="text-sm text-gray-800 mb-1 border-b pb-1">${contact.fullName} – ${contact.email}</div>`;
-    }).join("");
-}
+});
 </script>
 </body>
 </html>
