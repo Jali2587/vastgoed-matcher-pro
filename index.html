@@ -4025,9 +4025,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
       header: true,
       skipEmptyLines: true,
       complete: function(results) {
-        parsedData = results.data
-  .filter(row => row['First Name'] && row['Last Name'])
-  .map(row => ({
+        parsedData = results.data.map(row => ({
           firstName: row['First Name'],
           lastName: row['Last Name'],
           linkedin: row['URL'],
@@ -4162,5 +4160,44 @@ async function findMatchesForDeal(dealText) {
 <button class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" onclick="findMatchesForDeal(document.getElementById('dealInput').value)">🔍 Vind investeerders/brokers</button>
 <div class="mt-4 text-sm text-gray-800" id="matchResults"></div>
 </div>
+
+<script>
+function parseAndPreviewCSV(file) {
+    if (!file) return;
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function (results) {
+            const data = results.data;
+
+            const mapped = data
+                .map(row => {
+                    const fullName = row["First Name"] && row["Last Name"]
+                        ? row["First Name"].trim() + " " + row["Last Name"].trim()
+                        : null;
+                    const email = row["Email Address"] || row["Email"] || "";
+                    return fullName && email ? { fullName, email } : null;
+                })
+                .filter(row => row !== null);
+
+            setContactsToUpload(mapped);
+            displayPreview(mapped);
+        },
+        error: function (err) {
+            console.error("CSV Parse Error:", err);
+        }
+    });
+}
+
+function displayPreview(data) {
+    const previewEl = document.getElementById("csvPreview");
+    if (!previewEl) return;
+
+    previewEl.innerHTML = data.map(contact => {
+        return `<div class="text-sm text-gray-800 mb-1 border-b pb-1">${contact.fullName} – ${contact.email}</div>`;
+    }).join("");
+}
+</script>
 </body>
 </html>
