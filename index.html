@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-
 <html lang="nl">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Vastgoed Matcher Pro AI - Enhanced</title>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vastgoed Matcher Pro AI - Enhanced</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-<div id="root"></div>
-<!-- Firebase Configuration -->
-<script>
+    <div id="root"></div>
+
+    <!-- Firebase Configuration -->
+    <script>
         // JOUW ECHTE FIREBASE CONFIGURATIE
         const firebaseConfig = {
             apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
@@ -37,7 +38,8 @@
         
         console.log('🔥 Firebase initialized successfully!');
     </script>
-<script type="text/babel">
+
+    <script type="text/babel">
         const { useState, useEffect } = React;
         
         // Simple icon components to avoid React errors
@@ -3997,13 +3999,15 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • Werkwijze en approach beschrijving');
         console.log('   • Visual distinction: groene accent kleur voor brokers');
     </script>
+
 <!-- 🔽 CSV Upload & Preview Component -->
-<div class="p-4 border-t border-gray-300 mt-6" id="csv-upload-section">
-<h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
-<input accept=".csv" class="mb-4" id="csvFileInput" type="file"/>
-<div class="overflow-x-auto text-sm" id="csvPreview"></div>
-<button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" id="uploadToFirestore">Upload naar Firestore</button>
+<div id="csv-upload-section" class="p-4 border-t border-gray-300 mt-6">
+  <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+  <input type="file" id="csvFileInput" accept=".csv" class="mb-4" />
+  <div id="csvPreview" class="overflow-x-auto text-sm"></div>
+  <button id="uploadToFirestore" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Upload naar Firestore</button>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script type="text/javascript">
   const csvFileInput = document.getElementById('csvFileInput');
@@ -4084,6 +4088,8 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     }
   });
 </script>
+
+
 <script>
 async function findMatchesForDeal(dealText) {
   const user = firebase.auth().currentUser;
@@ -4154,81 +4160,14 @@ async function findMatchesForDeal(dealText) {
   }
 }
 </script>
+
+
 <div class="mt-10 p-4 bg-gray-100 rounded shadow">
-<h3 class="text-lg font-semibold mb-2">🤝 AI-matching voor deals</h3>
-<textarea class="w-full border p-2 rounded" id="dealInput" placeholder="Plak hier je vastgoeddeal beschrijving..." rows="4"></textarea>
-<button class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" onclick="findMatchesForDeal(document.getElementById('dealInput').value)">🔍 Vind investeerders/brokers</button>
-<div class="mt-4 text-sm text-gray-800" id="matchResults"></div>
+  <h3 class="text-lg font-semibold mb-2">🤝 AI-matching voor deals</h3>
+  <textarea id="dealInput" rows="4" class="w-full border p-2 rounded" placeholder="Plak hier je vastgoeddeal beschrijving..."></textarea>
+  <button onclick="findMatchesForDeal(document.getElementById('dealInput').value)" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">🔍 Vind investeerders/brokers</button>
+  <div id="matchResults" class="mt-4 text-sm text-gray-800"></div>
 </div>
 
-<script>
-// Nieuwe veilige CSV-verwerking en upload
-document.getElementById("csvUpload").addEventListener("change", function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async function (results) {
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                alert("⛔ Je bent niet ingelogd.");
-                return;
-            }
-
-            const contacts = [];
-            const previewContainer = document.getElementById("csvPreview");
-            previewContainer.innerHTML = ""; // reset preview
-
-            results.data.forEach((row, index) => {
-                const fullName = row["First Name"] || row["Voornaam"] || "";
-                const lastName = row["Last Name"] || row["Achternaam"] || "";
-                const email = row["Email Address"] || row["Email"] || "";
-                const company = row["Company"] || row["Bedrijf"] || "";
-                const position = row["Position"] || row["Functie"] || "";
-                if (fullName.trim() === "" || email.trim() === "") return;
-
-                const contact = {
-                    firstName: fullName.trim(),
-                    lastName: lastName.trim(),
-                    email: email.trim(),
-                    company: company.trim(),
-                    position: position.trim(),
-                    uploadedBy: user.email,
-                    timestamp: new Date().toISOString()
-                };
-                contacts.push(contact);
-
-                const rowElement = document.createElement("div");
-                rowElement.innerHTML = `<strong>${contact.firstName} ${contact.lastName}</strong> – ${contact.email} | ${contact.company} – ${contact.position}`;
-                previewContainer.appendChild(rowElement);
-            });
-
-            if (contacts.length === 0) {
-                alert("Geen geldige contacten gevonden in het CSV-bestand.");
-                return;
-            }
-
-            const db = firebase.firestore();
-            const batch = db.batch();
-            const contactsRef = db.collection("contacts");
-
-            contacts.forEach((contact) => {
-                const docRef = contactsRef.doc();
-                batch.set(docRef, contact);
-            });
-
-            try {
-                await batch.commit();
-                alert("✅ Upload succesvol! " + contacts.length + " contacten toegevoegd.");
-            } catch (error) {
-                console.error("❌ Fout bij upload:", error);
-                alert("Fout bij upload: " + error.message);
-            }
-        }
-    });
-});
-</script>
 </body>
 </html>
