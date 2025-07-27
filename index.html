@@ -4021,74 +4021,79 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     if (user) userId = user.uid;
   });
 
-  csvFileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  document.getElementById("csvUpload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        parsedData = results.data.map(row => ({
-          firstName: row['First Name'],
-          lastName: row['Last Name'],
-          linkedin: row['URL'],
-          email: row['Email Address'],
-          company: row['Company'],
-          position: row['Position'],
-          contactType: 'investor'
-        }));
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    preview: 1000,
+    complete: function (results) {
+      const data = results.data.slice(3); // Regel 1-3 overslaan
+      const cleanedData = [];
 
-        renderPreview(parsedData);
+      for (let row of data) {
+        const firstName = row["First Name"]?.trim() || "";
+        const lastName = row["Last Name"]?.trim() || "";
+        const email = row["Email Address"]?.trim() || "";
+        const title = row["Position"]?.trim()?.toLowerCase() || "";
+
+        // Sla over als geen enkele van deze velden is ingevuld
+        if (!firstName && !lastName && !email) continue;
+
+        let contactType = "contact";
+        if (title.includes("investeerder") || title.includes("investment")) contactType = "investor";
+        else if (title.includes("makelaar") || title.includes("broker")) contactType = "broker";
+
+        const contact = {
+          firstName,
+          lastName,
+          email,
+          title,
+          type: contactType,
+          source: "LinkedIn",
+          createdAt: new Date().toISOString(),
+        };
+
+        cleanedData.push(contact);
       }
-    });
-  });
 
-  function renderPreview(data) {
-    const html = data.slice(0, 5).map((item, idx) => `
-      <div class="p-2 border-b">
-        <strong>${item.firstName} ${item.lastName}</strong> – ${item.position || ''} @ ${item.company || ''}
-        <div class="text-xs text-gray-500">${item.email || ''} | ${item.linkedin || ''}</div>
-        <label class="block text-sm mt-2">Classificatie:
-          <select onchange="parsedData[${idx}].contactType = this.value" class="ml-2 border p-1 rounded">
-            <option value="investor">Investor</option>
-            <option value="broker">Broker</option>
-            <option value="both">Beiden</option>
-          </select>
-        </label>
-      </div>
-    `).join('');
-    csvPreview.innerHTML = html;
-  }
+      // Preview tonen
+      const previewDiv = document.getElementById("csvPreview");
+      previewDiv.innerHTML = cleanedData.map(c => `${c.firstName} ${c.lastName} – ${c.email} | Classificatie: ${c.type}`).join("<br>");
 
-  uploadButton.addEventListener('click', async () => {
-    if (!userId || parsedData.length === 0) {
-      alert('Geen gebruiker ingelogd of geen data beschikbaar.');
-      return;
-    }
+      // Upload naar Firebase
+      if (window.firebase && firebase.firestore) {
+        const db = firebase.firestore();
+        const batch = db.batch();
 
-    try {
-      const batch = firebase.firestore().batch();
-      const contactsRef = firebase.firestore().collection('contacts');
-
-      parsedData.forEach(contact => {
-        const docRef = contactsRef.doc();
-        batch.set(docRef, {
-          ...contact,
-          owner_id: userId,
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        cleanedData.forEach((contact) => {
+          const collectionName = contact.type === "broker" ? "brokers" : (contact.type === "investor" ? "investors" : "contacts");
+          const docRef = db.collection(collectionName).doc();
+          batch.set(docRef, contact);
         });
-      });
 
-      await batch.commit();
-      alert('✅ Contacten succesvol geüpload!');
-    } catch (err) {
-      console.error('❌ Fout bij upload:', err);
-      alert('Fout bij upload: ' + err.message);
+        batch.commit()
+          .then(() => {
+            alert("✅ Upload succesvol afgerond.");
+          })
+          .catch((error) => {
+            console.error("❌ Fout bij upload:", error);
+            alert("❌ Fout bij upload: " + error.message);
+          });
+      } else {
+        alert("❌ Firebase is niet geïnitialiseerd.");
+      }
+    },
+    error: function (error) {
+      console.error("❌ CSV parse fout:", error);
+      alert("❌ CSV parse fout: " + error.message);
     }
   });
-</script>
+});
 
+<script>
 
 <script>
 async function findMatchesForDeal(dealText) {
