@@ -20,6 +20,9 @@
   // Initialize Firebase if not already initialized
   if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
+    window.auth = firebase.auth();
+    window.db = firebase.firestore();
+    console.log('🔥 Firebase initialized successfully!');
   }
 
   // Make auth and firestore globally available
@@ -46,17 +49,10 @@
     <!-- Firebase Configuration -->
     <script>
         // JOUW ECHTE FIREBASE CONFIGURATIE
-        const firebaseConfig = {
-            apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
-            authDomain: "vastgoed-matcher-mvp.firebaseapp.com",
-            projectId: "vastgoed-matcher-mvp",
-            storageBucket: "vastgoed-matcher-mvp.appspot.com",
-            messagingSenderId: "785479169064",
-            appId: "1:785479169064:web:eb328415e1277241df311d"
-        };
+        
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        
         
         // Initialize services
         const db = firebase.firestore();
