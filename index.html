@@ -4025,15 +4025,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     const file = e.target.files[0];
     if (!file) return;
 
-    // ✅ Added validation for LinkedIn CSV
-Papa.parse(file, {
-    beforeFirstChunk: function(chunk) {
-        const lines = chunk.split(/\r?\n/).slice(3); // skip metadata rows
-        return lines.join('\n');
-    },
-    transform: function(value, field) {
-        return (value === undefined || value === null) ? '' : value;
-    },
+    Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: function(results) {
@@ -4082,18 +4074,10 @@ Papa.parse(file, {
       parsedData.forEach(contact => {
         const docRef = contactsRef.doc();
         batch.set(docRef, {
-    // ✅ Validate fields to prevent undefined values
-    const safeData = {};
-    for (const [key, value] of Object.entries(data)) {
-        safeData[key] = (value === undefined || value === null) ? '' : value;
-    }
-    console.log('Uploading contact:', safeData);
-    
           ...contact,
           owner_id: userId,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
-        
-});
+        });
       });
 
       await batch.commit();
