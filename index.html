@@ -1,6 +1,32 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+      apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
+      authDomain: "vastgoed-matcher-mvp.firebaseapp.com",
+      projectId: "vastgoed-matcher-mvp",
+      storageBucket: "vastgoed-matcher-mvp.appspot.com",
+      messagingSenderId: "785479169064",
+      appId: "1:785479169064:web:eb328415e1277241df311d"
+  };
+
+  // Initialize Firebase if not already initialized
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  // Make auth and firestore globally available
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vastgoed Matcher Pro AI - Enhanced</title>
@@ -20,19 +46,14 @@
     <!-- Firebase Configuration -->
     <script>
         // JOUW ECHTE FIREBASE CONFIGURATIE
-        
-<!-- Firebase Configuration (Updated) -->
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
-        authDomain: "vastgoed-matcher-mvp.firebaseapp.com",
-        projectId: "vastgoed-matcher-mvp",
-        storageBucket: "vastgoed-matcher-mvp.appspot.com",
-        messagingSenderId: "785479169064",
-        appId: "1:785479169064:web:eb328415e1277241df311d"
-    };
-</script>
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
+            authDomain: "vastgoed-matcher-mvp.firebaseapp.com",
+            projectId: "vastgoed-matcher-mvp",
+            storageBucket: "vastgoed-matcher-mvp.appspot.com",
+            messagingSenderId: "785479169064",
+            appId: "1:785479169064:web:eb328415e1277241df311d"
+        };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
