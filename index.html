@@ -4025,23 +4025,46 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        parsedData = results.data.map(row => ({
-          firstName: row['First Name'],
-          lastName: row['Last Name'],
-          linkedin: row['URL'],
-          email: row['Email Address'],
-          company: row['Company'],
-          position: row['Position'],
-          contactType: 'investor'
-        }));
+    
+// --- Safe CSV Upload Code ---
+Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+        const data = results.data.map(row => {
+            return {
+                firstName: row["First Name"]?.trim() || "N/A",
+                lastName: row["Last Name"]?.trim() || "N/A",
+                email: row["Email Address"]?.trim() || "N/A",
+                company: row["Company"]?.trim() || "N/A",
+                position: row["Position"]?.trim() || "N/A",
+                type: detectContactType(row["Position"]),
+                timestamp: new Date().toISOString()
+            };
+        }).filter(contact => contact.email !== "N/A" || (contact.firstName !== "N/A" && contact.lastName !== "N/A"));
 
-        renderPreview(parsedData);
-      }
-    });
+        console.log(`✅ Gevalideerde contacten: ${data.length}`);
+        
+        const batch = db.batch();
+        data.forEach(contact => {
+            const ref = db.collection("contacts").doc();
+            batch.set(ref, contact);
+        });
+
+        batch.commit()
+            .then(() => console.log("🔥 Upload succesvol!"))
+            .catch(err => console.error("❌ Upload fout:", err));
+    }
+});
+
+function detectContactType(position) {
+    if (!position) return "contact";
+    const posLower = position.toLowerCase();
+    if (posLower.includes("broker") || posLower.includes("makelaar")) return "broker";
+    if (posLower.includes("investor") || posLower.includes("investeerder")) return "investor";
+    return "contact";
+}
+
   });
 
   function renderPreview(data) {
