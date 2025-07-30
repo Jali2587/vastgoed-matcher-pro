@@ -1,30 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-
-<!-- Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-  const firebaseConfig = {
-      apiKey: "AIzaSyD5daKmpLUMcxmOiAXkPkmiJrZ5kDG3HMo",
-      authDomain: "vastgoed-matcher-mvp.firebaseapp.com",
-      projectId: "vastgoed-matcher-mvp",
-      storageBucket: "vastgoed-matcher-mvp.appspot.com",
-      messagingSenderId: "785479169064",
-      appId: "1:785479169064:web:eb328415e1277241df311d"
-  };
-
-  // Initialize Firebase if not already initialized
-  if (!firebase.apps.length) {
-      
-  }
-
-  // Make auth and firestore globally available
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vastgoed Matcher Pro AI - Enhanced</title>
@@ -34,6 +10,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
@@ -4190,6 +4168,58 @@ async function findMatchesForDeal(dealText) {
   <button onclick="findMatchesForDeal(document.getElementById('dealInput').value)" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">🔍 Vind investeerders/brokers</button>
   <div id="matchResults" class="mt-4 text-sm text-gray-800"></div>
 </div>
+
+
+<!-- CSV Upload for Contacts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadInput = document.createElement('input');
+    uploadInput.type = 'file';
+    uploadInput.accept = '.csv';
+    uploadInput.style.margin = '10px';
+    document.body.prepend(uploadInput);
+
+    uploadInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const batch = db.batch();
+                let savedCount = 0;
+
+                results.data.forEach((row, index) => {
+                    const firstName = row['First Name'] || row['Voornaam'] || '';
+                    const lastName = row['Last Name'] || row['Achternaam'] || '';
+                    const email = row['Email Address'] || row['E-mailadres'] || '';
+                    const title = row['Job Title'] || row['Functietitel'] || '';
+
+                    if (!firstName && !lastName) return;
+
+                    const docRef = db.collection('contacts').doc();
+                    const type = title.toLowerCase().includes('broker') ? 'broker' :
+                                 title.toLowerCase().includes('investeerder') ? 'investor' : 'contact';
+
+                    batch.set(docRef, {
+                        firstName,
+                        lastName,
+                        email,
+                        title,
+                        type,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    savedCount++;
+                });
+
+                batch.commit()
+                    .then(() => alert(`✅ ${savedCount} contacten succesvol geüpload!`))
+                    .catch(err => console.error('❌ Fout bij upload:', err));
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>
