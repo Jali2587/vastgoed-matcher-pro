@@ -4221,5 +4221,49 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+
+        // Validatie: filter lege namen en ongedefinieerde velden
+        const cleanedData = jsonData.map(row => {
+            return Object.fromEntries(Object.entries(row).map(([k,v]) => [k, v || '']));
+        }).filter(row => row['First Name'] || row['Last Name']);
+
+        console.log("✅ Gevalideerde contacten:", cleanedData.length);
+
+        // Opslaan naar Firestore
+        const batch = db.batch();
+        cleanedData.forEach(contact => {
+            const ref = db.collection('contacts').doc();
+            batch.set(ref, {
+                firstName: contact['First Name'] || '',
+                lastName: contact['Last Name'] || '',
+                email: contact['Email Address'] || '',
+                company: contact['Company'] || '',
+                position: contact['Position'] || '',
+                type: contact['Type'] || 'contact'
+            });
+        });
+        batch.commit()
+            .then(() => alert("🔥 Upload succesvol!"))
+            .catch(err => console.error("❌ Fout bij upload:", err));
+    };
+    reader.readAsArrayBuffer(file);
+}
+</script>
+
+<div>
+    <input type="file" id="fileInput" accept=".csv, .xlsx" onchange="handleFileUpload(event)" />
+</div>
 </body>
 </html>
