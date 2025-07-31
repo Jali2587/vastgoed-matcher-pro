@@ -4221,49 +4221,80 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-function handleFileUpload(event) {
-    const file = event.target.files[0];
+// Added XLSX support and mapping validation
+function handleFileUpload(file) {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, {type: 'array'});
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+        let workbook;
+        if (file.name.endsWith('.xlsx')) {
+            workbook = XLSX.read(data, { type: 'array' });
+        } else {
+            workbook = XLSX.read(e.target.result, { type: 'binary' });
+        }
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-        // Validatie: filter lege namen en ongedefinieerde velden
-        const cleanedData = jsonData.map(row => {
-            return Object.fromEntries(Object.entries(row).map(([k,v]) => [k, v || '']));
-        }).filter(row => row['First Name'] || row['Last Name']);
+        const validatedData = jsonData.map((row, index) => {
+            return {
+                firstName: row['First Name'] || row['Voornaam'] || '',
+                lastName: row['Last Name'] || row['Achternaam'] || '',
+                email: row['Email Address'] || row['Email'] || '',
+                company: row['Company'] || row['Bedrijf'] || '',
+                title: row['Position'] || row['Functie'] || '',
+                type: 'contact'
+            };
+        }).filter(c => c.firstName !== '' && c.lastName !== '');
 
-        console.log("✅ Gevalideerde contacten:", cleanedData.length);
-
-        // Opslaan naar Firestore
-        const batch = db.batch();
-        cleanedData.forEach(contact => {
-            const ref = db.collection('contacts').doc();
-            batch.set(ref, {
-                firstName: contact['First Name'] || '',
-                lastName: contact['Last Name'] || '',
-                email: contact['Email Address'] || '',
-                company: contact['Company'] || '',
-                position: contact['Position'] || '',
-                type: contact['Type'] || 'contact'
-            });
-        });
-        batch.commit()
-            .then(() => alert("🔥 Upload succesvol!"))
-            .catch(err => console.error("❌ Fout bij upload:", err));
+        // Show preview with option to remove mappings
+        displayPreview(validatedData);
     };
-    reader.readAsArrayBuffer(file);
-}
-</script>
 
-<div>
-    <input type="file" id="fileInput" accept=".csv, .xlsx" onchange="handleFileUpload(event)" />
-</div>
-</body>
+    if (file.name.endsWith('.xlsx')) {
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.readAsBinaryString(file);
+    }
+}
+
+function displayPreview(data) {
+    const previewDiv = document.getElementById('upload-preview');
+    previewDiv.innerHTML = '<h3>Preview Contacts</h3>';
+    data.forEach((c, i) => {
+        previewDiv.innerHTML += `<div>
+            ${c.firstName} ${c.lastName} - ${c.email}
+            <button onclick="removeRow(${i})">Remove</button>
+        </div>`;
+    });
+    window.uploadData = data;
+}
+
+function removeRow(index) {
+    window.uploadData.splice(index, 1);
+    displayPreview(window.uploadData);
+}
+
+async function uploadContacts() {
+    if (!window.uploadData || window.uploadData.length === 0) {
+        alert("No contacts to upload.");
+        return;
+    }
+    const batch = firebase.firestore().batch();
+    const contactsRef = firebase.firestore().collection('contacts');
+
+    window.uploadData.forEach(c => {
+        const docRef = contactsRef.doc();
+        batch.set(docRef, c);
+    });
+
+    try {
+        await batch.commit();
+        alert('Contacts uploaded successfully!');
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Failed to upload contacts.');
+    }
+}
+</script></body>
 </html>
