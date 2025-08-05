@@ -4010,7 +4010,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
   </button>
 </div>
 
-<!-- Enkel PapaParse v5.4.1 -->
+<!-- PapaParse v5.4.1 -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
   const csvFileInput = document.getElementById('csvFileInput');
@@ -4027,26 +4027,30 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      delimiter: ',',
-      rowDelimiter: ';;',
-      transformHeader: h => h.replace(/;;$/, '').trim().toLowerCase().replace(/\s+/g,'_'),
-      complete: results => {
-        console.log('Parsed fields:', results.meta.fields);
-        parsedData = results.data.map(row => ({
-          firstName: row['first_name'] || '',
-          lastName:  row['last_name']   || '',
-          email:     row['email_address'] || '',
-          position:  row['position']    || '',
-          company:   row['company']     || '',
-          linkedin:  row['url']         || '',
-          contactType: 'investor'
-        }));
-        renderPreview(parsedData);
-      }
-    });
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Replace ';;' record delimiters with actual newlines
+      const text = reader.result.replace(/;;/g, '
+');
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: results => {
+          console.log('Parsed fields:', results.meta.fields);
+          parsedData = results.data.map(row => ({
+            firstName: row['First Name'] || row['Voornaam'] || '',
+            lastName:  row['Last Name']  || row['Achternaam'] || '',
+            email:     row['Email Address'] || row['E-mailadres'] || '',
+            position:  row['Position']    || row['Functie'] || '',
+            company:   row['Company']     || row['Bedrijf'] || '',
+            linkedin:  row['URL']         || row['LinkedIn'] || '',
+            contactType: 'investor'
+          }));
+          renderPreview(parsedData);
+        }
+      });
+    };
+    reader.readAsText(file);
   });
 
   function renderPreview(data) {
@@ -4086,7 +4090,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         });
       });
       await batch.commit();
-      alert(\`✅ \${parsedData.length} contacten succesvol geüpload!\`);
+      alert(`✅ ${parsedData.length} contacten succesvol geüpload!`);
     } catch (err) {
       console.error('Upload-fout:', err);
       alert('Fout bij upload: ' + err.message);
