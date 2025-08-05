@@ -4005,10 +4005,95 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
   <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
   <input type="file" id="csvFileInput" accept=".csv" class="mb-4" />
   <div id="csvPreview" class="overflow-x-auto text-sm"></div>
-  <button id="uploadToFirestore" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Upload naar Firestore</button>
+  <button id="uploadToFirestore" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    Upload naar Firestore
+  </button>
 </div>
 
+<!-- Enkel PapaParse v5.4.1 -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+  const csvFileInput = document.getElementById('csvFileInput');
+  const csvPreview   = document.getElementById('csvPreview');
+  const uploadButton = document.getElementById('uploadToFirestore');
+  let parsedData = [];
+  let userId     = null;
+
+  // Zorg dat je ingelogd bent, anders blokkeert uploaden
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) userId = user.uid;
+  });
+
+  csvFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => h.replace(/;;$/, '').trim(),
+      complete: results => {
+        parsedData = results.data.map(row => ({
+          firstName: row['First Name']     || row['Voornaam']    || '',
+          lastName:  row['Last Name']      || row['Achternaam']  || '',
+          email:     row['Email Address']  || row['E-mailadres'] || '',
+          position:  row['Position']       || row['Functie']     || '',
+          company:   row['Company']        || row['Bedrijf']     || '',
+          linkedin:  row['URL']            || row['LinkedIn']    || '',
+          contactType: 'investor'
+        }));
+        renderPreview(parsedData);
+      }
+    });
+  });
+
+  function renderPreview(data) {
+    csvPreview.innerHTML = data.slice(0,5).map((item,idx) => \`
+      <div class="p-2 border-b">
+        <strong>\${item.firstName} \${item.lastName}</strong> – \${item.position} @ \${item.company}
+        <div class="text-xs text-gray-500">\${item.email} | \${item.linkedin}</div>
+        <label class="block text-sm mt-2">Classificatie:
+          <select onchange="parsedData[\${idx}].contactType = this.value" class="ml-2 border p-1 rounded">
+            <option value="investor">Investor</option>
+            <option value="broker">Broker</option>
+            <option value="both">Beiden</option>
+          </select>
+        </label>
+      </div>
+    \`).join('');
+  }
+
+  uploadButton.addEventListener('click', async () => {
+    if (!userId) {
+      alert('❌ Je bent niet ingelogd.');
+      return;
+    }
+    if (parsedData.length === 0) {
+      alert('❌ Geen data om te uploaden.');
+      return;
+    }
+
+    try {
+      const batch = firebase.firestore().batch();
+      const contactsRef = firebase.firestore().collection('contacts');
+
+      parsedData.forEach(c => {
+        const docRef = contactsRef.doc();
+        batch.set(docRef, {
+          ...c,
+          owner_id: userId,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+      alert(\`✅ \${parsedData.length} contacten succesvol geüpload!\`);
+    } catch (err) {
+      console.error('Upload-fout:', err);
+      alert('Fout bij upload: ' + err.message);
+    }
+  });
+</script>
 <script type="text/javascript">
   const csvFileInput = document.getElementById('csvFileInput');
   const csvPreview = document.getElementById('csvPreview');
@@ -4109,7 +4194,7 @@ async function findMatchesForDeal(dealText) {
     investors: investors.concat(brokers)
   };
 
-  const response = await fetch('/.netlify/functions/openai-chat', {
+  const response = await fetch('/.netlify/functions/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -4171,7 +4256,6 @@ async function findMatchesForDeal(dealText) {
 
 
 <!-- CSV Upload for Contacts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const uploadInput = document.createElement('input');
