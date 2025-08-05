@@ -4030,7 +4030,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ';',
+      delimiter: ',',
       transformHeader: h => h.replace(/;;$/, '').trim().toLowerCase().replace(/\s+/g,'_'),
       complete: results => {
         console.log('Parsed fields:', results.meta.fields);
