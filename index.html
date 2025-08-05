@@ -4000,7 +4000,15 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
         console.log('   • Visual distinction: groene accent kleur voor brokers');
     </script>
 
+<!-- 🔽 CSV Upload & Preview Component -->
+<div id="csv-upload-section" class="p-4 border-t border-gray-300 mt-6">
+  <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+  <input type="file" id="csvFileInput" accept=".csv" class="mb-4" />
+  <div id="csvPreview" class="overflow-x-auto text-sm"></div>
+  <button id="uploadToFirestore" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Upload naar Firestore</button>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script type="text/javascript">
   const csvFileInput = document.getElementById('csvFileInput');
   const csvPreview = document.getElementById('csvPreview');
@@ -4163,106 +4171,134 @@ async function findMatchesForDeal(dealText) {
 
 
 <!-- CSV Upload for Contacts -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-
-<!-- 🔽 Enkel Vanilla-HTML CSV Upload onderaan -->
-<div id="csv-upload-section" class="p-4 border-t border-gray-300 mt-6">
-  <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
-  <input type="file" id="csvFileInput" accept=".csv" class="mb-4" />
-  <div id="csvPreview" class="overflow-x-auto text-sm"></div>
-  <button id="uploadToFirestore" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-    Upload naar Firestore
-  </button>
-</div>
-
-  });
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script>
-  const csvFileInput = document.getElementById('csvFileInput');
-  const csvPreview   = document.getElementById('csvPreview');
-  const uploadButton = document.getElementById('uploadToFirestore');
-  let parsedData = [];
-  let userId     = null;
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadInput = document.createElement('input');
+    uploadInput.type = 'file';
+    uploadInput.accept = '.csv';
+    uploadInput.style.margin = '10px';
+    document.body.prepend(uploadInput);
 
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) userId = user.uid;
-  });
+    uploadInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const batch = db.batch();
+                let savedCount = 0;
 
-  csvFileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const text = event.target.result;
-      // vervang elke ';;' gevolgd door newline door echte newline
-      const fixedText = text.replace(/;;\r?\n/g, '\n');
-      Papa.parse(fixedText, {
-        header: true,
-        skipEmptyLines: true,
-        delimiter: ',',
-        complete: results => {
-          console.log('Parsed fields:', results.meta.fields);
-          parsedData = results.data.map(row => ({
-            firstName: row['First Name']     || '',
-            lastName:  row['Last Name']      || '',
-            email:     row['Email Address']  || '',
-            position:  row['Position']       || '',
-            company:   row['Company']        || '',
-            linkedin:  row['Profile URL'] || row['URL'] || '',
-            contactType: 'investor'
-          }));
-          renderPreview(parsedData);
+                results.data.forEach((row, index) => {
+                    const firstName = row['First Name'] || row['Voornaam'] || '';
+                    const lastName = row['Last Name'] || row['Achternaam'] || '';
+                    const email = row['Email Address'] || row['E-mailadres'] || '';
+                    const title = row['Job Title'] || row['Functietitel'] || '';
+
+                    if (!firstName && !lastName) return;
+
+                    const docRef = db.collection('contacts').doc();
+                    const type = title.toLowerCase().includes('broker') ? 'broker' :
+                                 title.toLowerCase().includes('investeerder') ? 'investor' : 'contact';
+
+                    batch.set(docRef, {
+                        firstName,
+                        lastName,
+                        email,
+                        title,
+                        type,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    savedCount++;
+                });
+
+                batch.commit()
+                    .then(() => alert(`✅ ${savedCount} contacten succesvol geüpload!`))
+                    .catch(err => console.error('❌ Fout bij upload:', err));
+            }
+        });
+    });
+});
+</script>
+
+
+  <!-- CSV Upload Section onderaan -->
+  <div id="csv-upload-section" class="p-6 bg-white border-t border-gray-300">
+    <h2 class="text-2xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+    <input type="file" id="csvFileInput" accept=".csv" class="mb-4 p-2 border rounded" />
+    <div id="csvPreview" class="mb-4 overflow-x-auto text-sm"></div>
+    <button id="uploadToFirestore" class="px-6 py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
+      Upload naar Firestore
+    </button>
+  </div>
+
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('csvFileInput');
+      const preview = document.getElementById('csvPreview');
+      const uploadBtn = document.getElementById('uploadToFirestore');
+      let parsedData = [];
+      let userId = null;
+
+      firebase.auth().onAuthStateChanged(u => {
+        if (u) {
+          userId = u.uid;
         }
       });
-    };
-    reader.readAsText(file);
-  });
 
-  function renderPreview(data) {
-    csvPreview.innerHTML = data.slice(0,5).map((item,idx) => `
-      <div class="p-2 border-b">
-        <strong>${item.firstName} ${item.lastName}</strong> – ${item.position} @ ${item.company}
-        <div class="text-xs text-gray-500">${item.email} | ${item.linkedin}</div>
-        <label class="block text-sm mt-2">Classificatie:
-          <select onchange="parsedData[${idx}].contactType = this.value" class="ml-2 border p-1 rounded">
-            <option value="investor">Investor</option>
-            <option value="broker">Broker</option>
-            <option value="both">Beiden</option>
-          </select>
-        </label>
-      </div>
-    `).join('');
-  }
-
-  uploadButton.addEventListener('click', async () => {
-    if (!userId) {
-      alert('❌ Je bent niet ingelogd.');
-      return;
-    }
-    if (parsedData.length === 0) {
-      alert('❌ Geen data om te uploaden.');
-      return;
-    }
-    try {
-      const batch = firebase.firestore().batch();
-      const contactsRef = firebase.firestore().collection('contacts');
-      parsedData.forEach(c => {
-        const docRef = contactsRef.doc();
-        batch.set(docRef, {
-          ...c,
-          owner_id: userId,
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      input.addEventListener('change', e => {
+        const file = e.target.files[0]; 
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const fixed = ev.target.result.replace(/;;\r?\n/g, '\n');
+          Papa.parse(fixed, {
+            header: true,
+            skipEmptyLines: true,
+            delimiter: ',',
+            complete: res => {
+              parsedData = res.data.map(r => ({
+                firstName: r['First Name'] || '',
+                lastName:  r['Last Name']  || '',
+                email:     r['Email Address'] || '',
+                position:  r['Position']   || '',
+                company:   r['Company']    || '',
+                linkedin:  r['Profile URL'] || r['URL'] || '',
+                contactType: 'investor'
+              }));
+              preview.innerHTML = parsedData.slice(0,5).map(it => `
+                <div class="p-2 border-b">
+                  <strong>${it.firstName} ${it.lastName}</strong> – ${it.position} @ ${it.company}
+                  <div class="text-xs text-gray-500">${it.email} | ${it.linkedin}</div>
+                </div>
+              `).join('');
+            }
+          });
+        };
+        reader.readAsText(file);
       });
-      await batch.commit();
-      alert(`✅ ${parsedData.length} contacten succesvol geüpload!`);
-    } catch (err) {
-      console.error('Upload-fout:', err);
-      alert('Fout bij upload: ' + err.message);
-    }
-  });
-</script>
+
+      uploadBtn.addEventListener('click', async () => {
+        if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
+        if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
+        try {
+          const batch = firebase.firestore().batch();
+          const col = firebase.firestore().collection('contacts');
+          parsedData.forEach(c => {
+            const doc = col.doc();
+            batch.set(doc, { ...c, owner_id: userId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          });
+          await batch.commit();
+          alert(`✅ ${parsedData.length} contacten succesvol geüpload!`);
+        } catch(err) {
+          console.error('Fout bij upload:', err);
+          alert('Fout: ' + err.message);
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
