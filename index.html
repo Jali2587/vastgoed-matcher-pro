@@ -4497,6 +4497,139 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   </script>
+
+  <!-- CSV UPLOAD & CONTACTEN OVERZICHT -->
+  <div id="csv-upload-section" class="p-6 border-t mt-8 bg-white rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+    <input type="file" id="csvFileInput" accept=".csv"
+           class="block w-full max-w-sm border p-2 rounded mb-4" />
+    <div id="csvPreview" class="mb-4 text-sm text-gray-700"></div>
+    <button id="uploadToFirestore"
+            class="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      Upload naar Firestore
+    </button>
+    <div class="mt-4">
+      <strong>Totaal contacten in Firestore:</strong>
+      <span id="countValue" class="font-medium">0</span>
+    </div>
+  </div>
+  <ul id="contactItems" class="mt-6 space-y-2"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    (function() {
+      const input     = document.getElementById('csvFileInput');
+      const preview   = document.getElementById('csvPreview');
+      const uploadBtn = document.getElementById('uploadToFirestore');
+      const countEl   = document.getElementById('countValue');
+      const listEl    = document.getElementById('contactItems');
+      let parsedData  = [];
+      let userId      = null;
+      const db        = firebase.firestore();
+
+      firebase.auth().onAuthStateChanged(u => {
+        if (u) {
+          userId = u.uid;
+          refreshCount();
+          loadContacts();
+        }
+      });
+
+      async function refreshCount() {
+        const snap = await db.collection('contacts').get();
+        countEl.textContent = snap.size;
+      }
+
+      async function loadContacts() {
+        listEl.innerHTML = '';
+        const snap = await db.collection('contacts')
+                              .orderBy('createdAt','desc')
+                              .limit(100)
+                              .get();
+        snap.forEach(doc => {
+          const c = doc.data();
+          const li = document.createElement('li');
+          li.className = 'p-3 border rounded flex justify-between items-center';
+          li.innerHTML = `
+            <div>
+              <strong>${c.firstName||''} ${c.lastName||''}</strong><br/>
+              <small class="text-gray-500">${c.email||''} | ${c.linkedin||''}</small>
+            </div>
+            <select data-id="${doc.id}" class="px-2 py-1 border rounded">
+              <option value="investor"${c.contactType==='investor'?' selected':''}>Investor</option>
+              <option value="broker"${c.contactType==='broker'?' selected':''}>Broker</option>
+              <option value="both"${c.contactType==='both'?' selected':''}>Beiden</option>
+            </select>
+          `;
+          const sel = li.querySelector('select');
+          sel.addEventListener('change', e => {
+            db.collection('contacts').doc(doc.id)
+              .update({ contactType: e.target.value });
+          });
+          listEl.appendChild(li);
+        });
+      }
+
+      input.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: results => {
+            parsedData = results.data.map(r => ({
+              firstName:   r['First Name']    || '',
+              lastName:    r['Last Name']     || '',
+              email:       r['Email Address'] || '',
+              position:    r['Position']      || '',
+              company:     r['Company']       || '',
+              linkedin:    r['Profile URL']   || r['URL'] || '',
+              contactType: 'investor'
+            }));
+            preview.innerHTML = parsedData.slice(0,5).map((it,i) => `
+              <div class="mb-2 p-2 border rounded">
+                <strong>${it.firstName} ${it.lastName}</strong> – ${it.position} @ ${it.company}
+                <div class="text-xs text-gray-500">${it.email} | ${it.linkedin}</div>
+                <select onchange="parsedData[${i}].contactType=this.value"
+                        class="mt-1 border p-1 rounded w-full">
+                  <option value="investor">Investor</option>
+                  <option value="broker">Broker</option>
+                  <option value="both">Beiden</option>
+                </select>
+              </div>
+            `).join('');
+          }
+        });
+      });
+
+      uploadBtn.addEventListener('click', async () => {
+        if (!userId) return alert('❌ Je bent niet ingelogd.');
+        if (parsedData.length===0) return alert('❌ Geen CSV ingeladen.');
+        try {
+          const batch = db.batch();
+          const col = db.collection('contacts');
+          parsedData.forEach(item => {
+            const docRef = col.doc();
+            batch.set(docRef, {
+              ...item,
+              owner_id: userId,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+          await batch.commit();
+          alert(`✅ ${parsedData.length} contacten geüpload!`);
+          parsedData = [];
+          preview.innerHTML = '';
+          await refreshCount();
+          await loadContacts();
+        } catch(err) {
+          console.error(err);
+          alert('Fout bij upload: '+err.message);
+        }
+      });
+    })();
+  </script>
+
 </body>
 
 </html>
