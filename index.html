@@ -4364,7 +4364,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 
 
-  <!-- CSV Upload Section onderaan -->
+  <!-- CSV Upload Section (verborgen tot na login) -->
   <section id="csv-upload-section" class="p-6 bg-white border-t border-gray-300 hidden">
     <h2 class="text-2xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
     <input type="file" id="csvFileInput" accept=".csv" class="mb-4 p-2 border rounded w-full max-w-md" />
@@ -4376,13 +4376,14 @@ document.addEventListener('DOMContentLoaded', function() {
       <strong>Aantal contacten in Firestore:</strong> <span id="countValue">0</span>
     </div>
   </section>
-  <!-- Lijst contacten -->
+  <!-- Lijst van geüploade contacten (verborgen tot na login) -->
   <section id="contactsList" class="p-6 bg-white border-t border-gray-300 flex-1 overflow-auto hidden">
     <h2 class="text-2xl font-semibold mb-4">Geüploade Contacten</h2>
     <ul id="contactItems" class="space-y-2 max-w-3xl"></ul>
   </section>
 
-  <!-- PapaParse en Upload Script -->
+
+  <!-- PapaParse en upload/login-script -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -4396,7 +4397,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let userId = null;
 
-      // Handle login
+      // Login afhandelen
       loginBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const pass  = passInput.value;
@@ -4414,18 +4415,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
+      // UI element refs
       const input     = document.getElementById('csvFileInput');
       const preview   = document.getElementById('csvPreview');
       const uploadBtn = document.getElementById('uploadToFirestore');
       const countEl   = document.getElementById('countValue');
       const listEl    = document.getElementById('contactItems');
-      let parsedData = [];
+      let parsedData  = [];
 
+      // Teller verversen
       async function refreshCount() {
         const snap = await firebase.firestore().collection('contacts').get();
         countEl.textContent = snap.size;
       }
 
+      // Contacten inladen en tonen
       async function loadContacts() {
         listEl.innerHTML = '';
         const snap = await firebase.firestore().collection('contacts')
@@ -4454,6 +4458,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
 
+      // CSV uitlezen
       input.addEventListener('change', e => {
         const file = e.target.files[0]; if (!file) return;
         Papa.parse(file, {
@@ -4464,25 +4469,26 @@ document.addEventListener('DOMContentLoaded', function() {
               firstName: r['First Name']||'', lastName: r['Last Name']||'',
               email: r['Email Address']||'', position: r['Position']||'',
               company: r['Company']||'', linkedin: r['Profile URL']||r['URL']||'',
-              contactType: 'investor'
+              contactType:'investor'
             }));
             preview.textContent = JSON.stringify(parsedData.slice(0,5), null, 2);
           }
         });
       });
 
+      // Upload in batches & dedupe
       uploadBtn.addEventListener('click', async () => {
         if (!userId) return;
-        if (parsedData.length === 0) { alert('❌ Kies eerst een CSV bestand.'); return; }
+        if (!parsedData.length) { alert('❌ Kies eerst een CSV bestand.'); return; }
         const col = firebase.firestore().collection('contacts');
         const unique = {}; parsedData.forEach(c => { if (c.linkedin) unique[c.linkedin]=c; });
         const entries = Object.values(unique);
         const chunkSize = 500;
         for (let i=0; i<entries.length; i+=chunkSize) {
           const batch = firebase.firestore().batch();
-          entries.slice(i, i+chunkSize).forEach(c => {
+          entries.slice(i,i+chunkSize).forEach(c => {
             const id = encodeURIComponent(c.linkedin);
-            batch.set(col.doc(id), { ...c, owner_id: userId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            batch.set(col.doc(id), { ...c, owner_id:userId, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
           });
           await batch.commit();
         }
@@ -4491,6 +4497,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   </script>
-
 </body>
+
 </html>
