@@ -4101,7 +4101,7 @@ async function findMatchesForDeal(dealText) {
     investors: investors.concat(brokers)
   };
 
-  const response = await fetch('/.netlify/functions/chat', {
+  const response = await fetch('/.netlify/functions/openai-chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -4213,7 +4213,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 🔽 CSV Upload & Preview Component -->
+
+<!-- 🔽 Enkel Vanilla-HTML CSV Upload onderaan -->
 <div id="csv-upload-section" class="p-4 border-t border-gray-300 mt-6">
   <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
   <input type="file" id="csvFileInput" accept=".csv" class="mb-4" />
@@ -4226,10 +4227,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
   const csvFileInput = document.getElementById('csvFileInput');
-  const csvPreview = document.getElementById('csvPreview');
+  const csvPreview   = document.getElementById('csvPreview');
   const uploadButton = document.getElementById('uploadToFirestore');
   let parsedData = [];
-  let userId = null;
+  let userId     = null;
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) userId = user.uid;
@@ -4241,19 +4242,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const reader = new FileReader();
     reader.onload = function(event) {
       const text = event.target.result;
-      // split records by ';;' and join with newline
-      const fixedText = text.split(';;').filter(r => r.trim() !== '').join('\n');
+      // vervang elke ';;' gevolgd door newline door echte newline
+      const fixedText = text.replace(/;;\r?\n/g, '\n');
       Papa.parse(fixedText, {
         header: true,
         skipEmptyLines: true,
+        delimiter: ',',
         complete: results => {
           console.log('Parsed fields:', results.meta.fields);
           parsedData = results.data.map(row => ({
-            firstName: row['First Name'] || '',
-            lastName:  row['Last Name']  || '',
-            email:     row['Email Address'] || '',
-            position:  row['Position']    || '',
-            company:   row['Company']     || '',
+            firstName: row['First Name']     || '',
+            lastName:  row['Last Name']      || '',
+            email:     row['Email Address']  || '',
+            position:  row['Position']       || '',
+            company:   row['Company']        || '',
             linkedin:  row['Profile URL'] || row['URL'] || '',
             contactType: 'investor'
           }));
@@ -4265,7 +4267,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function renderPreview(data) {
-    csvPreview.innerHTML = data.slice(0, 5).map((item, idx) => `
+    csvPreview.innerHTML = data.slice(0,5).map((item,idx) => `
       <div class="p-2 border-b">
         <strong>${item.firstName} ${item.lastName}</strong> – ${item.position} @ ${item.company}
         <div class="text-xs text-gray-500">${item.email} | ${item.linkedin}</div>
@@ -4308,5 +4310,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 </script>
+
 </body>
 </html>
