@@ -4019,7 +4019,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
   let parsedData = [];
   let userId     = null;
 
-  // Zorg dat je ingelogd bent, anders blokkeert uploaden
   firebase.auth().onAuthStateChanged(user => {
     if (user) userId = user.uid;
   });
@@ -4032,15 +4031,16 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
       header: true,
       skipEmptyLines: true,
       delimiter: ';',
-      transformHeader: h => h.replace(/;;$/, '').trim(),
+      transformHeader: h => h.replace(/;;$/, '').trim().toLowerCase().replace(/\s+/g,'_'),
       complete: results => {
+        console.log('Parsed fields:', results.meta.fields);
         parsedData = results.data.map(row => ({
-          firstName: row['First Name']     || row['Voornaam']    || '',
-          lastName:  row['Last Name']      || row['Achternaam']  || '',
-          email:     row['Email Address']  || row['E-mailadres'] || '',
-          position:  row['Position']       || row['Functie']     || '',
-          company:   row['Company']        || row['Bedrijf']     || '',
-          linkedin:  row['URL']            || row['LinkedIn']    || '',
+          firstName: row['first_name'] || '',
+          lastName:  row['last_name']   || '',
+          email:     row['email_address'] || '',
+          position:  row['position']    || '',
+          company:   row['company']     || '',
+          linkedin:  row['url']         || '',
           contactType: 'investor'
         }));
         renderPreview(parsedData);
@@ -4073,11 +4073,9 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
       alert('❌ Geen data om te uploaden.');
       return;
     }
-
     try {
       const batch = firebase.firestore().batch();
       const contactsRef = firebase.firestore().collection('contacts');
-
       parsedData.forEach(c => {
         const docRef = contactsRef.doc();
         batch.set(docRef, {
@@ -4086,7 +4084,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         });
       });
-
       await batch.commit();
       alert(\`✅ \${parsedData.length} contacten succesvol geüpload!\`);
     } catch (err) {
@@ -4114,7 +4111,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ';',
       complete: function(results) {
         parsedData = results.data.map(row => ({
           firstName: row['First Name'],
@@ -4271,7 +4267,6 @@ document.addEventListener('DOMContentLoaded', function() {
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
-      delimiter: ';',
             complete: function(results) {
                 const batch = db.batch();
                 let savedCount = 0;
