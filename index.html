@@ -4363,5 +4363,134 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   </script>
 
+
+  <!-- CSV Upload Section onderaan -->
+  <section id="csv-upload-section" class="p-6 bg-white border-t border-gray-300 hidden">
+    <h2 class="text-2xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+    <input type="file" id="csvFileInput" accept=".csv" class="mb-4 p-2 border rounded w-full max-w-md" />
+    <div id="csvPreview" class="mb-4 overflow-x-auto text-sm max-w-md"></div>
+    <button id="uploadToFirestore" class="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+      Upload naar Firestore
+    </button>
+    <div class="mt-4">
+      <strong>Aantal contacten in Firestore:</strong> <span id="countValue">0</span>
+    </div>
+  </section>
+  <!-- Lijst contacten -->
+  <section id="contactsList" class="p-6 bg-white border-t border-gray-300 flex-1 overflow-auto hidden">
+    <h2 class="text-2xl font-semibold mb-4">Geüploade Contacten</h2>
+    <ul id="contactItems" class="space-y-2 max-w-3xl"></ul>
+  </section>
+
+  <!-- PapaParse en Upload Script -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginSection = document.getElementById('login-section');
+      const csvSection   = document.getElementById('csv-upload-section');
+      const listSection  = document.getElementById('contactsList');
+      const emailInput   = document.getElementById('loginEmail');
+      const passInput    = document.getElementById('loginPassword');
+      const loginBtn     = document.getElementById('loginBtn');
+      const loginError   = document.getElementById('loginError');
+
+      let userId = null;
+
+      // Handle login
+      loginBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        const pass  = passInput.value;
+        loginError.textContent = '';
+        try {
+          const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+          userId = cred.user.uid;
+          loginSection.classList.add('hidden');
+          csvSection.classList.remove('hidden');
+          listSection.classList.remove('hidden');
+          await refreshCount();
+          await loadContacts();
+        } catch (err) {
+          loginError.textContent = err.message;
+        }
+      });
+
+      const input     = document.getElementById('csvFileInput');
+      const preview   = document.getElementById('csvPreview');
+      const uploadBtn = document.getElementById('uploadToFirestore');
+      const countEl   = document.getElementById('countValue');
+      const listEl    = document.getElementById('contactItems');
+      let parsedData = [];
+
+      async function refreshCount() {
+        const snap = await firebase.firestore().collection('contacts').get();
+        countEl.textContent = snap.size;
+      }
+
+      async function loadContacts() {
+        listEl.innerHTML = '';
+        const snap = await firebase.firestore().collection('contacts')
+          .orderBy('createdAt', 'desc').get();
+        snap.forEach(doc => {
+          const c = doc.data();
+          const li = document.createElement('li');
+          li.className = 'p-4 border-b flex justify-between items-center';
+          li.innerHTML = `
+            <div>
+              <h3 class="font-semibold">${c.firstName} ${c.lastName}</h3>
+              <p>${c.position} @ ${c.company}</p>
+              <a href="${c.linkedin}" target="_blank" class="text-blue-600 underline">${c.email}</a>
+            </div>
+            <select data-id="${doc.id}" class="p-2 border rounded">
+              <option value="investor"${c.contactType==='investor'?' selected':''}>Investor</option>
+              <option value="broker"${c.contactType==='broker'?' selected':''}>Broker</option>
+              <option value="both"${c.contactType==='both'?' selected':''}>Beiden</option>
+            </select>
+          `;
+          li.querySelector('select').addEventListener('change', async e => {
+            await firebase.firestore().collection('contacts').doc(doc.id)
+              .update({ contactType: e.target.value });
+          });
+          listEl.append(li);
+        });
+      }
+
+      input.addEventListener('change', e => {
+        const file = e.target.files[0]; if (!file) return;
+        Papa.parse(file, {
+          header: true, skipEmptyLines: true,
+          delimiter: ',', rowDelimiter: ';;',
+          complete: results => {
+            parsedData = results.data.map(r => ({
+              firstName: r['First Name']||'', lastName: r['Last Name']||'',
+              email: r['Email Address']||'', position: r['Position']||'',
+              company: r['Company']||'', linkedin: r['Profile URL']||r['URL']||'',
+              contactType: 'investor'
+            }));
+            preview.textContent = JSON.stringify(parsedData.slice(0,5), null, 2);
+          }
+        });
+      });
+
+      uploadBtn.addEventListener('click', async () => {
+        if (!userId) return;
+        if (parsedData.length === 0) { alert('❌ Kies eerst een CSV bestand.'); return; }
+        const col = firebase.firestore().collection('contacts');
+        const unique = {}; parsedData.forEach(c => { if (c.linkedin) unique[c.linkedin]=c; });
+        const entries = Object.values(unique);
+        const chunkSize = 500;
+        for (let i=0; i<entries.length; i+=chunkSize) {
+          const batch = firebase.firestore().batch();
+          entries.slice(i, i+chunkSize).forEach(c => {
+            const id = encodeURIComponent(c.linkedin);
+            batch.set(col.doc(id), { ...c, owner_id: userId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          });
+          await batch.commit();
+        }
+        alert(`✅ ${entries.length} unieke contacten geüpload in batches!`);
+        await refreshCount(); await loadContacts();
+      });
+    });
+  </script>
+
 </body>
 </html>
