@@ -4164,54 +4164,7 @@ async function findMatchesForDeal(dealText) {
 
 <!-- CSV Upload for Contacts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadInput = document.createElement('input');
-    uploadInput.type = 'file';
-    uploadInput.accept = '.csv';
-    uploadInput.style.margin = '10px';
-    document.body.prepend(uploadInput);
-
-    uploadInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                const batch = db.batch();
-                let savedCount = 0;
-
-                results.data.forEach((row, index) => {
-                    const firstName = row['First Name'] || row['Voornaam'] || '';
-                    const lastName = row['Last Name'] || row['Achternaam'] || '';
-                    const email = row['Email Address'] || row['E-mailadres'] || '';
-                    const title = row['Job Title'] || row['Functietitel'] || '';
-
-                    if (!firstName && !lastName) return;
-
-                    const docRef = db.collection('contacts').doc();
-                    const type = title.toLowerCase().includes('broker') ? 'broker' :
-                                 title.toLowerCase().includes('investeerder') ? 'investor' : 'contact';
-
-                    batch.set(docRef, {
-                        firstName,
-                        lastName,
-                        email,
-                        title,
-                        type,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    savedCount++;
-                });
-
-                batch.commit()
-                    .then(() => alert(`✅ ${savedCount} contacten succesvol geüpload!`))
-                    .catch(err => console.error('❌ Fout bij upload:', err));
-            }
-        });
-    });
-});
-</script>
+  <script>document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- 🔽 Enkel Vanilla-HTML CSV Upload onderaan -->
@@ -4224,7 +4177,8 @@ document.addEventListener('DOMContentLoaded', function() {
   </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  });
+</script>
 <script>
   const csvFileInput = document.getElementById('csvFileInput');
   const csvPreview   = document.getElementById('csvPreview');
