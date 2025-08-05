@@ -4222,18 +4222,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-  <!-- CSV Upload Section onderaan -->
-  <div id="csv-upload-section" class="p-6 bg-white border-t border-gray-300">
-    <h2 class="text-2xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
-    <input type="file" id="csvFileInput" accept=".csv" class="mb-4 p-2 border rounded" />
-    <div id="csvPreview" class="mb-4 overflow-x-auto text-sm"></div>
-    <button id="uploadToFirestore" class="px-6 py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
-      Upload naar Firestore
-    </button>
-  </div>
-
-  <!-- PapaParse for CSV parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('csvFileInput');
@@ -4278,6 +4267,80 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         };
         reader.readAsText(file);
+      });
+
+      uploadBtn.addEventListener('click', async () => {
+        if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
+        if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
+        try {
+          const batch = firebase.firestore().batch();
+          const col = firebase.firestore().collection('contacts');
+          parsedData.forEach(c => {
+            const doc = col.doc();
+            batch.set(doc, { ...c, owner_id: userId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          });
+          await batch.commit();
+          alert(`✅ ${parsedData.length} contacten succesvol geüpload!`);
+        } catch(err) {
+          console.error('Fout bij upload:', err);
+          alert('Fout: ' + err.message);
+        }
+      });
+    });
+  </script>
+
+
+  <!-- CSV Upload Section onderaan -->
+  <div id="csv-upload-section" class="p-6 bg-white border-t border-gray-300">
+    <h2 class="text-2xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
+    <input type="file" id="csvFileInput" accept=".csv" class="mb-4 p-2 border rounded" />
+    <div id="csvPreview" class="mb-4 overflow-x-auto text-sm"></div>
+    <button id="uploadToFirestore" class="px-6 py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
+      Upload naar Firestore
+    </button>
+  </div>
+
+  <!-- PapaParse voor CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('csvFileInput');
+      const preview = document.getElementById('csvPreview');
+      const uploadBtn = document.getElementById('uploadToFirestore');
+      let parsedData = [];
+      let userId = null;
+
+      // Check login
+      firebase.auth().onAuthStateChanged(u => {
+        if (u) userId = u.uid;
+      });
+
+      input.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          delimiter: ',',
+          rowDelimiter: ';;',
+          complete: res => {
+            parsedData = res.data.map(r => ({
+              firstName: r['First Name']      || '',
+              lastName:  r['Last Name']       || '',
+              email:     r['Email Address']   || '',
+              position:  r['Position']        || '',
+              company:   r['Company']         || '',
+              linkedin:  r['Profile URL'] || r['URL'] || '',
+              contactType: 'investor'
+            }));
+            preview.innerHTML = parsedData.slice(0,5).map(it => `
+              <div class="p-2 border-b">
+                <strong>${it.firstName} ${it.lastName}</strong> – ${it.position} @ ${it.company}
+                <div class="text-xs text-gray-500">${it.email} | ${it.linkedin}</div>
+              </div>
+            `).join('');
+          }
+        });
       });
 
       uploadBtn.addEventListener('click', async () => {
