@@ -4031,6 +4031,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      delimiter: ';',
       transformHeader: h => h.replace(/;;$/, '').trim(),
       complete: results => {
         parsedData = results.data.map(row => ({
@@ -4113,6 +4114,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      delimiter: ';',
       complete: function(results) {
         parsedData = results.data.map(row => ({
           firstName: row['First Name'],
@@ -4269,6 +4271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
+      delimiter: ';',
             complete: function(results) {
                 const batch = db.batch();
                 let savedCount = 0;
