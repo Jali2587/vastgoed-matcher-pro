@@ -4498,14 +4498,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   </script>
 
+    <!-- ============================= -->
   <!-- CSV UPLOAD & CONTACTEN OVERZICHT -->
+  <!-- ============================= -->
   <div id="csv-upload-section" class="p-6 border-t mt-8 bg-white rounded shadow">
     <h2 class="text-xl font-semibold mb-4">Contacten Uploaden via CSV</h2>
     <input type="file" id="csvFileInput" accept=".csv"
            class="block w-full max-w-sm border p-2 rounded mb-4" />
     <div id="csvPreview" class="mb-4 text-sm text-gray-700"></div>
-    <button id="uploadToFirestore"
-            class="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    <button id="uploadToFirestore" class="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
       Upload naar Firestore
     </button>
     <div class="mt-4">
@@ -4515,9 +4516,10 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
   <ul id="contactItems" class="mt-6 space-y-2"></ul>
 
+  <!-- PapaParse voor CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    (function() {
+    (function(){
       const input     = document.getElementById('csvFileInput');
       const preview   = document.getElementById('csvPreview');
       const uploadBtn = document.getElementById('uploadToFirestore');
@@ -4527,6 +4529,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let userId      = null;
       const db        = firebase.firestore();
 
+      // Zodra ingelogd: teller & lijst verversen
       firebase.auth().onAuthStateChanged(u => {
         if (u) {
           userId = u.uid;
@@ -4561,12 +4564,11 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="both"${c.contactType==='both'?' selected':''}>Beiden</option>
             </select>
           `;
-          const sel = li.querySelector('select');
-          sel.addEventListener('change', e => {
+          li.querySelector('select').addEventListener('change', e => {
             db.collection('contacts').doc(doc.id)
               .update({ contactType: e.target.value });
           });
-          listEl.appendChild(li);
+          listEl.append(li);
         });
       }
 
@@ -4629,7 +4631,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     })();
   </script>
-
 </body>
 
 </html>
