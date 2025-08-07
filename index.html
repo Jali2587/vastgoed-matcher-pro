@@ -4249,12 +4249,12 @@ document.addEventListener('DOMContentLoaded', function() {
             delimiter: ',',
             complete: res => {
               parsedData = res.data.map(r => ({
-                firstName: r['First Name'] || '',
-                lastName:  r['Last Name']  || '',
-                email:     r['Email Address'] || '',
-                position:  r['Position']   || '',
-                company:   r['Company']    || '',
-                linkedin:  r['Profile URL'] || r['URL'] || '',
+                firstName: r['First Name'] ?? '',
+                lastName:  r['Last Name'] ?? '',
+                email:     r['Email Address'] ?? '',
+                position:  r['Position'] ?? '',
+                company:   r['Company'] ?? '',
+                linkedin:  r['Profile URL'] ?? r['URL'] ?? '' || '',
                 contactType: 'investor'
               }));
               preview.innerHTML = parsedData.slice(0,5).map(it => `
@@ -4325,12 +4325,12 @@ document.addEventListener('DOMContentLoaded', function() {
           rowDelimiter: ';;',
           complete: res => {
             parsedData = res.data.map(r => ({
-              firstName: r['First Name']      || '',
-              lastName:  r['Last Name']       || '',
-              email:     r['Email Address']   || '',
-              position:  r['Position']        || '',
-              company:   r['Company']         || '',
-              linkedin:  r['Profile URL'] || r['URL'] || '',
+              firstName: r['First Name'] ?? '',
+              lastName:  r['Last Name'] ?? '',
+              email:     r['Email Address'] ?? '',
+              position:  r['Position'] ?? '',
+              company:   r['Company'] ?? '',
+              linkedin:  r['Profile URL'] ?? r['URL'] ?? '' || '',
               contactType: 'investor'
             }));
             preview.innerHTML = parsedData.slice(0,5).map(it => `
@@ -4398,24 +4398,22 @@ document.addEventListener('DOMContentLoaded', function() {
       let userId = null;
 
       // Login afhandelen
-    if (loginBtn) {
       loginBtn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      const pass  = passInput.value;
-      loginError.textContent = '';
-      try {
-      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
-      userId = cred.user.uid;
-      loginSection.classList.add('hidden');
-      csvSection.classList.remove('hidden');
-      listSection.classList.remove('hidden');
-      await refreshCount();
-      await loadContacts();
-      } catch (err) {
-      loginError.textContent = err.message;
-      }
+        const email = emailInput.value.trim();
+        const pass  = passInput.value;
+        loginError.textContent = '';
+        try {
+          const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+          userId = cred.user.uid;
+          loginSection.classList.add('hidden');
+          csvSection.classList.remove('hidden');
+          listSection.classList.remove('hidden');
+          await refreshCount();
+          await loadContacts();
+        } catch (err) {
+          loginError.textContent = err.message;
+        }
       });
-    }
 
       // UI element refs
       const input     = document.getElementById('csvFileInput');
@@ -4468,9 +4466,9 @@ document.addEventListener('DOMContentLoaded', function() {
           delimiter: ',', rowDelimiter: ';;',
           complete: results => {
             parsedData = results.data.map(r => ({
-              firstName: r['First Name']||'', lastName: r['Last Name']||'',
-              email: r['Email Address']||'', position: r['Position']||'',
-              company: r['Company']||'', linkedin: r['Profile URL']||r['URL']||'',
+              firstName: r['First Name'] ?? '', lastName: r['Last Name'] ?? '',
+              email: r['Email Address'] ?? '', position: r['Position'] ?? '',
+              company: r['Company'] ?? '', linkedin: r['Profile URL'] ?? r['URL'] ?? ''||'',
               contactType:'investor'
             }));
             preview.textContent = JSON.stringify(parsedData.slice(0,5), null, 2);
@@ -4582,12 +4580,12 @@ document.addEventListener('DOMContentLoaded', function() {
           skipEmptyLines: true,
           complete: results => {
             parsedData = results.data.map(r => ({
-              firstName:   r['First Name']    || '',
-              lastName:    r['Last Name']     || '',
-              email:       r['Email Address'] || '',
-              position:    r['Position']      || '',
-              company:     r['Company']       || '',
-              linkedin:    r['Profile URL']   || r['URL'] || '',
+              firstName:   r['First Name'] ?? '',
+              lastName:    r['Last Name'] ?? '',
+              email:       r['Email Address'] ?? '',
+              position:    r['Position'] ?? '',
+              company:     r['Company'] ?? '',
+              linkedin:    r['Profile URL'] ?? r['URL'] ?? '' || '',
               contactType: 'investor'
             }));
             preview.innerHTML = parsedData.slice(0,5).map((it,i) => `
