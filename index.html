@@ -4254,7 +4254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 email:     r['Email Address'] ?? '',
                 position:  r['Position'] ?? '',
                 company:   r['Company'] ?? '',
-                linkedin:  r['Profile URL'] ?? r['URL'] ?? '' || '',
+                linkedin:  r['Profile URL'] ?? r['URL'] ?? '',
                 contactType: 'investor'
               }));
               preview.innerHTML = parsedData.slice(0,5).map(it => `
@@ -4330,7 +4330,7 @@ document.addEventListener('DOMContentLoaded', function() {
               email:     r['Email Address'] ?? '',
               position:  r['Position'] ?? '',
               company:   r['Company'] ?? '',
-              linkedin:  r['Profile URL'] ?? r['URL'] ?? '' || '',
+              linkedin:  r['Profile URL'] ?? r['URL'] ?? '',
               contactType: 'investor'
             }));
             preview.innerHTML = parsedData.slice(0,5).map(it => `
@@ -4468,7 +4468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             parsedData = results.data.map(r => ({
               firstName: r['First Name'] ?? '', lastName: r['Last Name'] ?? '',
               email: r['Email Address'] ?? '', position: r['Position'] ?? '',
-              company: r['Company'] ?? '', linkedin: r['Profile URL'] ?? r['URL'] ?? ''||'',
+              company: r['Company'] ?? '', linkedin: r['Profile URL'] ?? r['URL'] ?? '',
               contactType:'investor'
             }));
             preview.textContent = JSON.stringify(parsedData.slice(0,5), null, 2);
@@ -4585,7 +4585,7 @@ document.addEventListener('DOMContentLoaded', function() {
               email:       r['Email Address'] ?? '',
               position:    r['Position'] ?? '',
               company:     r['Company'] ?? '',
-              linkedin:    r['Profile URL'] ?? r['URL'] ?? '' || '',
+              linkedin:    r['Profile URL'] ?? r['URL'] ?? '',
               contactType: 'investor'
             }));
             preview.innerHTML = parsedData.slice(0,5).map((it,i) => `
