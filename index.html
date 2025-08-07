@@ -4398,22 +4398,24 @@ document.addEventListener('DOMContentLoaded', function() {
       let userId = null;
 
       // Login afhandelen
+    if (loginBtn) {
       loginBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        const pass  = passInput.value;
-        loginError.textContent = '';
-        try {
-          const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
-          userId = cred.user.uid;
-          loginSection.classList.add('hidden');
-          csvSection.classList.remove('hidden');
-          listSection.classList.remove('hidden');
-          await refreshCount();
-          await loadContacts();
-        } catch (err) {
-          loginError.textContent = err.message;
-        }
+      const email = emailInput.value.trim();
+      const pass  = passInput.value;
+      loginError.textContent = '';
+      try {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+      userId = cred.user.uid;
+      loginSection.classList.add('hidden');
+      csvSection.classList.remove('hidden');
+      listSection.classList.remove('hidden');
+      await refreshCount();
+      await loadContacts();
+      } catch (err) {
+      loginError.textContent = err.message;
+      }
       });
+    }
 
       // UI element refs
       const input     = document.getElementById('csvFileInput');
