@@ -13,6 +13,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+/* Keep only the V2 upload UI visible */
+#csvFileInput,
+#uploadToFirestore,
+#uploadBtn {
+  display: none !important;
+}
+</style>
 </head>
 <body>
     <div id="root"></div>
@@ -4021,7 +4029,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     if (user) userId = user.uid;
   });
 
-  csvFileInput.addEventListener('change', (e) => {
+  if (csvFileInput) csvFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -4269,7 +4277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsText(file);
       });
 
-      uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
         if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
         try {
@@ -4343,7 +4351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
-      uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
         if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
         try {
@@ -4477,7 +4485,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       // Upload in batches & dedupe
-      uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) return;
         if (!parsedData.length) { alert('❌ Kies eerst een CSV bestand.'); return; }
         const col = firebase.firestore().collection('contacts');
@@ -4604,7 +4612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
-      uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) return alert('❌ Je bent niet ingelogd.');
         if (parsedData.length===0) return alert('❌ Geen CSV ingeladen.');
         try {
@@ -4644,7 +4652,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="csvPreviewV2" class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto"></div>
   </div>
 </div>
-<script type="text/babel">
+<script>
 (function(){
   try {
     const db = firebase.firestore();
@@ -4659,7 +4667,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUserId = null;
     let parsedData = [];
 
-    // helpers
     const safe = (v) => (v ?? '').toString().trim();
     const normEmail = (e) => safe(e).toLowerCase();
     const normLink  = (u) => safe(u).replace(/\/+$/, '').toLowerCase();
@@ -4669,14 +4676,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return e || l || '';
     };
 
-    // auth state -> count refresh
     auth.onAuthStateChanged(async (u) => {
       if (!u) return;
       currentUserId = u.uid;
       await refreshCount();
     });
 
-    // CSV parse
     if (csvInput) {
       csvInput.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
@@ -4695,7 +4700,6 @@ document.addEventListener('DOMContentLoaded', function() {
               contactType: 'investor'
             }));
 
-            // preview first 6
             const first = parsedData.slice(0, 6);
             previewEl.innerHTML = first.map((it, i) => `
               <div class="border rounded p-2 text-sm">
@@ -4709,7 +4713,6 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>`
             ).join('');
 
-            // keep select choices
             Array.from(previewEl.querySelectorAll('select')).forEach(sel => {
               sel.addEventListener('change', (ev) => {
                 const idx = parseInt(ev.target.getAttribute('data-i'), 10);
@@ -4722,13 +4725,11 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    // Upload btn
     if (uploadBtn) {
       uploadBtn.addEventListener('click', async () => {
         if (!currentUserId) return alert('❌ Je bent niet ingelogd.');
         if (!parsedData.length) return alert('❌ Geen CSV ingeladen.');
 
-        // dedupe
         const map = new Map();
         for (const row of parsedData) {
           const key = uniqueKey(row) || ('tmp_' + Math.random().toString(36).slice(2));
@@ -4736,7 +4737,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const clean = Array.from(map.values());
 
-        // chunked batches
         const chunkSize = 450;
         try {
           for (let i = 0; i < clean.length; i += chunkSize) {
@@ -4789,4 +4789,5 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- === /CSV UPLOAD (end) === -->
 
 </body>
+
 </html>
