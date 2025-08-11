@@ -4398,7 +4398,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let userId = null;
 
       // Login afhandelen
-      loginBtn.addEventListener('click', async () => {
+      if (loginBtn) loginBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const pass  = passInput.value;
         loginError.textContent = '';
@@ -4631,6 +4631,162 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     })();
   </script>
-</body>
 
+<!-- === CSV UPLOAD (single, bottom) === -->
+<div id="csv-upload-v2" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t shadow z-50">
+  <div class="max-w-6xl mx-auto p-4">
+    <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
+      <div class="font-semibold">Contacten CSV upload</div>
+      <input type="file" id="csvFileInputV2" accept=".csv" class="border rounded px-3 py-2" />
+      <button id="uploadToFirestoreV2" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Upload naar Firestore</button>
+      <div class="ml-auto text-sm">Jouw contacten: <span id="countValueV2">0</span></div>
+    </div>
+    <div id="csvPreviewV2" class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto"></div>
+  </div>
+</div>
+<script type="text/babel">
+(function(){
+  try {
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const el = (id) => document.getElementById(id);
+    const csvInput   = el('csvFileInputV2');
+    const previewEl  = el('csvPreviewV2');
+    const uploadBtn  = el('uploadToFirestoreV2');
+    const countEl    = el('countValueV2');
+
+    let currentUserId = null;
+    let parsedData = [];
+
+    // helpers
+    const safe = (v) => (v ?? '').toString().trim();
+    const normEmail = (e) => safe(e).toLowerCase();
+    const normLink  = (u) => safe(u).replace(/\/+$/, '').toLowerCase();
+    const uniqueKey = (r) => {
+      const e = normEmail(r.email);
+      const l = normLink(r.linkedin);
+      return e || l || '';
+    };
+
+    // auth state -> count refresh
+    auth.onAuthStateChanged(async (u) => {
+      if (!u) return;
+      currentUserId = u.uid;
+      await refreshCount();
+    });
+
+    // CSV parse
+    if (csvInput) {
+      csvInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (res) => {
+            parsedData = res.data.map((r) => ({
+              firstName: safe(r['First Name']),
+              lastName:  safe(r['Last Name']),
+              email:     safe(r['Email Address']),
+              position:  safe(r['Position']),
+              company:   safe(r['Company']),
+              linkedin:  safe(r['Profile URL']) || safe(r['URL']),
+              contactType: 'investor'
+            }));
+
+            // preview first 6
+            const first = parsedData.slice(0, 6);
+            previewEl.innerHTML = first.map((it, i) => `
+              <div class="border rounded p-2 text-sm">
+                <div class="font-medium">${it.firstName} ${it.lastName}</div>
+                <div class="text-gray-500">${it.email || '—'} | ${it.linkedin || '—'}</div>
+                <select data-i="${i}" class="mt-1 w-full border rounded px-2 py-1">
+                  <option value="investor">Investor</option>
+                  <option value="broker">Broker</option>
+                  <option value="both">Beiden</option>
+                </select>
+              </div>`
+            ).join('');
+
+            // keep select choices
+            Array.from(previewEl.querySelectorAll('select')).forEach(sel => {
+              sel.addEventListener('change', (ev) => {
+                const idx = parseInt(ev.target.getAttribute('data-i'), 10);
+                const v = ev.target.value;
+                if (!Number.isNaN(idx) && parsedData[idx]) parsedData[idx].contactType = v;
+              });
+            });
+          }
+        });
+      });
+    }
+
+    // Upload btn
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', async () => {
+        if (!currentUserId) return alert('❌ Je bent niet ingelogd.');
+        if (!parsedData.length) return alert('❌ Geen CSV ingeladen.');
+
+        // dedupe
+        const map = new Map();
+        for (const row of parsedData) {
+          const key = uniqueKey(row) || ('tmp_' + Math.random().toString(36).slice(2));
+          if (!map.has(key)) map.set(key, row);
+        }
+        const clean = Array.from(map.values());
+
+        // chunked batches
+        const chunkSize = 450;
+        try {
+          for (let i = 0; i < clean.length; i += chunkSize) {
+            const chunk = clean.slice(i, i + chunkSize);
+            const batch = db.batch();
+            const col = db.collection('contacts');
+            for (const item of chunk) {
+              const key = uniqueKey(item);
+              const ref = key ? col.doc(key) : col.doc();
+              const data = {
+                firstName:   safe(item.firstName),
+                lastName:    safe(item.lastName),
+                email:       normEmail(item.email),
+                position:    safe(item.position),
+                company:     safe(item.company),
+                linkedin:    normLink(item.linkedin),
+                contactType: item.contactType || 'investor',
+                owner_id:    currentUserId,
+                createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+              };
+              batch.set(ref, data, { merge: true });
+            }
+            await batch.commit();
+          }
+          alert('✅ Upload gereed!');
+          parsedData = [];
+          previewEl.innerHTML = '';
+          await refreshCount();
+        } catch (err) {
+          console.error('❌ Fout bij upload:', err);
+          alert('Fout bij upload: ' + err.message);
+        }
+      });
+    }
+
+    async function refreshCount() {
+      try {
+        const snap = await db.collection('contacts')
+          .where('owner_id', '==', currentUserId).get();
+        if (countEl) countEl.textContent = snap.size;
+      } catch (e) {
+        console.warn('Kon teller niet laden:', e?.message || e);
+      }
+    }
+  } catch(e) {
+    console.warn('CSV upload v2 init faalde:', e?.message || e);
+  }
+})();
+</script>
+<!-- === /CSV UPLOAD (end) === -->
+
+</body>
 </html>
