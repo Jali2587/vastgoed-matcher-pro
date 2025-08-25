@@ -1714,6 +1714,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               email: '',
               telefoon: '',
               bedrijf: '',
+              linkedin: '',
               locatie: '',
               minBudget: '',
               maxBudget: '',
@@ -1732,7 +1733,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               bijzonderheden: '', // 🔥 NEW: Additional notes for semantic matching
               communicatieVoorkeur: 'Email',
               beschikbaarheid: 'Direct'
-            });
+            }) );
 
             // 🔥 SIMPLIFIED LOCATION OPTIONS
             const hoofdLanden = [
@@ -1854,6 +1855,27 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             />
                           </div>
                         </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium mb-1">LinkedIn-profiel</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="url"
+                                value={formData.linkedin || ''}
+                                onChange={(e) => setFormData({...formData, linkedin: e.target.value})}
+                                className="flex-1 w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="https://www.linkedin.com/in/jouw-profiel"
+                              />
+                              <a
+                                href={formData.linkedin ? (formData.linkedin.startsWith('http') ? formData.linkedin : `https://${formData.linkedin}`) : undefined}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${!formData.linkedin ? 'opacity-50 pointer-events-none' : ''}`}
+                              >
+                                Open
+                              </a>
+                            </div>
+                          </div>
+
                       </div>
 
                       <div className="mb-8">
@@ -2092,6 +2114,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               email: '',
               telefoon: '',
               bedrijf: '',
+              linkedin: '',
               locatie: '',
               specialisaties: [],
               werkgebied: [],
@@ -2101,7 +2124,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               locatieDetails: '',
               werkwijze: '',
               bijzonderheden: ''
-            });
+            }) );
 
             const specialisatieOpties = [
               'Commercieel', 'Residentieel', 'Industrie', 'Retail', 
@@ -2208,6 +2231,27 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             />
                           </div>
                         </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium mb-1">LinkedIn-profiel</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="url"
+                                value={formData.linkedin || ''}
+                                onChange={(e) => setFormData({...formData, linkedin: e.target.value})}
+                                className="flex-1 w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="https://www.linkedin.com/in/jouw-profiel"
+                              />
+                              <a
+                                href={formData.linkedin ? (formData.linkedin.startsWith('http') ? formData.linkedin : `https://${formData.linkedin}`) : undefined}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${!formData.linkedin ? 'opacity-50 pointer-events-none' : ''}`}
+                              >
+                                Open
+                              </a>
+                            </div>
+                          </div>
+
                       </div>
 
                       <div className="mb-8">
