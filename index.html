@@ -1714,7 +1714,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               email: '',
               telefoon: '',
               bedrijf: '',
-              linkedin: '',
               locatie: '',
               minBudget: '',
               maxBudget: '',
@@ -1733,7 +1732,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               bijzonderheden: '', // 🔥 NEW: Additional notes for semantic matching
               communicatieVoorkeur: 'Email',
               beschikbaarheid: 'Direct'
-            }) );
+            });
 
             // 🔥 SIMPLIFIED LOCATION OPTIONS
             const hoofdLanden = [
@@ -1855,27 +1854,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             />
                           </div>
                         </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium mb-1">LinkedIn-profiel</label>
-                            <div className="flex gap-2">
-                              <input
-                                type="url"
-                                value={formData.linkedin || ''}
-                                onChange={(e) => setFormData({...formData, linkedin: e.target.value})}
-                                className="flex-1 w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://www.linkedin.com/in/jouw-profiel"
-                              />
-                              <a
-                                href={formData.linkedin ? (formData.linkedin.startsWith('http') ? formData.linkedin : `https://${formData.linkedin}`) : undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${!formData.linkedin ? 'opacity-50 pointer-events-none' : ''}`}
-                              >
-                                Open
-                              </a>
-                            </div>
-                          </div>
-
                       </div>
 
                       <div className="mb-8">
@@ -2114,7 +2092,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               email: '',
               telefoon: '',
               bedrijf: '',
-              linkedin: '',
               locatie: '',
               specialisaties: [],
               werkgebied: [],
@@ -2124,7 +2101,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
               locatieDetails: '',
               werkwijze: '',
               bijzonderheden: ''
-            }) );
+            });
 
             const specialisatieOpties = [
               'Commercieel', 'Residentieel', 'Industrie', 'Retail', 
@@ -2231,27 +2208,6 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
                             />
                           </div>
                         </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium mb-1">LinkedIn-profiel</label>
-                            <div className="flex gap-2">
-                              <input
-                                type="url"
-                                value={formData.linkedin || ''}
-                                onChange={(e) => setFormData({...formData, linkedin: e.target.value})}
-                                className="flex-1 w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://www.linkedin.com/in/jouw-profiel"
-                              />
-                              <a
-                                href={formData.linkedin ? (formData.linkedin.startsWith('http') ? formData.linkedin : `https://${formData.linkedin}`) : undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${!formData.linkedin ? 'opacity-50 pointer-events-none' : ''}`}
-                              >
-                                Open
-                              </a>
-                            </div>
-                          </div>
-
                       </div>
 
                       <div className="mb-8">
@@ -4073,7 +4029,7 @@ Geef concrete, actionable aanbevelingen voor deze specifieke match.
     if (user) userId = user.uid;
   });
 
-  if (csvFileInput) csvFileInput.addEventListener('change', (e) => {
+  if (csvFileInput) if (csvFileInput) csvFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -4321,7 +4277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsText(file);
       });
 
-      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
         if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
         try {
@@ -4395,7 +4351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
-      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) { alert('❌ Je bent niet ingelogd.'); return; }
         if (parsedData.length === 0) { alert('❌ Geen data om te uploaden.'); return; }
         try {
@@ -4450,7 +4406,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let userId = null;
 
       // Login afhandelen
-      if (loginBtn) loginBtn.addEventListener('click', async () => {
+      if (loginBtn) if (loginBtn) loginBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const pass  = passInput.value;
         loginError.textContent = '';
@@ -4529,7 +4485,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       // Upload in batches & dedupe
-      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) return;
         if (!parsedData.length) { alert('❌ Kies eerst een CSV bestand.'); return; }
         const col = firebase.firestore().collection('contacts');
@@ -4656,7 +4612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
-      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!userId) return alert('❌ Je bent niet ingelogd.');
         if (parsedData.length===0) return alert('❌ Geen CSV ingeladen.');
         try {
@@ -4770,7 +4726,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (uploadBtn) {
-      uploadBtn.addEventListener('click', async () => {
+      if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         if (!currentUserId) return alert('❌ Je bent niet ingelogd.');
         if (!parsedData.length) return alert('❌ Geen CSV ingeladen.');
 
@@ -4831,6 +4787,60 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <!-- === /CSV UPLOAD (end) === -->
+
+
+<!-- LinkedIn-profielknop helper (fallback) -->
+<script>
+(function(){
+  function ensureLinkedInUI(root){
+    try{
+      if(root.querySelector('#vm-linkedin-container')) return;
+      var emailLabel = Array.from(root.querySelectorAll('label')).find(function(l){
+        return /email/i.test((l.textContent||'').trim());
+      });
+      var anchor = emailLabel ? emailLabel.closest('div') : null;
+      var container = document.createElement('div');
+      container.id = 'vm-linkedin-container';
+      container.className = 'mt-4';
+      container.innerHTML = [
+        '<div class="flex items-end gap-2">',
+        '  <div class="flex-1">',
+        '    <label class="block text-sm font-medium text-gray-700">LinkedIn-profiel</label>',
+        '    <input type="url" id="vm-linkedin-url" placeholder="https://www.linkedin.com/in/..."',
+        '      class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />',
+        '  </div>',
+        '  <button type="button" id="vm-linkedin-open"',
+        '    class="inline-flex h-10 shrink-0 items-center rounded-md bg-blue-600 px-3 text-white hover:bg-blue-700">Open</button>',
+        '</div>'
+      ].join("");
+      if(anchor && anchor.parentNode){ anchor.parentNode.appendChild(container); } else { root.appendChild(container); }
+      var existing = root.querySelector('input[name="linkedin"], input#linkedin, input[data-field="linkedin"]');
+      if(existing && existing.value){ document.getElementById('vm-linkedin-url').value = existing.value; }
+      document.getElementById('vm-linkedin-open').addEventListener('click', function(){
+        var url = (document.getElementById('vm-linkedin-url').value || '').trim();
+        if(!url){ alert('Voer eerst een LinkedIn-URL in.'); return; }
+        if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        window.open(url, '_blank', 'noopener');
+      });
+    }catch(e){}
+  }
+  var obs = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      (m.addedNodes || []).forEach(function(node){
+        if(!(node instanceof HTMLElement)) return;
+        var t = (node.textContent || '');
+        if(/Investeerder Bewerken|Broker Bewerken|Contact(en)? Bewerken/i.test(t)){
+          ensureLinkedInUI(node);
+        }
+        if(node.getAttribute && (node.getAttribute('role')==='dialog' || /modal|dialog/i.test(node.className||''))){
+          ensureLinkedInUI(node);
+        }
+      });
+    });
+  });
+  obs.observe(document.documentElement, {subtree:true, childList:true});
+})();
+</script>
 
 </body>
 
