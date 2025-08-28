@@ -21,6 +21,7 @@
   display: none !important;
 }
 </style>
+<style>#csv-upload-section{display:none!important}</style>
 </head>
 <body>
     <div id="root"></div>
@@ -4841,6 +4842,128 @@ document.addEventListener('DOMContentLoaded', function() {
   obs.observe(document.documentElement, {subtree:true, childList:true});
 })();
 </script>
+
+
+<!-- ===== ChatGPT Option B: Single robust CSV uploader (with fan-out) ===== -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" as="script">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<section id="csv-upload-v2" class="max-w-5xl mx-auto mt-16 mb-24 p-6 bg-white rounded-xl shadow border">
+  <h2 class="text-2xl font-bold mb-1">Contacten uploaden (CSV)</h2>
+  <div class="grid md:grid-cols-4 gap-4 items-end">
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium mb-1">CSV-bestand</label>
+      <input type="file" id="csvV2File" accept=".csv" class="w-full border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Classificatie</label>
+      <select id="csvV2Type" class="w-full border rounded px-3 py-2">
+        <option value="investor">Investor</option>
+        <option value="broker">Broker</option>
+        <option value="both">Beiden</option>
+      </select>
+    </div>
+    <div>
+      <button id="csvV2Upload" class="w-full h-10 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">Upload naar Firebase</button>
+    </div>
+  </div>
+  <div id="csvV2Preview" class="mt-4 text-sm"></div>
+  <div id="csvV2Progress" class="mt-3 text-sm text-gray-700"></div>
+</section>
+
+<script>
+(() => {
+  const fileInput = document.getElementById('csvV2File');
+  const typeSel   = document.getElementById('csvV2Type');
+  const btn       = document.getElementById('csvV2Upload');
+  const previewEl = document.getElementById('csvV2Preview');
+  const progEl    = document.getElementById('csvV2Progress');
+  let rows = [];
+  const lc = s => (s || '').toString().trim().toLowerCase();
+  const normUrl = u => { u=(u||'').toString().trim(); if(!u) return ''; if(/^http(s)?:\/\//i.test(u)) return u; return 'https://'+u; };
+  const nameSplit = (full)=>{ full=(full||'').trim().replace(/\s+/g,' '); if(!full) return {firstName:'',lastName:''}; const p=full.split(' '); if(p.length===1) return {firstName:p[0],lastName:''}; const first=p.shift(); return {firstName:first,lastName:p.join(' ')}; };
+  const hashId = (s)=>{ s=(s||'').toString(); let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return h.toString(16); };
+  function renderPreview(items){ const top=items.slice(0,5).map(i=>(`<div class="border-b py-2"><strong>${i.firstName||''} ${i.lastName||''}</strong> ${i.position?(' – '+i.position):''} ${i.company?(' @ '+i.company):''}<div class="text-gray-500">${i.email||''} ${i.linkedin?(' • '+i.linkedin):''}</div></div>`)).join(''); previewEl.innerHTML = top || '<div class="text-gray-500">Voorbeeld verschijnt hier na het kiezen van een bestand.</div>'; }
+  fileInput && fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0]; rows=[]; if(!file){renderPreview(rows); return;}
+    Papa.parse(file, { header:true, skipEmptyLines:true, transformHeader:(h)=>(h||'').replace(/\uFEFF/g,'').trim(), complete:(res)=>{
+      const data = Array.isArray(res.data)?res.data:[]; const map = new Map();
+      for(const r of data){
+        const firstName = r['First Name']||r['Voornaam']||'';
+        const lastName  = r['Last Name']||r['Achternaam']||'';
+        const fullName  = r['Name']||r['Volledige naam']||r['Full Name']||'';
+        const email     = r['Email Address']||r['E-mail']||r['Email']||'';
+        const company   = r['Company']||r['Bedrijf']||'';
+        const position  = r['Position']||r['Functie']||r['Job Title']||'';
+        const ln        = r['Profile URL']||r['LinkedIn Profile URL']||r['URL']||r['Linkedin']||'';
+        let f=firstName, l=lastName; if(!f && !l && fullName){ const sp=nameSplit(fullName); f=sp.firstName; l=sp.lastName; }
+        const linkedin = normUrl(ln);
+        const key = lc(email) || linkedin || (f+'|'+l+'|'+company).toLowerCase();
+        if(!key || map.has(key)) continue;
+        map.set(key, { firstName:f||'', lastName:l||'', displayName:((f||'')+' '+(l||'')).trim(), email:lc(email), company:company||'', position:position||'', linkedin:linkedin||'' });
+      }
+      rows = Array.from(map.values()); renderPreview(rows);
+    }});
+  });
+  btn && btn.addEventListener('click', async ()=>{
+    const auth=firebase.auth(); const db=firebase.firestore(); const user=auth.currentUser;
+    if(!user){ alert('Log eerst in.'); return; }
+    if(!rows.length){ alert('Geen records gevonden.'); return; }
+    const typeSelVal = typeSel?typeSel.value:'investor'; const chunk=400; let done=0;
+    for(let i=0;i<rows.length;i+=chunk){
+      const batch=db.batch(); const slice=rows.slice(i,i+chunk);
+      for(const r of slice){
+        const key=(r.email||r.linkedin||r.displayName).toString(); const id=hashId(key);
+        batch.set(db.collection('contacts').doc(id), {...r, contactType:typeSelVal, owner_id:user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true});
+        const investor={ naam:r.displayName||((r.firstName+' '+r.lastName).trim())||'Onbekend', email:r.email||'', bedrijf:r.company||'', locatie:'', minBudget:0, maxBudget:0, risicoprofiel:'Gemiddeld', communicatieVoorkeur:'Email', investmentMotivatie:'', bijzonderheden:'', linkedin:r.linkedin||'', owner_id:user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+        const broker={ naam:r.displayName||((r.firstName+' '+r.lastName).trim())||'Onbekend', email:r.email||'', telefoon:'', bedrijf:r.company||'', locatie:'', specialisaties:[], werkgebied:[], ervaringJaren:'', trackRecord:'', commissieStructuur:'', locatieDetails:'', werkwijze:'', bijzonderheden:'', linkedin:r.linkedin||'', owner_id:user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if(typeSelVal==='investor' || typeSelVal==='both') batch.set(db.collection('investors').doc('i_'+id), investor, {merge:true});
+        if(typeSelVal==='broker' || typeSelVal==='both')   batch.set(db.collection('brokers').doc('b_'+id),   broker,   {merge:true});
+      }
+      await batch.commit(); done += slice.length; progEl.textContent = `Geüpload: ${done} / ${rows.length}`;
+    }
+    progEl.textContent = `✅ Klaar. Totaal geüpload/geüpdatet: ${rows.length}`; alert('✅ Upload compleet!');
+  });
+})();
+</script>
+<!-- ===== end ChatGPT Option B ===== -->
+
+
+<!-- ===== ChatGPT: LinkedIn button injector ===== -->
+<style>
+  .vm-linkedin-btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; border:1px solid #d1d5db; }
+  .vm-linkedin-btn:hover{ background:#f3f4f6; }
+</style>
+<script>
+(function(){
+  function mkBtn(href){
+    const a = document.createElement('a');
+    a.textContent = 'Open LinkedIn-profiel';
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    a.className = 'vm-linkedin-btn text-blue-700';
+    return a;
+  }
+  function norm(u){ if(!u) return ''; u=(u+'').trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; return u; }
+  function attach(el){
+    if(!el || el.__vm_linkedin_btn) return;
+    const btn = mkBtn('#');
+    btn.style.marginLeft = '0.5rem'; btn.style.marginTop = '0.25rem';
+    el.insertAdjacentElement('afterend', btn);
+    el.__vm_linkedin_btn = btn;
+    const upd = ()=>{
+      const v = norm(el.value);
+      if(!v || v==='https://'){ btn.href='#'; btn.style.pointerEvents='none'; btn.style.opacity='0.5'; }
+      else { btn.href=v; btn.style.pointerEvents='auto'; btn.style.opacity='1'; }
+    };
+    el.addEventListener('input', upd);
+    upd();
+  }
+  function scan(root){ root.querySelectorAll('input[id*="linkedin" i],input[name*="linkedin" i],input[placeholder*="LinkedIn" i]').forEach(attach); }
+  const mo=new MutationObserver(m=>{m.forEach(x=>{x.addedNodes&&x.addedNodes.forEach(n=>{ if(n.nodeType===1) scan(n); });});});
+  document.addEventListener('DOMContentLoaded', ()=>{ scan(document); mo.observe(document.body,{childList:true,subtree:true}); });
+})();
+</script>
+<!-- ===== end LinkedIn button injector ===== -->
 
 </body>
 
