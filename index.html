@@ -22,8 +22,45 @@
 }
 </style>
 <style>#csv-upload-section{display:none!important}</style>
+<style>
+/* --- PATCH: Hide legacy duplicate CSV upload controls (keep only the bottom one) --- */
+#csvFileInput, #uploadToFirestore, #uploadBtn, #csv-upload-section { display: none !important; }
+/* --- PATCH: Contacts Live Section --- */
+#contacts-live { max-width: 1200px; margin: 2rem auto; }
+.contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.contact-card { border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 14px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.contact-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; display:flex; align-items:center; justify-content:space-between;}
+.contact-meta { color: #475569; font-size: .875rem; line-height: 1.3; }
+.contact-tags { display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap; }
+.tag { font-size: .75rem; padding:.15rem .5rem; border-radius:999px; background:#f1f5f9; color:#0f172a; }
+.link-btn { display:inline-flex; gap:.4rem; align-items:center; padding:.4rem .6rem; border-radius:10px; border:1px solid #cbd5e1; background:#fff; text-decoration:none; }
+.link-btn:hover{ background:#f8fafc; }
+#contacts-controls{ display:flex; align-items:center; justify-content:space-between; margin: .25rem 0 1rem; gap: .75rem; flex-wrap:wrap;}
+#contacts-count{ font-weight:600;}
+</style>
 </head>
 <body>
+
+<!-- === PATCH: Realtime Contacts Overview (owner scoped) === -->
+<section id="contacts-live" class="hidden">
+  <div id="contacts-controls">
+    <div>
+      <span id="contacts-count">0</span> contacten
+      <span id="contacts-dedup-note" style="color:#64748b; font-size:.9rem; margin-left:.25rem;"></span>
+    </div>
+    <div style="display:flex; gap:.5rem; align-items:center;">
+      <select id="contacts-role-filter" class="link-btn" aria-label="Filter op rol">
+        <option value="all">Alle rollen</option>
+        <option value="investor">Investors</option>
+        <option value="broker">Brokers</option>
+        <option value="both">Beide</option>
+      </select>
+      <button id="contacts-load-more" class="link-btn">Meer laden</button>
+    </div>
+  </div>
+  <div id="contacts-list" class="contacts-grid"></div>
+</section>
+
     <div id="root"></div>
 
     <!-- Firebase Configuration -->
@@ -4640,6 +4677,170 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   obs.observe(document.documentElement, {subtree:true, childList:true});
+})();
+</script>
+
+
+<script type="module">
+// === PATCH: Real-time contacts loader with LinkedIn button & paging ===
+(function(){
+  const SECTION_ID = "contacts-live";
+  const LIST_ID = "contacts-list";
+  const COUNT_ID = "contacts-count";
+  const LOAD_BTN_ID = "contacts-load-more";
+  const FILTER_ID = "contacts-role-filter";
+
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  let lastDoc = null;
+  let unsubscribe = null;
+  let allDocs = [];
+  let dedupByEmail = new Map();
+  let currentFilter = "all";
+  const PAGE_SIZE = 100;
+
+  const $ = (id)=>document.getElementById(id);
+  const sectionEl = document.getElementById(SECTION_ID);
+
+  function ensureVisible(){
+    if(sectionEl) sectionEl.classList.remove("hidden");
+  }
+
+  function orStr(x){ return (x||"").toString(); }
+  function roleFromDoc(d){
+    const r = (d.role || d.contactType || "").toString().toLowerCase();
+    const investor = (d.isInvestor === true) || orStr(r).includes("investor");
+    const broker = (d.isBroker === true) || orStr(r).includes("broker");
+    if (investor && broker) return "both";
+    if (investor) return "investor";
+    if (broker) return "broker";
+    return "unknown";
+  }
+
+  function normalizeContact(docId, data){
+    const firstName = data.firstName || data.voornaam || "";
+    const lastName  = data.lastName  || data.achternaam || "";
+    const name = data.fullName || data.naam || [firstName, lastName].filter(Boolean).join(" ").trim() || "Onbekend";
+    const email = (data.email || data.eMail || data.mail || "").toLowerCase();
+    const phone = data.phone || data.telefoon || data.mobilenummer || "";
+    const company = data.company || data.bedrijf || "";
+    const city = data.city || data.plaats || data.locatie || "";
+    const country = data.country || data.land || "";
+    const linkedin = data.linkedin || data.linkedinUrl || data.linkedinURL || data.linkedIn || "";
+    const role = roleFromDoc(data);
+    return { id: docId, name, email, phone, company, city, country, linkedin, role, _raw: data };
+  }
+
+  function render(list){
+    const listEl = $(LIST_ID);
+    const countEl = $(COUNT_ID);
+    if (!listEl || !countEl) return;
+    const filtered = list.filter(c=>{
+      if(currentFilter==="all") return true;
+      if(currentFilter==="both") return c.role==="both";
+      return c.role === currentFilter;
+    });
+    countEl.textContent = filtered.length.toLocaleString("nl-NL");
+    const dedupNote = document.getElementById("contacts-dedup-note");
+    if (dedupNote) dedupNote.textContent = dedupByEmail.size ? `(gededupliceerd op email: ${dedupByEmail.size.toLocaleString("nl-NL")} uniek)` : "";
+
+    listEl.innerHTML = filtered.map(c=>{
+      const tags = [];
+      if (c.role && c.role!=="unknown") tags.push(c.role);
+      if (c.country) tags.push(c.country);
+      return `
+      <article class="contact-card">
+        <div class="contact-title">
+          <span>${escapeHtml(c.name)}</span>
+          ${c.linkedin ? `<a class="link-btn" href="${escapeAttr(c.linkedin)}" target="_blank" rel="noopener noreferrer" title="Open LinkedIn-profiel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            LinkedIn
+          </a>` : ``}
+        </div>
+        <div class="contact-meta">
+          ${c.company ? escapeHtml(c.company) : ""}
+          ${c.city || c.country ? ` • ${escapeHtml([c.city, c.country].filter(Boolean).join(", "))}` : ""}
+          ${c.email ? `<br>${escapeHtml(c.email)}` : ""}
+          ${c.phone ? ` • ${escapeHtml(c.phone)}` : ""}
+        </div>
+        ${tags.length ? `<div class="contact-tags">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>`:""}
+      </article>`;
+    }).join("");
+  }
+
+  function escapeHtml(s){ return (s||"").toString()
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
+
+  async function startRealtime(uid){
+    ensureVisible();
+    cleanup();
+    lastDoc = null;
+    allDocs = [];
+    dedupByEmail = new Map();
+
+    const baseQuery = db.collection("contacts")
+      .where("owner_id", "==", uid)
+      .orderBy("created_at", "desc")
+      .limit(PAGE_SIZE);
+
+    unsubscribe = baseQuery.onSnapshot((snap)=>{
+      snap.docChanges().forEach(ch=>{
+        const n = normalizeContact(ch.doc.id, ch.doc.data() || {});
+        const key = n.email || n.id;
+        if (!dedupByEmail.has(key)) dedupByEmail.set(key, n);
+      });
+      allDocs = Array.from(dedupByEmail.values());
+      if (snap.docs.length) lastDoc = snap.docs[snap.docs.length-1];
+      render(allDocs);
+    }, (err)=>{
+      console.error("Realtime contacts error:", err);
+    });
+  }
+
+  function cleanup(){
+    if (unsubscribe){ unsubscribe(); unsubscribe = null; }
+  }
+
+  async function loadMore(uid){
+    if (!lastDoc) return;
+    const snap = await db.collection("contacts")
+      .where("owner_id","==",uid)
+      .orderBy("created_at","desc")
+      .startAfter(lastDoc)
+      .limit(PAGE_SIZE)
+      .get();
+    if (!snap.empty){
+      snap.docs.forEach(doc=>{
+        const n = normalizeContact(doc.id, doc.data()||{});
+        const key = n.email || n.id;
+        if (!dedupByEmail.has(key)) dedupByEmail.set(key, n);
+      });
+      allDocs = Array.from(dedupByEmail.values());
+      lastDoc = snap.docs[snap.docs.length-1];
+      render(allDocs);
+    }
+  }
+
+  document.addEventListener("click", (e)=>{
+    if (e.target && e.target.id === LOAD_BTN_ID){
+      const u = auth.currentUser;
+      if (u) loadMore(u.uid);
+    }
+  });
+  document.addEventListener("change", (e)=>{
+    if (e.target && e.target.id === FILTER_ID){
+      currentFilter = e.target.value;
+      render(allDocs);
+    }
+  });
+
+  auth.onAuthStateChanged((u)=>{
+    if (u) startRealtime(u.uid);
+  });
+
 })();
 </script>
 
