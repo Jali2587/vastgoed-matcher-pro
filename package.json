@@ -1,5 +1,9 @@
 {
-  "dependencies": {
-    "papaparse": "^5.4.1"
+  "name": "vastgoed-matcher-pro",
+  "version": "1.0.0",
+  "description": "Vastgoed Matcher Pro AI - Enhanced",
+  "dependencies": {},
+  "scripts": {
+    "build": "echo 'No build needed'"
   }
 }
