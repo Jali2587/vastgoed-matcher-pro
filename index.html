@@ -439,15 +439,42 @@
                                 const line = lines[i].trim();
                                 if (!line) continue;
                                 
+                                console.log('📝 Originele regel:', line);
+                                
                                 // LinkedIn CSV specifiek formaat met ;; als separator
-                                const parts = line.split(';;').map(part => 
-                                    part.replace(/^"|"$/g, '').trim()
-                                );
+                                // Gebruik een betere splitsing die omgaat met gequote velden
+                                const parts = [];
+                                let currentPart = '';
+                                let inQuotes = false;
+                                
+                                for (let j = 0; j < line.length; j++) {
+                                    const char = line[j];
+                                    const nextChar = line[j + 1];
+                                    
+                                    if (char === '"') {
+                                        inQuotes = !inQuotes;
+                                        currentPart += char;
+                                    } else if (char === ';' && nextChar === ';' && !inQuotes) {
+                                        // Dit is een scheidingsteken ;;
+                                        parts.push(currentPart.trim());
+                                        currentPart = '';
+                                        j++; // Skip de volgende ;
+                                    } else {
+                                        currentPart += char;
+                                    }
+                                }
+                                
+                                // Voeg het laatste deel toe
+                                if (currentPart.trim()) {
+                                    parts.push(currentPart.trim());
+                                }
+                                
+                                console.log('🔧 Gesplitste delen:', parts);
                                 
                                 if (parts.length >= 6) {
                                     // Verwerk naam (kan "Voornaam, Achternaam" formaat hebben)
-                                    let firstName = parts[0] || '';
-                                    let lastName = parts[1] || '';
+                                    let firstName = parts[0] ? parts[0].replace(/^"|"$/g, '').trim() : '';
+                                    let lastName = parts[1] ? parts[1].replace(/^"|"$/g, '').trim() : '';
                                     
                                     // Als eerste deel een komma bevat, splits dan op komma voor naam
                                     if (firstName.includes(',') && !lastName) {
@@ -456,14 +483,14 @@
                                         lastName = nameParts[0]?.trim() || '';
                                     }
                                     
-                                    const url = parts[2] || '';
-                                    const email = parts[3] || '';
-                                    const company = parts[4] || '';
-                                    const position = parts[5] || '';
-                                    const connectedOn = parts[6] || '';
+                                    const url = parts[2] ? parts[2].replace(/^"|"$/g, '').trim() : '';
+                                    const email = parts[3] ? parts[3].replace(/^"|"$/g, '').trim() : '';
+                                    const company = parts[4] ? parts[4].replace(/^"|"$/g, '').trim() : '';
+                                    const position = parts[5] ? parts[5].replace(/^"|"$/g, '').trim() : '';
+                                    const connectedOn = parts[6] ? parts[6].replace(/^"|"$/g, '').trim() : '';
                                     
                                     if (firstName || lastName) {
-                                        connections.push({
+                                        const connection = {
                                             firstName: firstName,
                                             lastName: lastName,
                                             email: email,
@@ -473,8 +500,12 @@
                                             connectedOn: connectedOn,
                                             contactType: contactType,
                                             importSource: 'linkedin'
-                                        });
+                                        };
+                                        connections.push(connection);
+                                        console.log('✅ Toegevoegd:', connection);
                                     }
+                                } else {
+                                    console.log('❌ Rij heeft te weinig delen:', parts.length);
                                 }
                             }
                             
@@ -489,6 +520,33 @@
                     
                     reader.onerror = function() {
                         reject(new Error('Fout bij lezen van bestand'));
+                    };
+                    
+                    reader.readAsText(file);
+                });
+            };
+
+            // 🔥 DEBUG functie om CSV structuur te analyseren
+            const debugCSVStructure = (file) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const csvText = e.target.result;
+                        console.log('🔍 CSV Structuur Analyse:');
+                        console.log('Totaal rijen:', csvText.split('\n').length);
+                        
+                        // Toon eerste 3 rijen voor analyse
+                        const lines = csvText.split('\n');
+                        for (let i = 0; i < Math.min(3, lines.length); i++) {
+                            const line = lines[i].trim();
+                            if (line) {
+                                console.log(`Rij ${i}:`, line);
+                                console.log(`Rij ${i} split op ;;:`, line.split(';;'));
+                            }
+                        }
+                        
+                        resolve(lines);
                     };
                     
                     reader.readAsText(file);
@@ -837,8 +895,11 @@
                     
                     try {
                         setIsUploading(true);
-                        let parsedData;
                         
+                        // Eerst debug de structuur
+                        await debugCSVStructure(file);
+                        
+                        let parsedData;
                         if (csvSource === 'linkedin') {
                             parsedData = await parseLinkedInCSV(file, contactType);
                         } else {
