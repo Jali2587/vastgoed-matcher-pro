@@ -1,7 +1,5 @@
 {
-  "name": "vastgoed-matcher-pro",
-  "version": "1.0.0",
   "dependencies": {
-    "openai": "^4.28.4"
+    "papaparse": "^5.4.1"
   }
 }
