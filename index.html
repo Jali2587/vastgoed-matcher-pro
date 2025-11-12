@@ -422,70 +422,80 @@
                 return users.find(u => u.id === id) || { name: 'Onbekend', email: '' };
             };
 
-            // 🔥 VERBETERDE LinkedIn CSV Parser - Speciaal voor LinkedIn Connections export
+            // 🔥 WERKENDE LinkedIn CSV Parser - Speciaal voor LinkedIn Connections export
             const parseLinkedInCSV = (file, contactType = 'investor') => {
                 return new Promise((resolve, reject) => {
-                    Papa.parse(file, {
-                        header: true, // LinkedIn CSV heeft headers
-                        skipEmptyLines: true,
-                        complete: (results) => {
-                            try {
-                                console.log('🔍 LinkedIn CSV parsing gestart...', results.data.length);
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        try {
+                            const csvText = e.target.result;
+                            console.log('🔍 LinkedIn CSV parsing gestart...');
+                            
+                            const connections = [];
+                            const lines = csvText.split('\n');
+                            
+                            for (let i = 0; i < lines.length; i++) {
+                                const line = lines[i].trim();
+                                if (!line) continue;
                                 
-                                const connections = [];
-                                let processedCount = 0;
+                                // LinkedIn CSV specifiek formaat met ;; als separator
+                                const parts = line.split(';;').map(part => 
+                                    part.replace(/^"|"$/g, '').trim()
+                                );
                                 
-                                // LinkedIn CSV heeft verschillende formaten, afhankelijk van export
-                                for (let i = 0; i < results.data.length; i++) {
-                                    const row = results.data[i];
-                                    if (!row) continue;
+                                if (parts.length >= 6) {
+                                    // Verwerk naam (kan "Voornaam, Achternaam" formaat hebben)
+                                    let firstName = parts[0] || '';
+                                    let lastName = parts[1] || '';
                                     
-                                    try {
-                                        // LinkedIn CSV velden kunnen variëren, probeer verschillende veldnamen
-                                        const firstName = row['First Name'] || row['Voornaam'] || row['firstName'] || '';
-                                        const lastName = row['Last Name'] || row['Achternaam'] || row['lastName'] || '';
-                                        const email = row['Email Address'] || row['E-mail'] || row['Email'] || row['emailAddress'] || '';
-                                        const company = row['Company'] || row['Bedrijf'] || row['company'] || '';
-                                        const position = row['Position'] || row['Functie'] || row['Job Title'] || row['position'] || '';
-                                        const url = row['URL'] || row['Profile URL'] || row['LinkedIn Profile URL'] || row['linkedInUrl'] || '';
-                                        const connectedOn = row['Connected On'] || row['Connected'] || row['connectedOn'] || '';
-                                        
-                                        // Alleen toevoegen als we naam hebben
-                                        if (firstName || lastName) {
-                                            connections.push({
-                                                firstName: firstName,
-                                                lastName: lastName,
-                                                email: email,
-                                                company: company,
-                                                position: position,
-                                                linkedin: url,
-                                                connectedOn: connectedOn,
-                                                contactType: contactType,
-                                                importSource: 'linkedin'
-                                            });
-                                            processedCount++;
-                                        }
-                                    } catch (lineError) {
-                                        console.log('❌ Fout bij verwerken rij:', row, lineError);
+                                    // Als eerste deel een komma bevat, splits dan op komma voor naam
+                                    if (firstName.includes(',') && !lastName) {
+                                        const nameParts = firstName.split(',');
+                                        firstName = nameParts[1]?.trim() || '';
+                                        lastName = nameParts[0]?.trim() || '';
+                                    }
+                                    
+                                    const url = parts[2] || '';
+                                    const email = parts[3] || '';
+                                    const company = parts[4] || '';
+                                    const position = parts[5] || '';
+                                    const connectedOn = parts[6] || '';
+                                    
+                                    if (firstName || lastName) {
+                                        connections.push({
+                                            firstName: firstName,
+                                            lastName: lastName,
+                                            email: email,
+                                            company: company,
+                                            position: position,
+                                            linkedin: url,
+                                            connectedOn: connectedOn,
+                                            contactType: contactType,
+                                            importSource: 'linkedin'
+                                        });
                                     }
                                 }
-                                
-                                console.log(`✅ LinkedIn parsing voltooid: ${processedCount} connecties verwerkt`);
-                                resolve(connections);
-                                
-                            } catch (error) {
-                                console.error('❌ LinkedIn CSV parsing error:', error);
-                                reject(error);
                             }
-                        },
-                        error: (error) => {
+                            
+                            console.log(`✅ LinkedIn parsing voltooid: ${connections.length} connecties verwerkt`);
+                            resolve(connections);
+                            
+                        } catch (error) {
+                            console.error('❌ LinkedIn CSV parsing error:', error);
                             reject(error);
                         }
-                    });
+                    };
+                    
+                    reader.onerror = function() {
+                        reject(new Error('Fout bij lezen van bestand'));
+                    };
+                    
+                    reader.readAsText(file);
                 });
             };
 
-            // 🔥 VERBETERDE CSV Upload Functions
+            // 🔥 Standaard CSV Upload Functions
             const handleCsvUpload = (file, contactType = 'investor') => {
                 return new Promise((resolve, reject) => {
                     Papa.parse(file, {
@@ -638,7 +648,180 @@
                 }
             };
 
-            // 🔥 VERBETERDE Enhanced CSV Upload Section met LinkedIn support
+            // 🔥 ENHANCED MATCHING ALGORITHM WITH SEMANTIC ANALYSIS
+            const calculateMatchScore = (investor, deal) => {
+                let score = 0;
+                let maxScore = 0;
+                let reasoningFactors = [];
+
+                // Budget matching (20% - reduced to make room for semantic)
+                maxScore += 20;
+                if (deal.prijs >= investor.minBudget && deal.prijs <= investor.maxBudget) {
+                    score += 20;
+                    reasoningFactors.push(`✓ Budget perfect match (€${deal.prijs.toLocaleString()} binnen €${investor.minBudget.toLocaleString()}-€${investor.maxBudget.toLocaleString()} range)`);
+                } else if (deal.prijs < investor.minBudget) {
+                    const budgetScore = Math.max(0, 20 - ((investor.minBudget - deal.prijs) / investor.minBudget * 20));
+                    score += budgetScore;
+                    reasoningFactors.push(`⚠ Deal prijs onder minimum budget (${budgetScore.toFixed(1)}/20 punten)`);
+                } else {
+                    reasoningFactors.push(`✗ Deal prijs boven maximum budget`);
+                }
+
+                // 🔥 SIMPLIFIED LOCATION MATCHING (15% - reduced)
+                maxScore += 15;
+                let locationScore = 0;
+                
+                // Check country match
+                if ((investor.voorkeursLanden || []).some(land => 
+                    deal.locatie.toLowerCase().includes(land.toLowerCase())
+                )) {
+                    locationScore = 15;
+                    reasoningFactors.push(`✓ Land match gevonden in locatie`);
+                }
+                // Check region match 
+                else if ((investor.voorkeursRegio || []).length > 0) {
+                    locationScore = 8;
+                    reasoningFactors.push(`~ Regio voorkeur aanwezig`);
+                }
+                // Default geographic scope
+                else {
+                    locationScore = 5;
+                    reasoningFactors.push(`~ Geen specifieke locatie eisen`);
+                }
+                
+                score += locationScore;
+
+                // Type vastgoed matching (15%)
+                maxScore += 15;
+                if ((investor.vastgoedTypes || []).includes(deal.type)) {
+                    score += 15;
+                    reasoningFactors.push(`✓ Vastgoed type match (${deal.type})`);
+                } else if ((investor.vastgoedTypes || []).length === 0) {
+                    score += 7;
+                    reasoningFactors.push(`~ Geen specifieke vastgoed type voorkeur`);
+                } else {
+                    reasoningFactors.push(`✗ Vastgoed type niet in voorkeuren`);
+                }
+
+                // Project type matching (10%)
+                maxScore += 10;
+                if ((investor.projectTypes || []).includes(deal.projectType)) {
+                    score += 10;
+                    reasoningFactors.push(`✓ Project type match (${deal.projectType})`);
+                } else if ((investor.projectTypes || []).length === 0) {
+                    score += 5;
+                    reasoningFactors.push(`~ Geen specifieke project type voorkeur`);
+                } else {
+                    reasoningFactors.push(`✗ Project type niet in voorkeuren`);
+                }
+
+                // Rendement matching (15%)
+                maxScore += 15;
+                if (deal.verwachtRendement >= investor.gewenstRendement) {
+                    score += 15;
+                    reasoningFactors.push(`✓ Rendement boven verwachting (${deal.verwachtRendement}% vs ${investor.gewenstRendement}%)`);
+                } else {
+                    const rendementScore = Math.max(0, 15 - ((investor.gewenstRendement - deal.verwachtRendement) / investor.gewenstRendement * 15));
+                    score += rendementScore;
+                    reasoningFactors.push(`⚠ Rendement onder verwachting (${rendementScore.toFixed(1)}/15 punten)`);
+                }
+
+                // Risico matching (10%)
+                maxScore += 10;
+                const risicoMatch = {
+                    'Conservatief': { 'Laag': 10, 'Gemiddeld': 6, 'Hoog': 2 },
+                    'Gemiddeld': { 'Laag': 8, 'Gemiddeld': 10, 'Hoog': 7 },
+                    'Agressief': { 'Laag': 5, 'Gemiddeld': 8, 'Hoog': 10 }
+                };
+                const risicoScore = risicoMatch[investor.risicoprofiel]?.[deal.risico] || 0;
+                score += risicoScore;
+                reasoningFactors.push(`${risicoScore >= 8 ? '✓' : '⚠'} Risico match (${investor.risicoprofiel} profiel, ${deal.risico} risico)`);
+
+                // 🔥 NEW: SEMANTIC MATCHING (15% - new powerful feature)
+                maxScore += 15;
+                let semanticScore = 0;
+                let semanticReasons = [];
+                
+                const investorText = [
+                    investor.investmentMotivatie || '',
+                    investor.bijzonderheden || '',
+                    investor.locatieDetails || ''
+                ].join(' ').toLowerCase();
+                
+                const dealText = [
+                    deal.beschrijving || '',
+                    deal.bijzonderheden || ''
+                ].join(' ').toLowerCase();
+
+                // Semantic keyword matching
+                const semanticMatches = [
+                    { investor: ['stabiel', 'huurinkomst', 'gegarandeerd'], deal: ['gegarandeerd', 'huurder', 'corporatie'], points: 5, desc: 'Stabiele huurinkomsten match' },
+                    { investor: ['turn-key', 'geen renovatie', 'kant-en-klaar'], deal: ['turn-key', 'kant-en-klaar', 'direct'], points: 4, desc: 'Turn-key voorkeur match' },
+                    { investor: ['duurzaam', 'energie', 'milieu'], deal: ['energielabel', 'duurzaam', 'zonnepanel', 'warmtepomp'], points: 3, desc: 'Duurzaamheid match' },
+                    { investor: ['student', 'universiteit'], deal: ['student', 'universiteit', 'campus'], points: 3, desc: 'Studenten segment match' },
+                    { investor: ['centrum', 'bereikbaar', 'transport'], deal: ['centrum', 'metro', 'transport', 'bereikbaar'], points: 2, desc: 'Locatie bereikbaarheid match' }
+                ];
+
+                semanticMatches.forEach(match => {
+                    const investorHasKeywords = match.investor.some(keyword => investorText.includes(keyword));
+                    const dealHasKeywords = match.deal.some(keyword => dealText.includes(keyword));
+                    
+                    if (investorHasKeywords && dealHasKeywords) {
+                        semanticScore += match.points;
+                        semanticReasons.push(`✓ ${match.desc}`);
+                    }
+                });
+
+                // Conflict detection
+                const conflicts = [
+                    { investor: ['geen renovatie', 'turn-key'], deal: ['renovatie', 'opknappen'], desc: 'Renovatie conflict' },
+                    { investor: ['centrum'], deal: ['buitenwijk', 'periferie'], desc: 'Locatie voorkeur conflict' }
+                ];
+
+                conflicts.forEach(conflict => {
+                    const investorWants = conflict.investor.some(keyword => investorText.includes(keyword));
+                    const dealOffers = conflict.deal.some(keyword => dealText.includes(keyword));
+                    
+                    if (investorWants && dealOffers) {
+                        semanticScore -= 3;
+                        semanticReasons.push(`⚠ ${conflict.desc} gedetecteerd`);
+                    }
+                });
+
+                score += Math.max(0, Math.min(15, semanticScore));
+                reasoningFactors.push(...semanticReasons);
+
+                const finalScore = Math.round((score / maxScore) * 100);
+                
+                return {
+                    score: finalScore,
+                    reasoning: reasoningFactors,
+                    maxScore,
+                    actualScore: score,
+                    semanticScore: semanticScore,
+                    semanticReasons: semanticReasons
+                };
+            };
+
+            const findMatches = (dealId) => {
+                const deal = deals.find(d => d.id === dealId);
+                if (!deal) return [];
+
+                return investors.map(investor => {
+                    const matchResult = calculateMatchScore(investor, deal);
+                    return {
+                        investor,
+                        deal,
+                        matchScore: matchResult.score,
+                        reasoning: matchResult.reasoning,
+                        semanticScore: matchResult.semanticScore,
+                        semanticReasons: matchResult.semanticReasons,
+                        aiInsights: null
+                    };
+                }).sort((a, b) => b.matchScore - a.matchScore);
+            };
+
+            // 🔥 Enhanced CSV Upload Section met LinkedIn support
             const CsvUploadSection = () => {
                 const [selectedFile, setSelectedFile] = React.useState(null);
                 const [contactType, setContactType] = React.useState('investor');
