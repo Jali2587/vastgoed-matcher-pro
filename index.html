@@ -422,11 +422,11 @@
                 return users.find(u => u.id === id) || { name: 'Onbekend', email: '' };
             };
 
-            // 🔥 LinkedIn CSV Parser - Speciaal voor LinkedIn Connections export
+            // 🔥 VERBETERDE LinkedIn CSV Parser - Speciaal voor LinkedIn Connections export
             const parseLinkedInCSV = (file, contactType = 'investor') => {
                 return new Promise((resolve, reject) => {
                     Papa.parse(file, {
-                        header: false, // LinkedIn CSV heeft een speciaal formaat
+                        header: true, // LinkedIn CSV heeft headers
                         skipEmptyLines: true,
                         complete: (results) => {
                             try {
@@ -435,42 +435,35 @@
                                 const connections = [];
                                 let processedCount = 0;
                                 
-                                // LinkedIn CSV heeft dit specifieke formaat met ;; als separator
-                                for (let i = 1; i < results.data.length; i++) { // Skip header
-                                    const row = results.data[i][0]; // LinkedIn data zit in eerste kolom
-                                    if (!row || !row.trim()) continue;
+                                // LinkedIn CSV heeft verschillende formaten, afhankelijk van export
+                                for (let i = 0; i < results.data.length; i++) {
+                                    const row = results.data[i];
+                                    if (!row) continue;
                                     
                                     try {
-                                        // Verwijder dubbele puntkomma's en splits
-                                        const cleanedRow = row.replace(/;;/g, '|SEPARATOR|').replace(/","/g, '|QUOTE_SEP|');
-                                        const parts = cleanedRow.split('|SEPARATOR|').map(part => 
-                                            part.replace(/\|QUOTE_SEP\|/g, '","').replace(/^"|"$/g, '').trim()
-                                        );
+                                        // LinkedIn CSV velden kunnen variëren, probeer verschillende veldnamen
+                                        const firstName = row['First Name'] || row['Voornaam'] || row['firstName'] || '';
+                                        const lastName = row['Last Name'] || row['Achternaam'] || row['lastName'] || '';
+                                        const email = row['Email Address'] || row['E-mail'] || row['Email'] || row['emailAddress'] || '';
+                                        const company = row['Company'] || row['Bedrijf'] || row['company'] || '';
+                                        const position = row['Position'] || row['Functie'] || row['Job Title'] || row['position'] || '';
+                                        const url = row['URL'] || row['Profile URL'] || row['LinkedIn Profile URL'] || row['linkedInUrl'] || '';
+                                        const connectedOn = row['Connected On'] || row['Connected'] || row['connectedOn'] || '';
                                         
-                                        if (parts.length >= 6) {
-                                            const firstName = parts[0]?.split(',')[0]?.replace(/^"|"$/g, '').trim() || '';
-                                            const lastName = parts[0]?.split(',')[1]?.replace(/^"|"$/g, '').trim() || '';
-                                            const url = parts[1]?.replace(/^"|"$/g, '').trim() || '';
-                                            const email = parts[2]?.replace(/^"|"$/g, '').trim() || '';
-                                            const company = parts[3]?.replace(/^"|"$/g, '').trim() || '';
-                                            const position = parts[4]?.replace(/^"|"$/g, '').trim() || '';
-                                            const connectedOn = parts[5]?.replace(/^"|"$/g, '').trim() || '';
-                                            
-                                            // Alleen toevoegen als we naam hebben
-                                            if (firstName || lastName) {
-                                                connections.push({
-                                                    firstName: firstName,
-                                                    lastName: lastName,
-                                                    email: email,
-                                                    company: company,
-                                                    position: position,
-                                                    linkedin: url,
-                                                    connectedOn: connectedOn,
-                                                    contactType: contactType,
-                                                    importSource: 'linkedin'
-                                                });
-                                                processedCount++;
-                                            }
+                                        // Alleen toevoegen als we naam hebben
+                                        if (firstName || lastName) {
+                                            connections.push({
+                                                firstName: firstName,
+                                                lastName: lastName,
+                                                email: email,
+                                                company: company,
+                                                position: position,
+                                                linkedin: url,
+                                                connectedOn: connectedOn,
+                                                contactType: contactType,
+                                                importSource: 'linkedin'
+                                            });
+                                            processedCount++;
                                         }
                                     } catch (lineError) {
                                         console.log('❌ Fout bij verwerken rij:', row, lineError);
@@ -492,7 +485,7 @@
                 });
             };
 
-            // 🔥 CSV Upload Functions - GEFIXTE VERSIE
+            // 🔥 VERBETERDE CSV Upload Functions
             const handleCsvUpload = (file, contactType = 'investor') => {
                 return new Promise((resolve, reject) => {
                     Papa.parse(file, {
@@ -645,201 +638,37 @@
                 }
             };
 
-            // 🔥 ENHANCED MATCHING ALGORITHM WITH SEMANTIC ANALYSIS
-            const calculateMatchScore = (investor, deal) => {
-                let score = 0;
-                let maxScore = 0;
-                let reasoningFactors = [];
-
-                // Budget matching (20% - reduced to make room for semantic)
-                maxScore += 20;
-                if (deal.prijs >= investor.minBudget && deal.prijs <= investor.maxBudget) {
-                    score += 20;
-                    reasoningFactors.push(`✓ Budget perfect match (€${deal.prijs.toLocaleString()} binnen €${investor.minBudget.toLocaleString()}-€${investor.maxBudget.toLocaleString()} range)`);
-                } else if (deal.prijs < investor.minBudget) {
-                    const budgetScore = Math.max(0, 20 - ((investor.minBudget - deal.prijs) / investor.minBudget * 20));
-                    score += budgetScore;
-                    reasoningFactors.push(`⚠ Deal prijs onder minimum budget (${budgetScore.toFixed(1)}/20 punten)`);
-                } else {
-                    reasoningFactors.push(`✗ Deal prijs boven maximum budget`);
-                }
-
-                // 🔥 SIMPLIFIED LOCATION MATCHING (15% - reduced)
-                maxScore += 15;
-                let locationScore = 0;
-                
-                // Check country match
-                if ((investor.voorkeursLanden || []).some(land => 
-                    deal.locatie.toLowerCase().includes(land.toLowerCase())
-                )) {
-                    locationScore = 15;
-                    reasoningFactors.push(`✓ Land match gevonden in locatie`);
-                }
-                // Check region match 
-                else if ((investor.voorkeursRegio || []).length > 0) {
-                    locationScore = 8;
-                    reasoningFactors.push(`~ Regio voorkeur aanwezig`);
-                }
-                // Default geographic scope
-                else {
-                    locationScore = 5;
-                    reasoningFactors.push(`~ Geen specifieke locatie eisen`);
-                }
-                
-                score += locationScore;
-
-                // Type vastgoed matching (15%)
-                maxScore += 15;
-                if ((investor.vastgoedTypes || []).includes(deal.type)) {
-                    score += 15;
-                    reasoningFactors.push(`✓ Vastgoed type match (${deal.type})`);
-                } else if ((investor.vastgoedTypes || []).length === 0) {
-                    score += 7;
-                    reasoningFactors.push(`~ Geen specifieke vastgoed type voorkeur`);
-                } else {
-                    reasoningFactors.push(`✗ Vastgoed type niet in voorkeuren`);
-                }
-
-                // Project type matching (10%)
-                maxScore += 10;
-                if ((investor.projectTypes || []).includes(deal.projectType)) {
-                    score += 10;
-                    reasoningFactors.push(`✓ Project type match (${deal.projectType})`);
-                } else if ((investor.projectTypes || []).length === 0) {
-                    score += 5;
-                    reasoningFactors.push(`~ Geen specifieke project type voorkeur`);
-                } else {
-                    reasoningFactors.push(`✗ Project type niet in voorkeuren`);
-                }
-
-                // Rendement matching (15%)
-                maxScore += 15;
-                if (deal.verwachtRendement >= investor.gewenstRendement) {
-                    score += 15;
-                    reasoningFactors.push(`✓ Rendement boven verwachting (${deal.verwachtRendement}% vs ${investor.gewenstRendement}%)`);
-                } else {
-                    const rendementScore = Math.max(0, 15 - ((investor.gewenstRendement - deal.verwachtRendement) / investor.gewenstRendement * 15));
-                    score += rendementScore;
-                    reasoningFactors.push(`⚠ Rendement onder verwachting (${rendementScore.toFixed(1)}/15 punten)`);
-                }
-
-                // Risico matching (10%)
-                maxScore += 10;
-                const risicoMatch = {
-                    'Conservatief': { 'Laag': 10, 'Gemiddeld': 6, 'Hoog': 2 },
-                    'Gemiddeld': { 'Laag': 8, 'Gemiddeld': 10, 'Hoog': 7 },
-                    'Agressief': { 'Laag': 5, 'Gemiddeld': 8, 'Hoog': 10 }
-                };
-                const risicoScore = risicoMatch[investor.risicoprofiel]?.[deal.risico] || 0;
-                score += risicoScore;
-                reasoningFactors.push(`${risicoScore >= 8 ? '✓' : '⚠'} Risico match (${investor.risicoprofiel} profiel, ${deal.risico} risico)`);
-
-                // 🔥 NEW: SEMANTIC MATCHING (15% - new powerful feature)
-                maxScore += 15;
-                let semanticScore = 0;
-                let semanticReasons = [];
-                
-                const investorText = [
-                    investor.investmentMotivatie || '',
-                    investor.bijzonderheden || '',
-                    investor.locatieDetails || ''
-                ].join(' ').toLowerCase();
-                
-                const dealText = [
-                    deal.beschrijving || '',
-                    deal.bijzonderheden || ''
-                ].join(' ').toLowerCase();
-
-                // Semantic keyword matching
-                const semanticMatches = [
-                    { investor: ['stabiel', 'huurinkomst', 'gegarandeerd'], deal: ['gegarandeerd', 'huurder', 'corporatie'], points: 5, desc: 'Stabiele huurinkomsten match' },
-                    { investor: ['turn-key', 'geen renovatie', 'kant-en-klaar'], deal: ['turn-key', 'kant-en-klaar', 'direct'], points: 4, desc: 'Turn-key voorkeur match' },
-                    { investor: ['duurzaam', 'energie', 'milieu'], deal: ['energielabel', 'duurzaam', 'zonnepanel', 'warmtepomp'], points: 3, desc: 'Duurzaamheid match' },
-                    { investor: ['student', 'universiteit'], deal: ['student', 'universiteit', 'campus'], points: 3, desc: 'Studenten segment match' },
-                    { investor: ['centrum', 'bereikbaar', 'transport'], deal: ['centrum', 'metro', 'transport', 'bereikbaar'], points: 2, desc: 'Locatie bereikbaarheid match' }
-                ];
-
-                semanticMatches.forEach(match => {
-                    const investorHasKeywords = match.investor.some(keyword => investorText.includes(keyword));
-                    const dealHasKeywords = match.deal.some(keyword => dealText.includes(keyword));
-                    
-                    if (investorHasKeywords && dealHasKeywords) {
-                        semanticScore += match.points;
-                        semanticReasons.push(`✓ ${match.desc}`);
-                    }
-                });
-
-                // Conflict detection
-                const conflicts = [
-                    { investor: ['geen renovatie', 'turn-key'], deal: ['renovatie', 'opknappen'], desc: 'Renovatie conflict' },
-                    { investor: ['centrum'], deal: ['buitenwijk', 'periferie'], desc: 'Locatie voorkeur conflict' }
-                ];
-
-                conflicts.forEach(conflict => {
-                    const investorWants = conflict.investor.some(keyword => investorText.includes(keyword));
-                    const dealOffers = conflict.deal.some(keyword => dealText.includes(keyword));
-                    
-                    if (investorWants && dealOffers) {
-                        semanticScore -= 3;
-                        semanticReasons.push(`⚠ ${conflict.desc} gedetecteerd`);
-                    }
-                });
-
-                score += Math.max(0, Math.min(15, semanticScore));
-                reasoningFactors.push(...semanticReasons);
-
-                const finalScore = Math.round((score / maxScore) * 100);
-                
-                return {
-                    score: finalScore,
-                    reasoning: reasoningFactors,
-                    maxScore,
-                    actualScore: score,
-                    semanticScore: semanticScore,
-                    semanticReasons: semanticReasons
-                };
-            };
-
-            const findMatches = (dealId) => {
-                const deal = deals.find(d => d.id === dealId);
-                if (!deal) return [];
-
-                return investors.map(investor => {
-                    const matchResult = calculateMatchScore(investor, deal);
-                    return {
-                        investor,
-                        deal,
-                        matchScore: matchResult.score,
-                        reasoning: matchResult.reasoning,
-                        semanticScore: matchResult.semanticScore,
-                        semanticReasons: matchResult.semanticReasons,
-                        aiInsights: null
-                    };
-                }).sort((a, b) => b.matchScore - a.matchScore);
-            };
-
-            // 🔥 Enhanced CSV Upload Section met LinkedIn support
+            // 🔥 VERBETERDE Enhanced CSV Upload Section met LinkedIn support
             const CsvUploadSection = () => {
                 const [selectedFile, setSelectedFile] = React.useState(null);
                 const [contactType, setContactType] = React.useState('investor');
                 const [csvSource, setCsvSource] = React.useState('standard'); // 'standard' of 'linkedin'
+                const [isUploading, setIsUploading] = React.useState(false);
 
                 const handleFileSelect = async (event) => {
                     const file = event.target.files[0];
                     if (!file) return;
                     
                     setSelectedFile(file);
+                    setUploadProgress('');
                     
                     try {
+                        setIsUploading(true);
+                        let parsedData;
+                        
                         if (csvSource === 'linkedin') {
-                            const linkedinData = await parseLinkedInCSV(file, contactType);
-                            setCsvData(linkedinData);
+                            parsedData = await parseLinkedInCSV(file, contactType);
                         } else {
-                            await handleCsvUpload(file, contactType);
+                            parsedData = await handleCsvUpload(file, contactType);
                         }
+                        
+                        setCsvData(parsedData);
+                        setUploadProgress(`✅ ${parsedData.length} contacten gevonden in CSV`);
                     } catch (error) {
                         console.error('CSV parsing error:', error);
                         setUploadProgress(`❌ Fout bij verwerken CSV: ${error.message}`);
+                    } finally {
+                        setIsUploading(false);
                     }
                 };
 
@@ -848,7 +677,15 @@
                         alert('Geen CSV data om te uploaden');
                         return;
                     }
+                    setIsUploading(true);
                     uploadContactsToFirebase(csvData);
+                    setIsUploading(false);
+                };
+
+                const clearData = () => {
+                    setCsvData([]);
+                    setSelectedFile(null);
+                    setUploadProgress('');
                 };
 
                 return (
@@ -864,7 +701,10 @@
                                         type="radio" 
                                         value="standard" 
                                         checked={csvSource === 'standard'}
-                                        onChange={(e) => setCsvSource(e.target.value)}
+                                        onChange={(e) => {
+                                            setCsvSource(e.target.value);
+                                            clearData();
+                                        }}
                                         className="text-blue-600"
                                     />
                                     <span>Standaard CSV</span>
@@ -874,7 +714,10 @@
                                         type="radio" 
                                         value="linkedin" 
                                         checked={csvSource === 'linkedin'}
-                                        onChange={(e) => setCsvSource(e.target.value)}
+                                        onChange={(e) => {
+                                            setCsvSource(e.target.value);
+                                            clearData();
+                                        }}
                                         className="text-blue-600"
                                     />
                                     <span>🔥 LinkedIn Connections Export</span>
@@ -888,11 +731,13 @@
                                 accept=".csv" 
                                 onChange={handleFileSelect}
                                 className="p-2 border rounded w-full md:w-auto" 
+                                disabled={isUploading}
                             />
                             <select 
                                 value={contactType}
                                 onChange={(e) => setContactType(e.target.value)}
                                 className="p-2 border rounded"
+                                disabled={isUploading}
                             >
                                 <option value="investor">Investeerder</option>
                                 <option value="broker">Broker</option>
@@ -900,11 +745,29 @@
                             </select>
                             <button 
                                 onClick={handleUpload}
-                                disabled={csvData.length === 0}
-                                className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={csvData.length === 0 || isUploading}
+                                className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center space-x-2"
                             >
-                                Upload naar Firestore
+                                {isUploading ? (
+                                    <>
+                                        <div className="loading-spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                        <span>Uploaden...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>📤</span>
+                                        <span>Upload naar Firestore</span>
+                                    </>
+                                )}
                             </button>
+                            {csvData.length > 0 && (
+                                <button 
+                                    onClick={clearData}
+                                    className="px-5 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                >
+                                    Wissen
+                                </button>
+                            )}
                         </div>
                         
                         {uploadProgress && (
@@ -919,10 +782,16 @@
                         
                         {csvData.length > 0 && (
                             <div className="border rounded p-4 bg-gray-50">
-                                <h3 className="font-medium mb-2">
-                                    Voorbeeld van geüploade data ({csvData.length} contacten)
-                                    {csvSource === 'linkedin' && ' 🔥 LinkedIn Connecties'}
-                                </h3>
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-medium">
+                                        Voorbeeld van geüploade data ({csvData.length} contacten)
+                                        {csvSource === 'linkedin' && ' 🔥 LinkedIn Connecties'}
+                                    </h3>
+                                    <span className="text-sm text-gray-600">
+                                        {contactType === 'both' ? 'Investeerders & Brokers' : 
+                                         contactType === 'investor' ? 'Alleen Investeerders' : 'Alleen Brokers'}
+                                    </span>
+                                </div>
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto custom-scrollbar">
                                     {csvData.slice(0, 9).map((contact, index) => (
                                         <div key={index} className="p-3 bg-white rounded border text-sm">
@@ -973,7 +842,7 @@
                                         <li>Upload het gedownloade CSV bestand hier</li>
                                     </ol>
                                     <p className="mt-2 text-xs">
-                                        🔥 <strong>Automatische parsing:</strong> Namen, bedrijven, functies en LinkedIn URLs worden automatisch herkend
+                                        🔥 <strong>Verbeterde parsing:</strong> Namen, bedrijven, functies en LinkedIn URLs worden automatisch herkend
                                     </p>
                                 </div>
                             ) : (
