@@ -422,6 +422,76 @@
                 return users.find(u => u.id === id) || { name: 'Onbekend', email: '' };
             };
 
+            // 🔥 LinkedIn CSV Parser - Speciaal voor LinkedIn Connections export
+            const parseLinkedInCSV = (file, contactType = 'investor') => {
+                return new Promise((resolve, reject) => {
+                    Papa.parse(file, {
+                        header: false, // LinkedIn CSV heeft een speciaal formaat
+                        skipEmptyLines: true,
+                        complete: (results) => {
+                            try {
+                                console.log('🔍 LinkedIn CSV parsing gestart...', results.data.length);
+                                
+                                const connections = [];
+                                let processedCount = 0;
+                                
+                                // LinkedIn CSV heeft dit specifieke formaat met ;; als separator
+                                for (let i = 1; i < results.data.length; i++) { // Skip header
+                                    const row = results.data[i][0]; // LinkedIn data zit in eerste kolom
+                                    if (!row || !row.trim()) continue;
+                                    
+                                    try {
+                                        // Verwijder dubbele puntkomma's en splits
+                                        const cleanedRow = row.replace(/;;/g, '|SEPARATOR|').replace(/","/g, '|QUOTE_SEP|');
+                                        const parts = cleanedRow.split('|SEPARATOR|').map(part => 
+                                            part.replace(/\|QUOTE_SEP\|/g, '","').replace(/^"|"$/g, '').trim()
+                                        );
+                                        
+                                        if (parts.length >= 6) {
+                                            const firstName = parts[0]?.split(',')[0]?.replace(/^"|"$/g, '').trim() || '';
+                                            const lastName = parts[0]?.split(',')[1]?.replace(/^"|"$/g, '').trim() || '';
+                                            const url = parts[1]?.replace(/^"|"$/g, '').trim() || '';
+                                            const email = parts[2]?.replace(/^"|"$/g, '').trim() || '';
+                                            const company = parts[3]?.replace(/^"|"$/g, '').trim() || '';
+                                            const position = parts[4]?.replace(/^"|"$/g, '').trim() || '';
+                                            const connectedOn = parts[5]?.replace(/^"|"$/g, '').trim() || '';
+                                            
+                                            // Alleen toevoegen als we naam hebben
+                                            if (firstName || lastName) {
+                                                connections.push({
+                                                    firstName: firstName,
+                                                    lastName: lastName,
+                                                    email: email,
+                                                    company: company,
+                                                    position: position,
+                                                    linkedin: url,
+                                                    connectedOn: connectedOn,
+                                                    contactType: contactType,
+                                                    importSource: 'linkedin'
+                                                });
+                                                processedCount++;
+                                            }
+                                        }
+                                    } catch (lineError) {
+                                        console.log('❌ Fout bij verwerken rij:', row, lineError);
+                                    }
+                                }
+                                
+                                console.log(`✅ LinkedIn parsing voltooid: ${processedCount} connecties verwerkt`);
+                                resolve(connections);
+                                
+                            } catch (error) {
+                                console.error('❌ LinkedIn CSV parsing error:', error);
+                                reject(error);
+                            }
+                        },
+                        error: (error) => {
+                            reject(error);
+                        }
+                    });
+                });
+            };
+
             // 🔥 CSV Upload Functions - GEFIXTE VERSIE
             const handleCsvUpload = (file, contactType = 'investor') => {
                 return new Promise((resolve, reject) => {
@@ -437,7 +507,8 @@
                                     company: row['Company'] || row['Bedrijf'] || '',
                                     position: row['Position'] || row['Functie'] || row['Job Title'] || '',
                                     linkedin: row['Profile URL'] || row['LinkedIn Profile URL'] || row['URL'] || row['Linkedin'] || '',
-                                    contactType: contactType
+                                    contactType: contactType,
+                                    importSource: 'standard_csv'
                                 })).filter(item => item.firstName || item.lastName || item.email);
                                 
                                 setCsvData(data);
@@ -469,19 +540,27 @@
                     for (let i = 0; i < contacts.length; i++) {
                         const contact = contacts[i];
                         
-                        // Create base contact data
+                        // LinkedIn-specifieke velden toevoegen
                         const baseData = {
                             naam: `${contact.firstName} ${contact.lastName}`.trim(),
                             email: contact.email,
-                            telefoon: '', // Can be empty
+                            telefoon: '', 
                             bedrijf: contact.company,
-                            locatie: '', // Can be empty
+                            locatie: '',
                             owner_id: user.id,
-                            import_source: 'csv_upload',
+                            import_source: contact.importSource || 'csv_upload',
                             created_at: firebase.firestore.FieldValue.serverTimestamp()
                         };
 
-                        // Upload to investors collection if type is investor or both
+                        // LinkedIn-specifieke velden
+                        if (contact.linkedin) {
+                            baseData.linkedin = contact.linkedin;
+                        }
+                        if (contact.connectedOn) {
+                            baseData.connectedOn = contact.connectedOn;
+                        }
+
+                        // Upload to investors collection
                         if (contact.contactType === 'investor' || contact.contactType === 'both') {
                             const investorData = {
                                 ...baseData,
@@ -494,8 +573,8 @@
                                 projectTypes: [],
                                 communicatieVoorkeur: 'Email',
                                 beschikbaarheid: 'Direct',
-                                investmentMotivatie: '',
-                                bijzonderheden: contact.position ? `Functie: ${contact.position}` : ''
+                                investmentMotivatie: contact.position ? `Functie: ${contact.position}` : '',
+                                bijzonderheden: contact.importSource === 'linkedin' ? 'Geïmporteerd van LinkedIn' : ''
                             };
                             
                             const investorRef = db.collection('investors').doc();
@@ -503,7 +582,7 @@
                             investorCount++;
                         }
 
-                        // Upload to brokers collection if type is broker or both
+                        // Upload to brokers collection
                         if (contact.contactType === 'broker' || contact.contactType === 'both') {
                             const brokerData = {
                                 ...baseData,
@@ -513,7 +592,8 @@
                                 trackRecord: contact.position || '',
                                 commissieStructuur: '',
                                 werkwijze: '',
-                                bijzonderheden: contact.position ? `Functie: ${contact.position}` : ''
+                                bijzonderheden: contact.position ? `Functie: ${contact.position}` : 
+                                                contact.importSource === 'linkedin' ? 'Geïmporteerd van LinkedIn' : ''
                             };
                             
                             const brokerRef = db.collection('brokers').doc();
@@ -521,7 +601,7 @@
                             brokerCount++;
                         }
                         
-                        // Update progress every 10 contacts
+                        // Update progress
                         if (i % 10 === 0) {
                             setUploadProgress(`${i} van ${contacts.length} contacten verwerkt...`);
                         }
@@ -534,10 +614,14 @@
                     if (brokerCount > 0) successMessage += `${brokerCount} brokers `;
                     successMessage += `toegevoegd.`;
                     
+                    if (contacts[0]?.importSource === 'linkedin') {
+                        successMessage += ' 🔥 LinkedIn connecties succesvol geïmporteerd!';
+                    }
+                    
                     setUploadProgress(successMessage);
                     setCsvData([]);
                     
-                    // Refresh the data to show new contacts
+                    // Refresh data
                     setTimeout(() => {
                         loadData();
                     }, 2000);
@@ -734,17 +818,29 @@
                 }).sort((a, b) => b.matchScore - a.matchScore);
             };
 
-            // 🔥 CSV Upload Component - GEFIXTE VERSIE
+            // 🔥 Enhanced CSV Upload Section met LinkedIn support
             const CsvUploadSection = () => {
                 const [selectedFile, setSelectedFile] = React.useState(null);
                 const [contactType, setContactType] = React.useState('investor');
+                const [csvSource, setCsvSource] = React.useState('standard'); // 'standard' of 'linkedin'
 
-                const handleFileSelect = (event) => {
+                const handleFileSelect = async (event) => {
                     const file = event.target.files[0];
                     if (!file) return;
                     
                     setSelectedFile(file);
-                    handleCsvUpload(file, contactType);
+                    
+                    try {
+                        if (csvSource === 'linkedin') {
+                            const linkedinData = await parseLinkedInCSV(file, contactType);
+                            setCsvData(linkedinData);
+                        } else {
+                            await handleCsvUpload(file, contactType);
+                        }
+                    } catch (error) {
+                        console.error('CSV parsing error:', error);
+                        setUploadProgress(`❌ Fout bij verwerken CSV: ${error.message}`);
+                    }
                 };
 
                 const handleUpload = () => {
@@ -757,7 +853,35 @@
 
                 return (
                     <div className="p-6 bg-white border-t border-gray-200 mt-8 rounded-lg shadow">
-                        <h2 className="text-2xl font-semibold mb-4">Contacten CSV upload</h2>
+                        <h2 className="text-2xl font-semibold mb-4">Contacten CSV Upload</h2>
+                        
+                        {/* CSV Source Selectie */}
+                        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h3 className="font-medium text-blue-800 mb-2">📥 Kies CSV Type:</h3>
+                            <div className="flex flex-wrap gap-4">
+                                <label className="flex items-center space-x-2">
+                                    <input 
+                                        type="radio" 
+                                        value="standard" 
+                                        checked={csvSource === 'standard'}
+                                        onChange={(e) => setCsvSource(e.target.value)}
+                                        className="text-blue-600"
+                                    />
+                                    <span>Standaard CSV</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                    <input 
+                                        type="radio" 
+                                        value="linkedin" 
+                                        checked={csvSource === 'linkedin'}
+                                        onChange={(e) => setCsvSource(e.target.value)}
+                                        className="text-blue-600"
+                                    />
+                                    <span>🔥 LinkedIn Connections Export</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
                             <input 
                                 type="file" 
@@ -795,7 +919,10 @@
                         
                         {csvData.length > 0 && (
                             <div className="border rounded p-4 bg-gray-50">
-                                <h3 className="font-medium mb-2">Voorbeeld van geüploade data ({csvData.length} contacten):</h3>
+                                <h3 className="font-medium mb-2">
+                                    Voorbeeld van geüploade data ({csvData.length} contacten)
+                                    {csvSource === 'linkedin' && ' 🔥 LinkedIn Connecties'}
+                                </h3>
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto custom-scrollbar">
                                     {csvData.slice(0, 9).map((contact, index) => (
                                         <div key={index} className="p-3 bg-white rounded border text-sm">
@@ -811,8 +938,12 @@
                                             {contact.email && (
                                                 <div className="text-blue-600 truncate">{contact.email}</div>
                                             )}
+                                            {contact.connectedOn && (
+                                                <div className="text-xs text-gray-500">Connected: {contact.connectedOn}</div>
+                                            )}
                                             <div className="text-xs text-gray-500 mt-1">
                                                 Type: {contact.contactType === 'both' ? 'Investeerder & Broker' : contact.contactType}
+                                                {contact.importSource === 'linkedin' && ' • 🔥 LinkedIn'}
                                             </div>
                                         </div>
                                     ))}
@@ -825,16 +956,36 @@
                             </div>
                         )}
                         
+                        {/* Instructies gebaseerd op geselecteerde CSV source */}
                         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                            <h4 className="font-semibold text-yellow-800 mb-2">📋 Ondersteunde CSV kolommen:</h4>
-                            <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                                <li><code>First Name</code> / <code>Voornaam</code> (verplicht)</li>
-                                <li><code>Last Name</code> / <code>Achternaam</code> (verplicht)</li>
-                                <li><code>Email Address</code> / <code>Email</code> / <code>E-mail</code></li>
-                                <li><code>Company</code> / <code>Bedrijf</code></li>
-                                <li><code>Position</code> / <code>Functie</code> / <code>Job Title</code></li>
-                                <li><code>Profile URL</code> / <code>LinkedIn Profile URL</code> / <code>URL</code></li>
-                            </ul>
+                            <h4 className="font-semibold text-yellow-800 mb-2">
+                                {csvSource === 'linkedin' ? '📋 LinkedIn Connections Export' : '📋 Standaard CSV'}
+                            </h4>
+                            
+                            {csvSource === 'linkedin' ? (
+                                <div className="text-sm text-yellow-700 space-y-2">
+                                    <p><strong>Hoe LinkedIn connecties exporteren:</strong></p>
+                                    <ol className="list-decimal list-inside space-y-1 ml-2">
+                                        <li>Ga naar LinkedIn → Mijn Netwerk</li>
+                                        <li>Klik op "Connections" in linker menu</li>
+                                        <li>Klik op "Exporteer connecties" (rechtsboven)</li>
+                                        <li>Kies "CSV" formaat en download</li>
+                                        <li>Upload het gedownloade CSV bestand hier</li>
+                                    </ol>
+                                    <p className="mt-2 text-xs">
+                                        🔥 <strong>Automatische parsing:</strong> Namen, bedrijven, functies en LinkedIn URLs worden automatisch herkend
+                                    </p>
+                                </div>
+                            ) : (
+                                <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                                    <li><code>First Name</code> / <code>Voornaam</code> (verplicht)</li>
+                                    <li><code>Last Name</code> / <code>Achternaam</code> (verplicht)</li>
+                                    <li><code>Email Address</code> / <code>Email</code> / <code>E-mail</code></li>
+                                    <li><code>Company</code> / <code>Bedrijf</code></li>
+                                    <li><code>Position</code> / <code>Functie</code> / <code>Job Title</code></li>
+                                    <li><code>Profile URL</code> / <code>LinkedIn Profile URL</code> / <code>URL</code></li>
+                                </ul>
+                            )}
                         </div>
                     </div>
                 );
@@ -1518,8 +1669,21 @@
                     </div>
 
                     {data.linkedin && (
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <LinkedInButton url={data.linkedin} />
+                        </div>
+                    )}
+
+                    {data.import_source === 'linkedin' && (
+                        <div className="mb-2">
+                            <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                🔥 LinkedIn Connectie
+                            </span>
+                            {data.connectedOn && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                    Connected: {data.connectedOn}
+                                </span>
+                            )}
                         </div>
                     )}
 
