@@ -92,6 +92,316 @@
     </script>
 
     <script type="text/babel">
+        // 🔥 Simple Deal Form Component
+        const SimpleDealForm = ({ onSubmit, onCancel }) => {
+            const [formData, setFormData] = React.useState({
+                titel: '',
+                locatie: '',
+                type: 'Appartement',
+                projectType: 'Turn-key',
+                prijs: 0,
+                verwachtRendement: 0,
+                risico: 'Gemiddeld',
+                beschrijving: '',
+                bedrijfFonds: '',
+                contactpersoon: '',
+                telefoon: '',
+                email: ''
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSubmit(formData);
+            };
+
+            return (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Titel *</label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.titel}
+                                onChange={(e) => setFormData({...formData, titel: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Locatie *</label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.locatie}
+                                onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Type</label>
+                            <select
+                                value={formData.type}
+                                onChange={(e) => setFormData({...formData, type: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            >
+                                <option value="Appartement">Appartement</option>
+                                <option value="Kantoor">Kantoor</option>
+                                <option value="Woning">Woning</option>
+                                <option value="Commercieel">Commercieel</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Project Type</label>
+                            <select
+                                value={formData.projectType}
+                                onChange={(e) => setFormData({...formData, projectType: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            >
+                                <option value="Turn-key">Turn-key</option>
+                                <option value="Renovatie">Renovatie</option>
+                                <option value="Nieuwbouw">Nieuwbouw</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Prijs (€)</label>
+                            <input
+                                type="number"
+                                value={formData.prijs}
+                                onChange={(e) => setFormData({...formData, prijs: parseInt(e.target.value) || 0})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Verwacht Rendement (%)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                value={formData.verwachtRendement}
+                                onChange={(e) => setFormData({...formData, verwachtRendement: parseFloat(e.target.value) || 0})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Beschrijving</label>
+                        <textarea
+                            value={formData.beschrijving}
+                            onChange={(e) => setFormData({...formData, beschrijving: e.target.value})}
+                            rows="3"
+                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        />
+                    </div>
+
+                    <div className="flex justify-end space-x-4">
+                        <button 
+                            type="button"
+                            onClick={onCancel}
+                            className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                        >
+                            Annuleren
+                        </button>
+                        <button 
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Deal Toevoegen
+                        </button>
+                    </div>
+                </form>
+            );
+        };
+
+        // 🔥 Simple Investor Form Component
+        const SimpleInvestorForm = ({ onSubmit, onCancel }) => {
+            const [formData, setFormData] = React.useState({
+                naam: '',
+                email: '',
+                telefoon: '',
+                bedrijf: '',
+                locatie: '',
+                minBudget: 0,
+                maxBudget: 0,
+                gewenstRendement: 0,
+                risicoprofiel: 'Gemiddeld',
+                ervaringLevel: 'Gemiddeld',
+                vastgoedTypes: [],
+                projectTypes: [],
+                communicatieVoorkeur: 'Email',
+                beschikbaarheid: 'Direct',
+                investmentMotivatie: '',
+                bijzonderheden: ''
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSubmit(formData);
+            };
+
+            return (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Naam *</label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.naam}
+                                onChange={(e) => setFormData({...formData, naam: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Email *</label>
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Bedrijf</label>
+                            <input
+                                type="text"
+                                value={formData.bedrijf}
+                                onChange={(e) => setFormData({...formData, bedrijf: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Locatie</label>
+                            <input
+                                type="text"
+                                value={formData.locatie}
+                                onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Min Budget (€)</label>
+                            <input
+                                type="number"
+                                value={formData.minBudget}
+                                onChange={(e) => setFormData({...formData, minBudget: parseInt(e.target.value) || 0})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Max Budget (€)</label>
+                            <input
+                                type="number"
+                                value={formData.maxBudget}
+                                onChange={(e) => setFormData({...formData, maxBudget: parseInt(e.target.value) || 0})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-4">
+                        <button 
+                            type="button"
+                            onClick={onCancel}
+                            className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                        >
+                            Annuleren
+                        </button>
+                        <button 
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Investeerder Toevoegen
+                        </button>
+                    </div>
+                </form>
+            );
+        };
+
+        // 🔥 Simple Broker Form Component
+        const SimpleBrokerForm = ({ onSubmit, onCancel }) => {
+            const [formData, setFormData] = React.useState({
+                naam: '',
+                email: '',
+                telefoon: '',
+                bedrijf: '',
+                locatie: '',
+                specialisaties: [],
+                werkgebied: [],
+                ervaringJaren: 0,
+                trackRecord: '',
+                commissieStructuur: '',
+                werkwijze: '',
+                bijzonderheden: ''
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSubmit(formData);
+            };
+
+            return (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Naam *</label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.naam}
+                                onChange={(e) => setFormData({...formData, naam: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Email *</label>
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Bedrijf</label>
+                            <input
+                                type="text"
+                                value={formData.bedrijf}
+                                onChange={(e) => setFormData({...formData, bedrijf: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Locatie</label>
+                            <input
+                                type="text"
+                                value={formData.locatie}
+                                onChange={(e) => setFormData({...formData, locatie: e.target.value})}
+                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-4">
+                        <button 
+                            type="button"
+                            onClick={onCancel}
+                            className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
+                        >
+                            Annuleren
+                        </button>
+                        <button 
+                            type="submit"
+                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                            Broker Toevoegen
+                        </button>
+                    </div>
+                </form>
+            );
+        };
+
         // Main application component
         const VastgoedInvesteerderMatcher = () => {
             const [user, setUser] = React.useState(null);
@@ -127,6 +437,86 @@
             const [csvData, setCsvData] = React.useState([]);
             const [uploadProgress, setUploadProgress] = React.useState('');
             const [contactsCount, setContactsCount] = React.useState(0);
+
+            // 🔥 NEW: Add deal function
+            const handleAddDeal = async (dealData) => {
+                try {
+                    const newDeal = {
+                        ...dealData,
+                        id: `deal_${Date.now()}`,
+                        owner_id: user.id,
+                        created_at: new Date().toISOString(),
+                        commissionStructure: {
+                            total_rate: 0.025,
+                            participants: [
+                                { 
+                                    role: 'deal_owner', 
+                                    user_id: user.id, 
+                                    percentage: 60, 
+                                    fixed_amount: 0, 
+                                    type: 'percentage',
+                                    name: user.name,
+                                    is_external: false
+                                }
+                            ]
+                        }
+                    };
+                    
+                    await db.collection('deals').doc(newDeal.id).set(newDeal);
+                    setDeals(prev => [...prev, newDeal]);
+                    setShowAddDeal(false);
+                    
+                    console.log('✅ Deal toegevoegd:', newDeal);
+                    alert('Deal succesvol toegevoegd!');
+                } catch (error) {
+                    console.error('❌ Fout bij toevoegen deal:', error);
+                    alert('Fout bij toevoegen deal: ' + error.message);
+                }
+            };
+
+            // 🔥 NEW: Add investor function
+            const handleAddInvestor = async (investorData) => {
+                try {
+                    const newInvestor = {
+                        ...investorData,
+                        id: `investor_${Date.now()}`,
+                        owner_id: user.id,
+                        created_at: new Date().toISOString(),
+                    };
+                    
+                    await db.collection('investors').doc(newInvestor.id).set(newInvestor);
+                    setInvestors(prev => [...prev, newInvestor]);
+                    setShowAddInvestor(false);
+                    
+                    console.log('✅ Investeerder toegevoegd:', newInvestor);
+                    alert('Investeerder succesvol toegevoegd!');
+                } catch (error) {
+                    console.error('❌ Fout bij toevoegen investeerder:', error);
+                    alert('Fout bij toevoegen investeerder: ' + error.message);
+                }
+            };
+
+            // 🔥 NEW: Add broker function
+            const handleAddBroker = async (brokerData) => {
+                try {
+                    const newBroker = {
+                        ...brokerData,
+                        id: `broker_${Date.now()}`,
+                        owner_id: user.id,
+                        created_at: new Date().toISOString(),
+                    };
+                    
+                    await db.collection('brokers').doc(newBroker.id).set(newBroker);
+                    setBrokers(prev => [...prev, newBroker]);
+                    setShowAddBroker(false);
+                    
+                    console.log('✅ Broker toegevoegd:', newBroker);
+                    alert('Broker succesvol toegevoegd!');
+                } catch (error) {
+                    console.error('❌ Fout bij toevoegen broker:', error);
+                    alert('Fout bij toevoegen broker: ' + error.message);
+                }
+            };
 
             // 🔥 ENHANCED AI MATCHING WITH SEMANTIC ANALYSIS
             const callOpenAI = async (prompt, type = 'analysis', data = null) => {
@@ -1261,25 +1651,39 @@
                         )}
                     </main>
 
-                    {/* Modals would go here */}
+                    {/* Modals */}
+                    {showAddDeal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <h3 className="text-xl font-bold mb-4">Nieuwe Deal Toevoegen</h3>
+                                <SimpleDealForm 
+                                    onSubmit={handleAddDeal}
+                                    onCancel={() => setShowAddDeal(false)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {showAddInvestor && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                 <h3 className="text-xl font-bold mb-4">Nieuwe Investeerder Toevoegen</h3>
-                                {/* Investor form content would go here */}
-                                <div className="flex justify-end space-x-4 mt-6">
-                                    <button 
-                                        onClick={() => setShowAddInvestor(false)}
-                                        className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
-                                    >
-                                        Annuleren
-                                    </button>
-                                    <button 
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    >
-                                        Toevoegen
-                                    </button>
-                                </div>
+                                <SimpleInvestorForm 
+                                    onSubmit={handleAddInvestor}
+                                    onCancel={() => setShowAddInvestor(false)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {showAddBroker && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <h3 className="text-xl font-bold mb-4">Nieuwe Broker Toevoegen</h3>
+                                <SimpleBrokerForm 
+                                    onSubmit={handleAddBroker}
+                                    onCancel={() => setShowAddBroker(false)}
+                                />
                             </div>
                         </div>
                     )}
@@ -1309,7 +1713,15 @@
                             formData.email, 
                             formData.password
                         );
-                        onLogin(userCredential.user);
+                        
+                        // Get user data from Firestore
+                        const userDoc = await firebase.firestore().collection('users').doc(userCredential.user.uid).get();
+                        const userData = userDoc.data();
+                        
+                        onLogin({ 
+                            id: userCredential.user.uid,
+                            ...userData
+                        });
                     } else {
                         // Register logic
                         const userCredential = await firebase.auth().createUserWithEmailAndPassword(
@@ -1907,6 +2319,12 @@
             isLoadingAI,
             getUserById 
         }) => {
+            const handleMatch = (dealId) => {
+                const matches = findMatches(dealId);
+                setMatches(matches);
+                setActiveTab('matching');
+            };
+
             return (
                 <div>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
@@ -1930,10 +2348,7 @@
                                 onEdit={handleEditDeal}
                                 onDelete={handleDeleteDeal}
                                 onCommission={openCommissionEditor}
-                                onMatch={() => {
-                                    // This would need the findMatches function
-                                    setActiveTab('matching');
-                                }}
+                                onMatch={() => handleMatch(deal.id)}
                                 onAnalyze={getDealInsights}
                                 isLoadingAI={isLoadingAI}
                             />
