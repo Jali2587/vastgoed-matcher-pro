@@ -1602,6 +1602,146 @@
                 );
             };
 
+            // 🔥 Deal Card Component (Fixed version)
+            const DealCard = ({ 
+                deal, 
+                user, 
+                getUserById, 
+                onEdit, 
+                onDelete, 
+                onCommission, 
+                onMatch, 
+                onAnalyze, 
+                isLoadingAI 
+            }) => {
+                return (
+                    <div className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
+                                deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                                {deal.risico} risico
+                            </span>
+                        </div>
+
+                        <div className="space-y-2 text-sm mb-4">
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">👤</span>
+                                <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
+                            </div>
+                            {deal.bedrijfFonds && (
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-gray-500">🏢</span>
+                                    <span className="font-medium">{deal.bedrijfFonds}</span>
+                                </div>
+                            )}
+                            {deal.contactpersoon && (
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-gray-500">👤</span>
+                                    <span>{deal.contactpersoon}</span>
+                                </div>
+                            )}
+                            {deal.telefoon && (
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-gray-500">📞</span>
+                                    <span>{deal.telefoon}</span>
+                                </div>
+                            )}
+                            {deal.email && (
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-gray-500">📧</span>
+                                    <span>{deal.email}</span>
+                                </div>
+                            )}
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">📍</span>
+                                <span>{deal.locatie}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">🏢</span>
+                                <span>{deal.type}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">🎯</span>
+                                <span>{deal.projectType}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">💰</span>
+                                <span className="font-semibold">€{deal.prijs?.toLocaleString() || '0'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">📈</span>
+                                <span className="font-semibold text-green-600">{deal.verwachtRendement || '0'}% rendement</span>
+                            </div>
+                        </div>
+
+                        {deal.commissionStructure && (
+                            <div className="mb-4 p-3 bg-gray-50 rounded border">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-gray-700">Commissie Structuur</span>
+                                    <span className="text-sm text-gray-600">
+                                        Totaal: {(deal.commissionStructure.total_rate * 100).toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    {deal.commissionStructure.participants?.map((participant, index) => (
+                                        <div key={index} className="flex justify-between text-xs">
+                                            <span>{participant.name || participant.role}</span>
+                                            <span>{participant.percentage}%</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {deal.beschrijving && (
+                            <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                                <p className="text-sm text-blue-800">{deal.beschrijving}</p>
+                            </div>
+                        )}
+
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={onMatch}
+                                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <span>🤖</span>
+                                <span>Vind Matches</span>
+                            </button>
+                            <button
+                                onClick={() => onCommission(deal)}
+                                className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <span>💰</span>
+                                <span>Commissie</span>
+                            </button>
+                        </div>
+
+                        {(user.role === 'beheerder' || deal.owner_id === user.id) && (
+                            <div className="flex space-x-2 mt-2">
+                                <button
+                                    onClick={() => onEdit(deal)}
+                                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <span>✏️</span>
+                                    <span>Bewerken</span>
+                                </button>
+                                <button
+                                    onClick={() => onDelete(deal.id)}
+                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <span>🗑️</span>
+                                    <span>Verwijderen</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
             // 🔥 Main Application Layout
             return (
                 <div className="min-h-screen bg-gray-50">
@@ -2455,85 +2595,38 @@
             );
         };
 
-        // 🔥 Deal Card Component
-        const DealCard = ({ 
-            deal, 
-            user, 
-            getUserById, 
-            onEdit, 
-            onDelete, 
-            onCommission, 
-            onMatch, 
-            onAnalyze, 
-            isLoadingAI 
-        }) => {
+        // 🔥 Placeholder components voor de ontbrekende tabs
+        const MatchingTab = ({ matches, deals, setActiveTab, createTransaction, getSmartMatchingInsights, isLoadingAI, getUserById }) => {
             return (
-                <div className="bg-white rounded-lg shadow-md p-6 border hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold text-gray-900">{deal.titel}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            deal.risico === 'Laag' ? 'bg-green-100 text-green-800' :
-                            deal.risico === 'Gemiddeld' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                        }`}>
-                            {deal.risico} risico
-                        </span>
+                <div>
+                    <h2 className="text-2xl font-bold mb-6">AI Matching</h2>
+                    <div className="text-center py-12">
+                        <div className="text-4xl mb-4">🤖</div>
+                        <p className="text-gray-600 text-lg">Matching functionaliteit wordt geladen...</p>
                     </div>
+                </div>
+            );
+        };
 
-                    <div className="space-y-2 text-sm mb-4">
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">👤</span>
-                            <span>Eigenaar: {getUserById(deal.owner_id).name}</span>
-                        </div>
-                        {deal.bedrijfFonds && (
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-500">🏢</span>
-                                <span className="font-medium">{deal.bedrijfFonds}</span>
-                            </div>
-                        )}
-                        {deal.contactpersoon && (
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-500">👤</span>
-                                <span>{deal.contactpersoon}</span>
-                            </div>
-                        )}
-                        {deal.telefoon && (
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-500">📞</span>
-                                <span>{deal.telefoon}</span>
-                            </div>
-                        )}
-                        {deal.email && (
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-500">📧</span>
-                                <span>{deal.email}</span>
-                            </div>
-                        )}
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">📍</span>
-                            <span>{deal.locatie}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">🏢</span>
-                            <span>{deal.type}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">🎯</span>
-                            <span>{deal.projectType}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">💰</span>
-                            <span className="font-semibold">€{deal.prijs?.toLocaleString() || '0'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-gray-500">📈</span>
-                            <span className="font-semibold text-green-600">{deal.verwachtRendement || '0'}% rendement</span>
-                        </div>
+        const TransactionsTab = ({ transactions, deals, investors, getUserById, calculateCommissionSummary }) => {
+            return (
+                <div>
+                    <h2 className="text-2xl font-bold mb-6">Transacties</h2>
+                    <div className="text-center py-12">
+                        <div className="text-4xl mb-4">💰</div>
+                        <p className="text-gray-600 text-lg">Transactie overzicht wordt geladen...</p>
                     </div>
+                </div>
+            );
+        };
 
-                    {deal.commissionStructure && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded border">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-gray-700">Commissie Structuur</span>
-                                <span className="text-sm text-gray-600">
-                                    {(deal
+        // Render the application
+        const App = () => {
+            return <VastgoedInvesteerderMatcher />;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
